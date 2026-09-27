@@ -18,6 +18,7 @@ type Props = {
   formatMoney: (value: number) => string;
   fileRef: RefObject<HTMLInputElement | null>;
   onRefresh: () => Promise<void>;
+  hasPending: () => Promise<boolean>;
   onOpenInstallGuide: () => void;
   onExportBackup: () => void;
   onExportCsv: () => void;
@@ -38,6 +39,7 @@ export function SettingsTab({
   formatMoney,
   fileRef,
   onRefresh,
+  hasPending,
   onOpenInstallGuide,
   onExportBackup,
   onExportCsv,
@@ -84,6 +86,7 @@ export function SettingsTab({
         custom={categories}
         offline={offline}
         pendingCount={queued.length}
+        hasPending={hasPending}
         onChange={onRefresh}
       />
 
