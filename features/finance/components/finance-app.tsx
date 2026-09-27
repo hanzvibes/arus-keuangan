@@ -9,7 +9,7 @@ import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
 import { accountBalance as balance, budgetSummary, reconciliationDelta } from "@/lib/finance";
 import { allCategories, defaultCategories } from "@/lib/categories";
-import { AuthUser } from "@/components/auth-user";
+import { AuthUser } from "@/features/auth/components/auth-user";
 import { usePwa } from "@/lib/use-pwa";
 import { FinanceApiError, financeApi } from "@/data/client/finance-api";
 import type { Account, Transaction, Budget, QueuedTransaction, TransactionType } from "@/domain/finance/types";
