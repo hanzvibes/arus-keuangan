@@ -51,3 +51,22 @@ test("finance UI stays split into feature tabs", async () => {
   assert.doesNotMatch(source, /className="analytics-grid"/);
   assert.doesNotMatch(source, /className="filter-bar"/);
 });
+
+test("offline storage is scoped by authenticated user", async () => {
+  const source = await readFile("lib/offline.ts", "utf8");
+  assert.match(source, /DATABASE_PREFIX\s*=\s*"arus-device-cache:"/);
+  assert.match(source, /readSnapshot\s*=\s*<T>\(userId: string\)/);
+  assert.match(source, /writeSnapshot\s*=\s*\(userId: string,/);
+  assert.match(source, /readQueue<T>\(userId: string\)/);
+  assert.match(source, /enqueueTransaction\(userId: string,/);
+  assert.match(source, /removeQueuedTransaction\(userId: string,/);
+  assert.match(source, /clearDeviceCache\(userId: string\)/);
+});
+
+test("finance offline hook resolves the Supabase user before touching device storage", async () => {
+  const source = await readFile("features/finance/hooks/use-finance-data.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /readQueue<QueuedTransaction>\(userId\)/);
+  assert.match(source, /writeSnapshot\(userId,/);
+  assert.match(source, /readSnapshot<FinanceData>\(userId\)/);
+});
