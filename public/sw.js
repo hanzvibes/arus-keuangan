@@ -1,6 +1,12 @@
-/* The production build replaces these two values with its asset list and version. */
-const CACHE = "arus-shell-dev";
-const PRECACHE = [];
+/* Static service worker for Next.js/Vercel. Bump CACHE when shell behavior changes. */
+const CACHE = "arus-shell-v1";
+const PRECACHE = [
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+  "/apple-touch-icon.png"
+];
 
 async function isAppHtml(response) {
   if (!response.ok || response.redirected || !response.headers.get("content-type")?.includes("text/html")) return false;
@@ -27,7 +33,6 @@ self.addEventListener("install", event => {
       if (response.ok && !response.redirected) await cache.put(path, response);
     }));
     await cacheShell();
-    // An update waits until the user chooses to apply it, so an open form is not interrupted.
   })());
 });
 

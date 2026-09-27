@@ -1,0 +1,13 @@
+# Legacy platform tooling is not part of the Vercel build context.
+.vinext/
+dist/
+.wrangler/
+.sites-runtime/
+build/
+db/
+drizzle/
+drizzle.config.ts
+vite.config.ts
+cloudflare-env.d.ts
+.openai/
+scripts/
