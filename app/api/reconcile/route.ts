@@ -8,10 +8,10 @@ export async function POST(request: Request) {
     const input = await request.json() as Record<string, unknown>;
     const accountId = typeof input.accountId === "string" ? input.accountId.trim() : "";
     const note = typeof input.note === "string" ? input.note.trim() : "";
-    const date = input.date;
-    const expected = input.expectedBalance;
-    const actual = input.actualBalance;
-    const delta = typeof expected === "number" && typeof actual === "number"
+    const date = typeof input.date === "string" ? input.date : "";
+    const expected = typeof input.expectedBalance === "number" ? input.expectedBalance : null;
+    const actual = typeof input.actualBalance === "number" ? input.actualBalance : null;
+    const delta = expected !== null && actual !== null
       ? reconciliationDelta(expected, actual)
       : null;
 
