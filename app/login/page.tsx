@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -21,12 +21,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("error") === "config"
-      ? "Konfigurasi Supabase belum tersedia di environment aplikasi."
-      : "",
-  );
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "config") {
+      setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
+    }
+  }, []);
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
