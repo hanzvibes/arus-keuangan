@@ -70,3 +70,36 @@ test("finance offline hook resolves the Supabase user before touching device sto
   assert.match(source, /writeSnapshot\(userId,/);
   assert.match(source, /readSnapshot<FinanceData>\(userId\)/);
 });
+
+test("shared UI directory contains only primitives used by the application", async () => {
+  const { readdir } = await import("node:fs/promises");
+  const files = (await readdir("components/ui")).sort();
+  assert.deepEqual(files, [
+    "alert-dialog.tsx",
+    "button.tsx",
+    "drawer.tsx",
+    "select.tsx",
+  ]);
+});
+
+test("removed starter UI packages do not return as direct dependencies", async () => {
+  const pkg = JSON.parse(await readFile("package.json", "utf8"));
+  const direct = { ...pkg.dependencies, ...pkg.devDependencies };
+  for (const name of [
+    "@base-ui/react",
+    "@hookform/resolvers",
+    "@shadcn/react",
+    "cmdk",
+    "date-fns",
+    "embla-carousel-react",
+    "input-otp",
+    "next-themes",
+    "react-day-picker",
+    "react-hook-form",
+    "react-resizable-panels",
+    "recharts",
+    "zod",
+  ]) {
+    assert.equal(direct[name], undefined, `${name} should stay removed unless a real feature needs it`);
+  }
+});
