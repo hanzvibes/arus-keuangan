@@ -175,16 +175,19 @@ async function changeQueue(
   });
 }
 
+export async function clearAppShellCache() {
+  if ("caches" in window) {
+    for (const key of await caches.keys()) {
+      if (key.startsWith("arus-shell-")) await caches.delete(key);
+    }
+  }
+}
+
 export async function clearDeviceCache(userId: string) {
   migrations.delete(userId);
   await deleteDatabase(databaseName(userId));
 
   // Remove any pre-user-scoping cache that may still exist after an interrupted migration.
   await deleteDatabase(LEGACY_DATABASE).catch(() => {});
-
-  if ("caches" in window) {
-    for (const key of await caches.keys()) {
-      if (key.startsWith("arus-shell-")) await caches.delete(key);
-    }
-  }
+  await clearAppShellCache();
 }
