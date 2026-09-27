@@ -91,9 +91,12 @@ export async function PATCH(request: Request) {
       assertQuery(current.error);
       if (!current.data) return bad("Akun tidak ditemukan.");
       if (asNumber(current.data.opening_balance) !== openingBalance) {
-        const used = await supabase.from("transactions").select("id").or(`account_id.eq.${id},to_account_id.eq.${id}`).limit(1);
-        assertQuery(used.error);
-        if ((used.data ?? []).length) return bad("Saldo awal tidak dapat diubah setelah ada transaksi. Gunakan Cocokkan saldo.");
+        const [usedFrom, usedTo] = await Promise.all([
+          supabase.from("transactions").select("id").eq("account_id", id).limit(1),
+          supabase.from("transactions").select("id").eq("to_account_id", id).limit(1),
+        ]);
+        assertQuery(usedFrom.error); assertQuery(usedTo.error);
+        if ((usedFrom.data ?? []).length || (usedTo.data ?? []).length) return bad("Saldo awal tidak dapat diubah setelah ada transaksi. Gunakan Cocokkan saldo.");
       }
       const result = await supabase.from("accounts").update({ name, kind, opening_balance: openingBalance }).eq("id", id).select("id").maybeSingle();
       assertQuery(result.error);
@@ -136,12 +139,14 @@ export async function DELETE(request: Request) {
     if (!key) return bad("ID tidak tersedia.");
 
     if (entity === "account") {
-      const [used, scheduled] = await Promise.all([
-        supabase.from("transactions").select("id").or(`account_id.eq.${key},to_account_id.eq.${key}`).limit(1),
-        supabase.from("recurring").select("id").or(`account_id.eq.${key},to_account_id.eq.${key}`).limit(1),
+      const [txFrom, txTo, recurringFrom, recurringTo] = await Promise.all([
+        supabase.from("transactions").select("id").eq("account_id", key).limit(1),
+        supabase.from("transactions").select("id").eq("to_account_id", key).limit(1),
+        supabase.from("recurring").select("id").eq("account_id", key).limit(1),
+        supabase.from("recurring").select("id").eq("to_account_id", key).limit(1),
       ]);
-      assertQuery(used.error); assertQuery(scheduled.error);
-      if ((used.data ?? []).length || (scheduled.data ?? []).length) return bad("Akun memiliki transaksi atau jadwal rutin. Hapus catatan terkait lebih dulu.");
+      [txFrom, txTo, recurringFrom, recurringTo].forEach(result => assertQuery(result.error));
+      if ([txFrom, txTo, recurringFrom, recurringTo].some(result => (result.data ?? []).length)) return bad("Akun memiliki transaksi atau jadwal rutin. Hapus catatan terkait lebih dulu.");
       const result = await supabase.from("accounts").delete().eq("id", key).select("id").maybeSingle();
       assertQuery(result.error);
       if (!result.data) return bad("Akun tidak ditemukan.");
