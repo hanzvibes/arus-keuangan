@@ -8,6 +8,28 @@ Jadwal mingguan atau bulanan tidak mendebit saldo otomatis: pengguna memilih **C
 
 Proyek ini memakai [vinext](https://github.com/cloudflare/vinext), Cloudflare D1, dan Drizzle.
 
+## Supabase Auth
+
+Akses dashboard dan endpoint `/api/*` sekarang dilindungi Supabase Auth. Halaman `/login` menggunakan email + password dan session disimpan sebagai cookie melalui `@supabase/ssr`. Session diverifikasi di `proxy.ts` dengan `getClaims()`; request API tanpa session menerima HTTP 401.
+
+Konfigurasi environment:
+
+```sh
+cp .env.example .env.local
+```
+
+Variable yang dibutuhkan:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+```
+
+Gunakan **publishable key**, bukan `service_role`/secret key. Untuk Vercel atau platform hosting lain, masukkan dua variable yang sama ke Environment Variables project.
+
+> **Batas scope saat ini:** Supabase Auth mengamankan akses aplikasi, tetapi record finansial masih memakai D1 yang sama seperti sebelumnya. Sebelum membuka aplikasi untuk banyak akun nyata, tambahkan ownership `user_id` pada data finansial dan filter seluruh read/write berdasarkan user yang sudah terverifikasi.
+
+
 ## Prerequisites
 
 - Node.js `>=22.13.0`
