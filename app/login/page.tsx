@@ -21,9 +21,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("error");
-    if (reason === "config") {
-      setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
-    } else if (reason === "verification") {
+    if (reason === "verification") {
       setError("Tautan verifikasi tidak valid atau sudah kedaluwarsa. Coba daftar atau masuk kembali.");
     }
   }, []);
@@ -31,7 +29,6 @@ export default function LoginPage() {
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-
 
     setSubmitting(true);
     try {
@@ -118,34 +115,3 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  minLength={6}
-                  placeholder="Masukkan password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                  onClick={() => setShowPassword((value) => !value)}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </label>
-
-            {error && <div className="auth-error" role="alert">{error}</div>}
-
-            <button className="auth-submit" type="submit" disabled={submitting}>
-              <span>{submitting ? "Memverifikasi..." : "Masuk"}</span>
-              {!submitting && <ArrowRight size={19} />}
-            </button>
-          </form>
-
-          <p className="auth-footnote auth-switch">
-            Belum punya akun? <a href="/register">Buat akun Arus</a>
-          </p>
-        </div>
-      </section>
-    </main>
-  );
-}
