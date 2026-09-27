@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 import { Check, Download, Upload, Wallet, WifiOff } from "lucide-react";
 import type { Account, Category, QueuedTransaction } from "@/domain/finance/types";
 import type { PwaState } from "@/lib/use-pwa";
-import { AuthUser } from "@/components/auth-user";
+import { AuthUser } from "@/features/auth/components/auth-user";
 import { CategoryManager } from "@/features/finance/components/category-manager";
 import { ScreenTitle } from "@/features/finance/components/screen-title";
 import { TransactionList } from "@/features/finance/components/transaction-list";
