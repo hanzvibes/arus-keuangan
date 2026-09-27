@@ -103,3 +103,25 @@ test("removed starter UI packages do not return as direct dependencies", async (
     assert.equal(direct[name], undefined, `${name} should stay removed unless a real feature needs it`);
   }
 });
+
+test("global CSS stays a small ordered stylesheet entrypoint", async () => {
+  const source = await readFile("app/globals.css", "utf8");
+  assert.ok(source.length < 1000, "globals.css should only compose style modules");
+  assert.match(source, /styles\/tokens\.css/);
+  assert.match(source, /styles\/finance\.css/);
+  assert.match(source, /styles\/auth\.css/);
+});
+
+test("obsolete ChatGPT starter auth surface stays removed", async () => {
+  const { access } = await import("node:fs/promises");
+  await assert.rejects(() => access("app/chatgpt-auth.ts"));
+  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
+  assert.doesNotMatch(proxy, /signin-with-chatgpt|signout-with-chatgpt|\\"\/callback\\"/);
+});
+
+test("auth-specific account UI lives in the auth feature", async () => {
+  const finance = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  const settings = await readFile("features/finance/components/tabs/settings-tab.tsx", "utf8");
+  assert.match(finance, /features\/auth\/components\/auth-user/);
+  assert.match(settings, /features\/auth\/components\/auth-user/);
+});
