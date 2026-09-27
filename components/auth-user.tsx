@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LogOut, Pencil, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { clearDeviceCache, readQueue } from "@/lib/offline";
+import { clearAppShellCache, clearDeviceCache, readQueue } from "@/lib/offline";
 
 type AuthUserProps = {
   variant: "sidebar" | "greeting" | "settings";
@@ -73,20 +73,27 @@ export function AuthUser({ variant }: AuthUserProps) {
   async function signOut() {
     setSigningOut(true);
     try {
-      const pending = await readQueue<unknown>();
-      if (pending.length > 0) {
-        const discard = window.confirm(
-          `Ada ${pending.length} transaksi offline yang belum terkirim. Keluar sekarang akan menghapus antrean lokal itu. Tetap keluar?`,
-        );
-        if (!discard) {
-          setSigningOut(false);
-          return;
+      const supabase = createClient();
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id || "";
+
+      if (userId) {
+        const pending = await readQueue<unknown>(userId);
+        if (pending.length > 0) {
+          const discard = window.confirm(
+            `Ada ${pending.length} transaksi offline yang belum terkirim. Keluar sekarang akan menghapus antrean lokal itu. Tetap keluar?`,
+          );
+          if (!discard) {
+            setSigningOut(false);
+            return;
+          }
         }
+
+        await clearDeviceCache(userId);
+      } else {
+        await clearAppShellCache();
       }
 
-      await clearDeviceCache();
-
-      const supabase = createClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
