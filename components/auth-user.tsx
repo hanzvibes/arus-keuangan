@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthUserProps = {
-  variant: "sidebar" | "greeting";
+  variant: "sidebar" | "greeting" | "settings";
 };
 
 type Viewer = {
@@ -73,6 +73,29 @@ export function AuthUser({ variant }: AuthUserProps) {
           <span>Selamat datang,</span>
           <strong>{viewer.name} 👋</strong>
         </div>
+      </div>
+    );
+  }
+
+  if (variant === "settings") {
+    return (
+      <div className="surface data-panel auth-account-panel">
+        <div className="data-panel-head">
+          <span className="auth-account-icon"><UserRound size={22} /></span>
+          <div>
+            <h2>Akun Arus</h2>
+            <p>{viewer.name} · {viewer.email}</p>
+          </div>
+        </div>
+        <button
+          className="restore-select auth-settings-logout"
+          type="button"
+          disabled={signingOut}
+          onClick={() => void signOut()}
+        >
+          <LogOut size={17} />
+          {signingOut ? "Keluar..." : "Keluar dari akun"}
+        </button>
       </div>
     );
   }
