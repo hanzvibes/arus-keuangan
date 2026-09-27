@@ -1,4 +1,5 @@
-export type Frequency = "weekly" | "monthly";
+import type { Frequency } from "../domain/finance/types.ts";
+export type { Frequency } from "../domain/finance/types.ts";
 
 /** Keep the original day of the month, so Jan 31 -> Feb 28 -> Mar 31. */
 export function nextOccurrence(date: string, frequency: Frequency, anchorDay: number): string {
