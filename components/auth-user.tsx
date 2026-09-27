@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LogOut, UserRound } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";\nimport { clearDeviceCache, readQueue } from "@/lib/offline";
+import { createClient } from "@/lib/supabase/client";
+import { clearDeviceCache, readQueue } from "@/lib/offline";
 
 type AuthUserProps = {
   variant: "sidebar" | "greeting" | "settings";
