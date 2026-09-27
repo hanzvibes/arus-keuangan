@@ -143,7 +143,7 @@ export default function LoginPage() {
 
             {error && <div className="auth-error" role="alert">{error}</div>}
 
-            <button className="auth-submit" type="submit" disabled={submitting || !configured}>
+            <button className="auth-submit" type="submit" disabled={submitting}>
               <span>{submitting ? "Memverifikasi..." : "Masuk"}</span>
               {!submitting && <ArrowRight size={19} />}
             </button>

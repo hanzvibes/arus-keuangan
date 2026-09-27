@@ -198,7 +198,7 @@ export default function RegisterPage() {
 
                 {error && <div className="auth-error" role="alert">{error}</div>}
 
-                <button className="auth-submit" type="submit" disabled={submitting || !configured}>
+                <button className="auth-submit" type="submit" disabled={submitting}>
                   <span>{submitting ? "Membuat akun..." : "Buat akun"}</span>
                   {!submitting && <ArrowRight size={19} />}
                 </button>

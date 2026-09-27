@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 
 const PUBLIC_PATHS = new Set([
   "/login",
@@ -26,24 +27,9 @@ function redirectToLogin(request: NextRequest, reason?: string) {
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !publishableKey) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Konfigurasi autentikasi belum tersedia." },
-        { status: 503 },
-      );
-    }
-    return isPublicPath(pathname)
-      ? NextResponse.next({ request })
-      : redirectToLogin(request, "config");
-  }
-
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(supabaseUrl, publishableKey, {
+  const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
