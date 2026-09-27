@@ -2,7 +2,12 @@ import type { Backup } from "../../lib/backup.ts";
 import type { FinanceData } from "../../domain/finance/types.ts";
 
 export class FinanceApiError extends Error {
-  constructor(message: string, readonly status: number) { super(message); }
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
 }
 
 async function request<T>(url: string, fallback: string, options?: RequestInit): Promise<T> {
