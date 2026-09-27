@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LogOut, UserRound } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";\nimport { clearDeviceCache, readQueue } from "@/lib/offline";
 
 type AuthUserProps = {
   variant: "sidebar" | "greeting" | "settings";
@@ -58,10 +58,28 @@ export function AuthUser({ variant }: AuthUserProps) {
   async function signOut() {
     setSigningOut(true);
     try {
+      const pending = await readQueue<unknown>();
+      if (pending.length > 0) {
+        const discard = window.confirm(
+          `Ada ${pending.length} transaksi offline yang belum terkirim. Keluar sekarang akan menghapus antrean lokal itu. Tetap keluar?`,
+        );
+        if (!discard) {
+          setSigningOut(false);
+          return;
+        }
+      }
+
+      await clearDeviceCache();
+
       const supabase = createClient();
-      await supabase.auth.signOut();
-    } finally {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
       window.location.assign("/login");
+    } catch (error) {
+      console.error("Sign out failed", error);
+      window.alert("Belum bisa keluar. Pastikan tab Arus lain ditutup lalu coba lagi.");
+      setSigningOut(false);
     }
   }
 
