@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set([
   "/login",
+  "/register",
+  "/auth/callback",
   "/signin-with-chatgpt",
   "/signout-with-chatgpt",
   "/callback",
@@ -78,7 +80,7 @@ export async function updateSession(request: NextRequest) {
     return redirectToLogin(request);
   }
 
-  if (authenticated && pathname === "/login") {
+  if (authenticated && (pathname === "/login" || pathname === "/register")) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/";
     homeUrl.search = "";
