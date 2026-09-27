@@ -1,5 +1,4 @@
-import type { Frequency } from "../../lib/recurring.ts";
-
+export type Frequency = "weekly" | "monthly";
 export type Account = { id: string; name: string; kind: string; openingBalance: number };
 export type TransactionType = "income" | "expense" | "transfer" | "adjustment";
 export type Transaction = { id: string; type: TransactionType; amount: number; accountId: string; toAccountId: string | null; category: string; note: string; date: string; createdAt?: string; queuedAt?: string };
