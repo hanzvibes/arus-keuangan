@@ -118,7 +118,39 @@ pnpm lint
 
 ## Deployment
 
-Arus tidak bergantung pada Cloudflare D1 lagi. Database dan auth berada di Supabase, sehingga frontend/API dapat dipindahkan ke Vercel atau hosting kompatibel Next.js lainnya selama environment Supabase tersedia.
+Arus sekarang menggunakan build **Next.js native**:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+pnpm start
+```
+
+Cloudflare/Vinext tidak lagi dipakai oleh script runtime aplikasi. Database dan auth berada di Supabase.
+
+### Vercel
+
+Repository sudah menyertakan `vercel.json` dengan framework `nextjs`, install command pnpm, build command Next.js, serta header PWA untuk service worker.
+
+Konfigurasi project di Vercel:
+
+1. Import repository `hanzvibes/arus-keuangan`.
+2. Root Directory: repository root.
+3. Framework Preset: Next.js.
+4. Tambahkan environment variable berikut untuk **Production** dan **Preview**:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+5. Deploy branch `main`.
+
+Tidak diperlukan database Vercel, D1 binding, Wrangler, atau Cloudflare Worker.
+
+Untuk email confirmation Supabase, tambahkan domain production Vercel ke Supabase Auth URL Configuration dan izinkan callback:
+
+```text
+https://<domain-production>/auth/callback
+```
+
+Preview deployment yang memakai signup/email confirmation juga perlu origin preview yang diizinkan, atau gunakan domain development khusus yang stabil.
 
 ## Security
 
