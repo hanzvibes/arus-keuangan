@@ -50,13 +50,6 @@
   ],
   "exclude": [
     "node_modules",
-    "examples",
-    "build",
-    "db",
-    "drizzle",
-    "scripts",
-    "vite.config.ts",
-    "drizzle.config.ts",
-    "cloudflare-env.d.ts"
+    "examples"
   ]
 }
