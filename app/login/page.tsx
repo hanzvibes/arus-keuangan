@@ -115,3 +115,34 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
+                  minLength={6}
+                  placeholder="Masukkan password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </label>
+
+            {error && <div className="auth-error" role="alert">{error}</div>}
+
+            <button className="auth-submit" type="submit" disabled={submitting}>
+              <span>{submitting ? "Memverifikasi..." : "Masuk"}</span>
+              {!submitting && <ArrowRight size={19} />}
+            </button>
+          </form>
+
+          <p className="auth-footnote auth-switch">
+            Belum punya akun? <a href="/register">Buat akun Arus</a>
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
