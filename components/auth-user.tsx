@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut, Pencil, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { clearDeviceCache, readQueue } from "@/lib/offline";
 
@@ -28,20 +28,34 @@ export function AuthUser({ variant }: AuthUserProps) {
 
     try {
       const supabase = createClient();
-      void supabase.auth.getUser().then(({ data }) => {
+
+      void (async () => {
+        const { data } = await supabase.auth.getUser();
         if (!active || !data.user) return;
+
         const email = data.user.email || "";
         const metadata = data.user.user_metadata as Record<string, unknown>;
         const metadataName =
           typeof metadata.full_name === "string" ? metadata.full_name.trim() :
           typeof metadata.name === "string" ? metadata.name.trim() :
           "";
+
+        const profile = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (!active) return;
+
+        const profileName = profile.data?.full_name?.trim() || "";
         const emailName = email.split("@")[0]?.trim() || "";
+
         setViewer({
-          name: metadataName || emailName || fallback.name,
+          name: profileName || metadataName || emailName || fallback.name,
           email: email || fallback.email,
         });
-      });
+      })();
     } catch {
       // The auth gate handles missing configuration. Keep a neutral fallback here.
     }
@@ -106,15 +120,21 @@ export function AuthUser({ variant }: AuthUserProps) {
             <p>{viewer.name} · {viewer.email}</p>
           </div>
         </div>
-        <button
-          className="restore-select auth-settings-logout"
-          type="button"
-          disabled={signingOut}
-          onClick={() => void signOut()}
-        >
-          <LogOut size={17} />
-          {signingOut ? "Keluar..." : "Keluar dari akun"}
-        </button>
+        <div className="auth-account-actions">
+          <a className="restore-select auth-profile-link" href="/profile">
+            <Pencil size={16} />
+            Kelola profil
+          </a>
+          <button
+            className="restore-select auth-settings-logout"
+            type="button"
+            disabled={signingOut}
+            onClick={() => void signOut()}
+          >
+            <LogOut size={17} />
+            {signingOut ? "Keluar..." : "Keluar dari akun"}
+          </button>
+        </div>
       </div>
     );
   }
