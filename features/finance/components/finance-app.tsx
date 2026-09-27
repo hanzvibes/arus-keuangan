@@ -302,6 +302,7 @@ export function FinanceApp() {
       formatMoney={fmt}
       fileRef={fileRef}
       onRefresh={refresh}
+      hasPending={hasPending}
       onOpenInstallGuide={()=>setInstallGuideOpen(true)}
       onExportBackup={()=>void exportBackup()}
       onExportCsv={()=>void exportCsv()}
