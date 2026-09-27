@@ -27,3 +27,27 @@ test("finance domain types stay framework and persistence agnostic", async () =>
   assert.doesNotMatch(source, /supabase/i);
   assert.doesNotMatch(source, /\.\.\/\.\.\/lib\//);
 });
+
+test("root page stays a thin finance composition", async () => {
+  const source = await readFile("app/page.tsx", "utf8");
+  assert.match(source, /<FinanceApp\s*\/>/);
+  assert.doesNotMatch(source, /useState|useEffect|financeApi|supabase/i);
+  assert.ok(source.length < 1000, "app/page.tsx should remain composition-only");
+});
+
+test("finance UI stays split into feature tabs", async () => {
+  const source = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  for (const tab of [
+    "HomeTab",
+    "AccountsTab",
+    "TransactionsTab",
+    "BudgetTab",
+    "AnalyticsTab",
+    "SettingsTab",
+  ]) {
+    assert.match(source, new RegExp(tab));
+  }
+  assert.doesNotMatch(source, /className="account-group"/);
+  assert.doesNotMatch(source, /className="analytics-grid"/);
+  assert.doesNotMatch(source, /className="filter-bar"/);
+});
