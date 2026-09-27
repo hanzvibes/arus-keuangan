@@ -10,6 +10,7 @@ import {
   removeQueuedTransaction,
   writeSnapshot,
 } from "@/lib/offline";
+import { createClient } from "@/lib/supabase/client";
 import type { FinanceData, QueuedTransaction } from "@/domain/finance/types";
 
 const empty: FinanceData = {
@@ -21,6 +22,7 @@ const empty: FinanceData = {
 };
 
 export function useFinanceData() {
+  const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<FinanceData>(empty);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -31,20 +33,52 @@ export function useFinanceData() {
   const [syncingQueue, setSyncingQueue] = useState(false);
   const syncingRef = useRef(false);
 
-  const reloadQueue = useCallback(async () => {
-    setQueued(await readQueue<QueuedTransaction>());
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (!active) return;
+
+        if (authError || !authData.user) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        setUserId(authData.user.id);
+      } catch {
+        if (active) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
+  const reloadQueue = useCallback(async () => {
+    if (!userId) return;
+    setQueued(await readQueue<QueuedTransaction>(userId));
+  }, [userId]);
+
   const refresh = useCallback(async () => {
+    if (!userId) return;
+
     try {
       const next = await financeApi.read();
       setData(next);
-      void writeSnapshot(next).catch(console.error);
+      void writeSnapshot(userId, next).catch(console.error);
       setStale(false);
       setConnected(true);
       setError(false);
     } catch {
-      const cached = await readSnapshot<FinanceData>().catch(() => null);
+      const cached = await readSnapshot<FinanceData>(userId).catch(() => null);
       if (cached) {
         setData(cached);
         setStale(true);
@@ -55,16 +89,16 @@ export function useFinanceData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const syncQueue = useCallback(async () => {
-    if (syncingRef.current || !navigator.onLine) return;
+    if (!userId || syncingRef.current || !navigator.onLine) return;
 
     syncingRef.current = true;
     setSyncingQueue(true);
 
     try {
-      const pending = (await readQueue<QueuedTransaction>())
+      const pending = (await readQueue<QueuedTransaction>(userId))
         .sort((a, b) => a.queuedAt.localeCompare(b.queuedAt));
 
       for (const item of pending) {
@@ -90,7 +124,7 @@ export function useFinanceData() {
           break;
         }
 
-        await removeQueuedTransaction(item.id);
+        await removeQueuedTransaction(userId, item.id);
         await reloadQueue();
         setQueueError("");
       }
@@ -102,14 +136,17 @@ export function useFinanceData() {
       syncingRef.current = false;
       setSyncingQueue(false);
     }
-  }, [refresh, reloadQueue]);
+  }, [refresh, reloadQueue, userId]);
 
   useEffect(() => {
+    if (!userId) return;
     queueMicrotask(() => void refresh());
     void reloadQueue().catch(console.error);
-  }, [refresh, reloadQueue]);
+  }, [refresh, reloadQueue, userId]);
 
   useEffect(() => {
+    if (!userId) return;
+
     queueMicrotask(() => void syncQueue());
 
     const onOnline = () => {
@@ -125,7 +162,7 @@ export function useFinanceData() {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
     };
-  }, [refresh, syncQueue]);
+  }, [refresh, syncQueue, userId]);
 
   const shown = useMemo<FinanceData>(() => ({
     ...data,
@@ -139,19 +176,27 @@ export function useFinanceData() {
     ),
   }), [data, queued]);
 
+  const requireUserId = useCallback(() => {
+    if (!userId) throw new Error("Sesi user belum siap.");
+    return userId;
+  }, [userId]);
+
   const queueTransaction = useCallback(async (transaction: QueuedTransaction) => {
-    await enqueueTransaction(transaction);
+    const currentUserId = requireUserId();
+    await enqueueTransaction(currentUserId, transaction);
     await reloadQueue();
-  }, [reloadQueue]);
+  }, [reloadQueue, requireUserId]);
 
   const hasPending = useCallback(async () => {
-    return (await readQueue<QueuedTransaction>()).length > 0;
-  }, []);
+    const currentUserId = requireUserId();
+    return (await readQueue<QueuedTransaction>(currentUserId)).length > 0;
+  }, [requireUserId]);
 
   const hasPendingForAccount = useCallback(async (accountId: string) => {
-    return (await readQueue<QueuedTransaction>())
+    const currentUserId = requireUserId();
+    return (await readQueue<QueuedTransaction>(currentUserId))
       .some(item => item.accountId === accountId || item.toAccountId === accountId);
-  }, []);
+  }, [requireUserId]);
 
   const runExclusive = useCallback(async function runExclusive<T>(
     action: () => Promise<T>,
@@ -166,34 +211,38 @@ export function useFinanceData() {
   }, []);
 
   const discardQueued = useCallback(async (id: string) => {
+    const currentUserId = requireUserId();
+
     return runExclusive(async () => {
       if (navigator.onLine) {
         const current = await financeApi.read();
         if (current.transactions.some(item => item.id === id)) {
-          await removeQueuedTransaction(id);
+          await removeQueuedTransaction(currentUserId, id);
           await reloadQueue();
           setData(current);
-          void writeSnapshot(current).catch(console.error);
+          void writeSnapshot(currentUserId, current).catch(console.error);
           setQueueError("");
           return "already-synced" as const;
         }
       }
 
-      await removeQueuedTransaction(id);
+      await removeQueuedTransaction(currentUserId, id);
       await reloadQueue();
       setQueueError("");
       return "discarded" as const;
     });
-  }, [reloadQueue, runExclusive]);
+  }, [reloadQueue, requireUserId, runExclusive]);
 
   const clearOfflineCache = useCallback(async () => {
+    const currentUserId = requireUserId();
+
     return runExclusive(async () => {
       if (await hasPending()) {
         throw new Error("Selesaikan transaksi tertunda sebelum menghapus data offline.");
       }
-      await clearDeviceCache();
+      await clearDeviceCache(currentUserId);
     });
-  }, [hasPending, runExclusive]);
+  }, [hasPending, requireUserId, runExclusive]);
 
   return {
     data,
