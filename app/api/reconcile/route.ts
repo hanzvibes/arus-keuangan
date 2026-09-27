@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       ? reconciliationDelta(expected, actual)
       : null;
 
-    if (!accountId || !note || note.length > 150 || !isCalendarDate(date) || delta === null || delta === 0) {
+    if (!accountId || !note || note.length > 150 || !isCalendarDate(date) || expected === null || actual === null || delta === null || delta === 0) {
       return Response.json({ error: "Isi saldo sebenarnya dan alasan penyesuaian dengan benar." }, { status: 400 });
     }
 
