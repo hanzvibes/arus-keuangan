@@ -53,10 +53,15 @@ export default function LoginPage() {
 
       const params = new URLSearchParams(window.location.search);
       const requested = params.get("next");
-      const destination =
-        requested && requested.startsWith("/") && !requested.startsWith("//")
-          ? requested
-          : "/";
+      let destination = "/";
+
+      if (requested) {
+        const candidate = new URL(requested, window.location.origin);
+        if (candidate.origin === window.location.origin) {
+          destination = `${candidate.pathname}${candidate.search}${candidate.hash}`;
+        }
+      }
+
       window.location.assign(destination);
     } catch {
       setError("Login belum bisa diproses. Coba lagi.");
