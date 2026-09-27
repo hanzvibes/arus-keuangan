@@ -75,11 +75,11 @@ export type ReconcileInput = {
 };
 
 export class FinanceRepositoryError extends Error {
-  constructor(
-    readonly kind: "UNAUTHENTICATED" | "DATA_ACCESS",
-    message: string,
-  ) {
+  readonly kind: "UNAUTHENTICATED" | "DATA_ACCESS";
+
+  constructor(kind: "UNAUTHENTICATED" | "DATA_ACCESS", message: string) {
     super(message);
+    this.kind = kind;
     this.name = "FinanceRepositoryError";
   }
 }
