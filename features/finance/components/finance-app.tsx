@@ -9,14 +9,18 @@ import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
 import { accountBalance as balance, budgetSummary, reconciliationDelta } from "@/lib/finance";
 import { allCategories, defaultCategories } from "@/lib/categories";
-import { RecurringSection } from "@/features/finance/components/recurring-section";
 import { AuthUser } from "@/components/auth-user";
-import { CategoryManager } from "@/features/finance/components/category-manager";
 import { usePwa } from "@/lib/use-pwa";
 import { FinanceApiError, financeApi } from "@/data/client/finance-api";
 import type { Account, Transaction, Budget, QueuedTransaction, TransactionType } from "@/domain/finance/types";
 import { useFinanceData } from "@/features/finance/hooks/use-finance-data";
-import { categoryEmoji, dateText, day, money } from "@/features/finance/lib/presentation";
+import { day, money } from "@/features/finance/lib/presentation";
+import { AccountsTab } from "@/features/finance/components/tabs/accounts-tab";
+import { AnalyticsTab } from "@/features/finance/components/tabs/analytics-tab";
+import { BudgetTab } from "@/features/finance/components/tabs/budget-tab";
+import { HomeTab } from "@/features/finance/components/tabs/home-tab";
+import { SettingsTab } from "@/features/finance/components/tabs/settings-tab";
+import { TransactionsTab } from "@/features/finance/components/tabs/transactions-tab";
 
 type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "settings";
 type Mode = "account" | "transaction" | "budget" | "quick" | null;
@@ -69,7 +73,6 @@ export function FinanceApp() {
   const beforeBudget=activeBudget?shown.transactions.filter(t=>t.type==="expense"&&t.category===category&&t.date.startsWith(date.slice(0,7))&&t.id!==editing).reduce((sum,t)=>sum+t.amount,0):0;
   const afterBudget=beforeBudget+Number(amount||0);
   const changeMonth=(delta:number)=>{const [year,number]=month.split("-").map(Number);const next=new Date(year,number-1+delta,1);setMonth([next.getFullYear(),String(next.getMonth()+1).padStart(2,"0")].join("-"));};
-  const periodControls=<div className="period-control"><button aria-label="Bulan sebelumnya" onClick={()=>changeMonth(-1)}><ChevronLeft size={19}/></button><span>{new Date(month+"-01T12:00:00").toLocaleDateString("id-ID",{month:"long",year:"numeric"})}</span><button aria-label="Bulan berikutnya" onClick={()=>changeMonth(1)}><ChevronRight size={19}/></button></div>;
   async function dropQueued(id:string){
     try{
       const result=await discardQueued(id);
@@ -80,8 +83,6 @@ export function FinanceApp() {
       else toast.error(e instanceof Error?e.message:"Antrean belum bisa diubah.");
     }
   }
-  const displayTx=(items:Transaction[],deletable=false)=><div className="transaction-list">{items.length?items.map(t=>{const waiting=queued.some(q=>q.id===t.id), adjustment=t.type==="adjustment";return <div className="transaction-row" key={t.id}><span className={"transaction-icon "+t.type}>{adjustment?<Scale size={18}/>:t.type==="transfer"?<ArrowLeftRight size={18}/>:categoryEmoji(t.category)}</span><div className="transaction-info"><b>{adjustment?"Penyesuaian saldo · "+t.note:t.note||t.category}</b><small>{shown.accounts.find(a=>a.id===t.accountId)?.name||"Akun"} · {dateText(t.date)}{waiting?" · Menunggu sinkronisasi":""}</small></div><strong className={t.type==="income"||adjustment&&t.amount>0?"green":""}>{adjustment?(t.amount>0?"+ ":"− ")+fmt(Math.abs(t.amount)):(t.type==="income"?"+ ":t.type==="expense"?"− ":"")+fmt(t.amount)}</strong>{deletable&&(adjustment?<span className="immutable-note">Tercatat</span>:waiting?<button className="row-delete" disabled={syncingQueue} aria-label={"Batalkan antrean "+(t.note||t.category)} onClick={()=>void dropQueued(t.id)}><Trash2 size={16}/></button>:<><button className="row-edit" aria-label={"Edit "+(t.note||t.category)} onClick={()=>edit("transaction",t)}><Pencil size={16}/></button><button className="row-delete" aria-label={"Hapus "+(t.note||t.category)} onClick={()=>setTarget({entity:"transaction",id:t.id,label:t.note||t.category})}><Trash2 size={16}/></button></>)}</div>}):<div className="empty-inside">Belum ada transaksi untuk filter ini.</div>}</div>;
-  const budgetRow=(b:Budget)=>{const spent=expenses.filter(t=>t.category===b.category).reduce((s,t)=>s+t.amount,0),percent=Math.round(spent/b.amount*100),ratio=spent/b.amount;return <div className="budget-row"><div className="budget-line"><div><span className="budget-icon">{categoryEmoji(b.category)}</span><b>{b.category}</b></div><strong className={ratio>=1?"red":ratio>=.8?"amber":"green"}>{percent}%</strong></div><div className="progress"><span style={{width:Math.min(percent,100)+"%",background:ratio>=1?"#df5a55":ratio>=.8?"#d79b2d":undefined}}/></div><div className="budget-numbers"><span>Terpakai {fmt(spent)}</span><span>Sisa {fmt(Math.max(0,b.amount-spent))}</span></div>{ratio>=.8&&<small className={"budget-warning "+(ratio>=1?"red":"amber")}>{ratio>1?"Budget terlampaui":ratio===1?"Budget habis":"Mendekati batas budget"}</small>}</div>};
   const changeTab=(next:Tab)=>{setTab(next);setQuery("");window.scrollTo({top:0,behavior:"smooth"});};
   async function copyAppLink(){
     try{await navigator.clipboard.writeText(window.location.origin+"/");toast.success("Tautan Arus disalin. Tempel di Chrome atau Safari.");}
@@ -198,8 +199,6 @@ export function FinanceApp() {
       else toast.error(e instanceof Error?e.message:"Data offline belum bisa dihapus.");
     }
   }
-  const screenTitle=(title:string,subtitle:string,action?:string,click?:()=>void)=><div className="screen-title"><div><h1>{title}</h1><p>{subtitle}</p></div>{action&&<button onClick={click}><Plus size={16}/>{action}</button>}</div>;
-  const emptyState=(title:string,body:string,action:string,click:()=>void)=><div className="empty-state"><span><Wallet size={25}/></span><h2>{title}</h2><p>{body}</p><button onClick={click}><Plus size={16}/>{action}</button></div>;
   return <><Toaster position="top-center" richColors/><div className="app-shell">
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
     <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions"><button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button><button aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button><button aria-label="Lihat analitik" onClick={()=>changeTab("analytics")}><BarChart3 size={19}/></button></div></header>
@@ -207,18 +206,110 @@ export function FinanceApp() {
     {pwa.updateAvailable&&<div className="update-strip" role="status"><span>Versi baru Arus siap digunakan.</span><button onClick={pwa.applyUpdate}>Perbarui</button></div>}
     {!pwa.installed&&!installTipDismissed&&<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>}
     {(offline||queued.length>0)&&<div className="offline-strip"><WifiOff size={18}/><span>{offline?"Menampilkan salinan terakhir. Transaksi baru akan menunggu koneksi.":queueError?`${queued.length} transaksi tertunda: ${queueError}`:`${queued.length} transaksi menunggu sinkronisasi.`}</span>{queued.length>0&&<button onClick={()=>changeTab("settings")}>Tinjau</button>}{offline?<button onClick={()=>void refresh()}>Coba lagi</button>:queued.length>0&&<button disabled={syncingQueue} onClick={()=>void syncQueue()}>{syncingQueue?"Mengirim...":"Kirim"}</button>}</div>}
-    {tab==="home"&&<><section className="balance-card"><div className="balance-top"><span>TOTAL SALDO</span><button aria-label="Sembunyikan atau tampilkan saldo" onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button></div><div className="balance-value">{fmt(total)}</div><div className="balance-bottom"><div><span>Dari akun</span><strong>{shown.accounts.length} akun</strong></div><Wallet className="balance-art" size={128} strokeWidth={1.2}/></div></section><div className="quick-actions"><button onClick={()=>open("transaction","income")}><span className="action-icon income"><Plus size={22}/></span>Pemasukan</button><button onClick={()=>open("transaction","expense")}><span className="action-icon expense"><Minus size={22}/></span>Pengeluaran</button><button className="all-actions" aria-label="Lihat budget" onClick={()=>changeTab("budget")}><LayoutGrid size={23}/></button></div>
-    <button className="quick-text-cta" onClick={()=>open("quick")}><MessageCircle size={18}/> Catat cepat lewat teks <ChevronRight size={17}/></button>
-    <div className="home-grid"><section className="surface week-card"><div className="section-head"><div><h2>Pengeluaran 7 hari</h2><p>Paling tinggi: {high.value?dateText(high.date):"—"}</p></div><div className="align-right"><strong>{fmt(weekTotal)}</strong><button className="text-link" onClick={()=>changeTab("analytics")}>Detail <ChevronRight size={16}/></button></div></div><div className="week-chart" role="img" aria-label="Grafik pengeluaran tujuh hari terakhir">{week.map((d,i)=><div className="bar-col" key={d.date}><div className="bar-wrap"><div className={"bar "+(i===6?"current":"")} style={{height:Math.max(d.value?16:7,d.value/peak*76)+"px"}} title={dateText(d.date)+": "+money(d.value)}/></div><span>{d.label}</span></div>)}</div></section><section className="surface recent-card"><div className="section-head"><h2>Transaksi Terakhir</h2><button className="text-link" onClick={()=>changeTab("transactions")}>Lihat semua <ChevronRight size={16}/></button></div>{displayTx(shown.transactions.slice(0,4))}</section></div><section className="surface home-budget"><div className="section-head"><div><h2>Budget</h2><p>Pantau batas pengeluaranmu</p></div><button className="text-link" onClick={()=>changeTab("budget")}>Lihat <ChevronRight size={16}/></button></div>{periodControls}{shown.budgets.length?shown.budgets.slice(0,2).map(b=><div key={b.id}>{budgetRow(b)}</div>):<p className="empty-inline">Belum ada budget. Atur batas pengeluaranmu.</p>}</section></>}
-    {tab==="accounts"&&<section className="screen">{screenTitle("Akun Finansial","Kelola sumber keuanganmu.","Tambah Akun",()=>open("account"))}<div className="account-summary surface"><span>TOTAL SALDO</span><strong>{fmt(total)}</strong><small>Dari {shown.accounts.length} akun</small></div>{shown.accounts.length?["bank","ewallet","cash"].map(k=>{const group=shown.accounts.filter(a=>a.kind===k);return group.length?<div className="account-group" key={k}><div className="group-title"><h2>{k==="bank"?"Akun Bank":k==="ewallet"?"E-Wallet":"Cash"}</h2><span>{fmt(group.reduce((s,a)=>s+balance(a,shown.transactions),0))}</span></div>{group.map(a=><div className="account-row surface" key={a.id}><span className="account-icon">{k==="bank"?<Landmark size={21}/>:k==="ewallet"?<CreditCard size={21}/>:<Wallet size={21}/>}</span><div className="account-name"><b>{a.name}</b><small>{k==="ewallet"?"E-WALLET":k.toUpperCase()}</small></div><strong>{fmt(balance(a,shown.transactions))}</strong><div className="account-row-actions"><button className="account-reconcile" disabled={offline} onClick={()=>startReconcile(a)}><Scale size={15}/> Cocokkan saldo</button><button className="row-edit" aria-label={"Edit "+a.name} onClick={()=>edit("account",a)}><Pencil size={16}/></button><button className="row-delete" aria-label={"Hapus "+a.name} onClick={()=>setTarget({entity:"account",id:a.id,label:a.name})}><Trash2 size={16}/></button></div></div>)}</div>:null;}):emptyState("Belum ada akun","Tambahkan rekening, dompet digital, atau uang tunai.","Tambah akun",()=>open("account"))}</section>}
-    {tab==="transactions"&&<section className="screen">{screenTitle("Transaksi","Riwayat dan jadwal keuanganmu.","Catat Baru",()=>open("transaction"))}{periodControls}
-      <div className="mini-stats"><div><span>Pemasukan</span><strong className="green">{fmt(income)}</strong></div><div><span>Pengeluaran</span><strong>{fmt(out)}</strong></div></div>
-      <div className="view-switch" role="group" aria-label="Tampilan transaksi"><button className={transactionView==="history"?"active":""} aria-pressed={transactionView==="history"} onClick={()=>setTransactionView("history")}>Riwayat</button><button className={transactionView==="schedule"?"active":""} aria-pressed={transactionView==="schedule"} onClick={()=>setTransactionView("schedule")}>Jadwal {shown.recurring.filter(r=>r.active&&r.nextDate<=day()).length>0&&<span className="view-count">{shown.recurring.filter(r=>r.active&&r.nextDate<=day()).length}</span>}</button></div>
-      {transactionView==="history"?<><div className="filter-bar"><select aria-label="Filter jenis" value={filterType} onChange={e=>setFilterType(e.target.value)}><option value="all">Semua jenis</option><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option><option value="transfer">Transfer</option><option value="adjustment">Penyesuaian saldo</option></select><select aria-label="Filter akun" value={filterAccount} onChange={e=>setFilterAccount(e.target.value)}><option value="all">Semua akun</option>{shown.accounts.map(a=><option value={a.id} key={a.id}>{a.name}</option>)}</select><select aria-label="Filter kategori" value={filterCategory} onChange={e=>setFilterCategory(e.target.value)}><option value="all">Semua kategori</option>{categories.map(c=><option value={c} key={c}>{c}</option>)}</select></div><label className="search-box"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari transaksi..." aria-label="Cari transaksi"/></label><div className="surface transaction-surface">{displayTx(filteredTransactions,true)}</div></>:<RecurringSection rules={shown.recurring} accounts={data.accounts} categories={categories} month={month} offline={offline} onChange={refresh} money={fmt}/>}
-    </section>}
-    {tab==="budget"&&<section className="screen">{screenTitle("Budget","Kelola dan pantau batas pengeluaranmu.","Tambah Budget",()=>open("budget"))}{periodControls}<div className="budget-overview surface"><div className="donut" style={{"--percent":Math.min(100,budgetPercent)+"%"} as React.CSSProperties}><span>{budgetPercent}%</span></div><div><span className="eyebrow">BUDGET TERPAKAI BULAN INI</span><strong>{fmt(budgetedSpend)}</strong><small>dari {fmt(budgetTotal)} · hanya kategori berbudget</small></div></div><h2 className="section-label">Kategori ({shown.budgets.length})</h2>{shown.budgets.length?shown.budgets.map(b=><div className="surface budget-item" key={b.id}>{budgetRow(b)}<div className="budget-actions"><button onClick={()=>edit("budget",b)}><Pencil size={15}/> Edit</button><button className="subtle-delete" onClick={()=>setTarget({entity:"budget",id:b.id,label:b.category})}><Trash2 size={15}/> Hapus</button></div></div>):emptyState("Belum ada budget","Tetapkan batas pengeluaran bulanan untuk kategori pilihanmu.","Tambah budget",()=>open("budget"))}</section>}
-    {tab==="analytics"&&<section className="screen">{screenTitle("Analitik","Lihat arah uangmu per bulan.")}{periodControls}<div className="analytics-grid"><div className="surface analytics-stat"><span>PEMASUKAN</span><strong className="green">{fmt(income)}</strong><ArrowDownLeft size={20}/></div><div className="surface analytics-stat"><span>PENGELUARAN</span><strong>{fmt(out)}</strong><ArrowUpRight size={20}/></div></div><div className="surface analytics-net"><span>Arus kas bersih</span><strong className={income-out>=0?"green":"red"}>{fmt(income-out)}</strong><p>Selisih pemasukan dan pengeluaran bulan ini.</p></div><div className="surface analytics-categories"><div className="section-head"><h2>Pengeluaran per kategori</h2></div>{byCategory.length?byCategory.map(x=><div className="category-line" key={x.category}><span className="category-icon">{categoryEmoji(x.category)}</span><div><b>{x.category}</b><span className="track"><i style={{width:Math.max(5,x.amount/out*100)+"%"}}/></span></div><strong>{fmt(x.amount)}</strong></div>):<p className="empty-inline">Belum ada pengeluaran bulan ini.</p>}</div></section>}
-    {tab==="settings"&&<section className="screen">{screenTitle("Data & Cadangan","Atur kategori dan simpan salinan catatanmu.")}<AuthUser variant="settings"/><div className="surface data-panel pwa-panel"><div className="data-panel-head"><span className="pwa-panel-icon"><Wallet size={23}/></span><div><h2>Pasang Arus</h2><p>Buka langsung dari layar utama seperti aplikasi di HP.</p></div></div>{pwa.installed?<p className="pwa-status"><Check size={16}/> Sudah terpasang di perangkat ini.</p>:<div className="pwa-actions">{pwa.canInstall&&<button className="restore-select" onClick={()=>void pwa.install()}><Download size={17}/> Pasang di perangkat</button>}<button className="restore-select" onClick={()=>setInstallGuideOpen(true)}>Cara pasang di HP</button></div>}{pwa.ready&&<p className="pwa-footnote">Catatan terakhir tersedia saat offline. Transaksi baru akan dikirim setelah tersambung.</p>}</div><CategoryManager custom={data.categories} offline={offline} pendingCount={queued.length} onChange={refresh}/><div className="surface data-panel"><div className="data-panel-head"><Download size={22}/><div><h2>Unduh data</h2><p>Cadangan JSON bisa dipulihkan; CSV untuk membuka transaksi di spreadsheet.</p></div></div><div className="data-actions"><button disabled={queued.length>0} onClick={()=>void exportBackup()}><Download size={17}/> Unduh cadangan</button><button disabled={queued.length>0} onClick={()=>void exportCsv()}><Download size={17}/> Ekspor CSV</button></div>{queued.length>0&&<p className="inline-note">Selesaikan transaksi tertunda agar unduhan memuat semua catatan.</p>}</div><div className="surface data-panel"><div className="data-panel-head"><Upload size={22}/><div><h2>Pulihkan cadangan</h2><p>Isi saat ini akan diganti seluruhnya. Unduh cadangan terbaru sebelum memulihkan.</p></div></div><input ref={fileRef} hidden type="file" accept=".json,application/json" onChange={e=>void selectBackup(e.target.files?.[0])}/><button className="restore-select" onClick={()=>fileRef.current?.click()}><Upload size={17}/> Pilih file JSON</button></div><div className="surface data-panel"><div className="data-panel-head"><WifiOff size={22}/><div><h2>Data offline</h2><p>Arus menyimpan salinan terakhir di perangkat ini. Transaksi baru saat offline akan dikirim saat koneksi kembali.</p></div></div><p className="offline-count">{queued.length} transaksi menunggu sinkronisasi</p>{queued.length>0&&<div className="pending-list"><div className="pending-list-head"><h3>Transaksi tertunda</h3><button disabled={offline||syncingQueue} onClick={()=>void syncQueue()}>{syncingQueue?"Mengirim...":"Kirim sekarang"}</button></div>{queueError&&<p className="inline-note">{queueError}</p>}{displayTx(queued.slice().sort((a,b)=>a.queuedAt.localeCompare(b.queuedAt)),true)}</div>}<button className="restore-select" disabled={queued.length>0||syncingQueue} onClick={()=>void removeDeviceCache()}>Hapus salinan perangkat</button>{queued.length>0&&<p className="inline-note">Kirim atau batalkan transaksi tertunda sebelum menghapus salinan.</p>}</div><p className="data-footnote">Data contoh tidak ikut diekspor. Catatan asli tersimpan di aplikasi privat ini.</p></section>}
+    {tab==="home"&&<HomeTab
+      hidden={hidden}
+      onToggleHidden={()=>setHidden(!hidden)}
+      total={total}
+      accountCount={shown.accounts.length}
+      formatMoney={fmt}
+      onIncome={()=>open("transaction","income")}
+      onExpense={()=>open("transaction","expense")}
+      onBudget={()=>changeTab("budget")}
+      onQuick={()=>open("quick")}
+      onAnalytics={()=>changeTab("analytics")}
+      onTransactions={()=>changeTab("transactions")}
+      week={week}
+      high={high}
+      weekTotal={weekTotal}
+      peak={peak}
+      accounts={shown.accounts}
+      transactions={shown.transactions}
+      queued={queued}
+      budgets={shown.budgets}
+      expenses={expenses}
+      month={month}
+      onMonthChange={changeMonth}
+    />}
+    {tab==="accounts"&&<AccountsTab
+      accounts={shown.accounts}
+      transactions={shown.transactions}
+      offline={offline}
+      total={total}
+      formatMoney={fmt}
+      onAdd={()=>open("account")}
+      onReconcile={startReconcile}
+      onEdit={account=>edit("account",account)}
+      onDelete={account=>setTarget({entity:"account",id:account.id,label:account.name})}
+    />}
+    {tab==="transactions"&&<TransactionsTab
+      month={month}
+      onMonthChange={changeMonth}
+      income={income}
+      out={out}
+      formatMoney={fmt}
+      transactionView={transactionView}
+      onTransactionViewChange={setTransactionView}
+      filterType={filterType}
+      onFilterTypeChange={setFilterType}
+      filterAccount={filterAccount}
+      onFilterAccountChange={setFilterAccount}
+      filterCategory={filterCategory}
+      onFilterCategoryChange={setFilterCategory}
+      query={query}
+      onQueryChange={setQuery}
+      filteredTransactions={filteredTransactions}
+      recurring={shown.recurring}
+      accounts={data.accounts}
+      categories={categories}
+      offline={offline}
+      queued={queued}
+      syncingQueue={syncingQueue}
+      onRefresh={refresh}
+      onAdd={()=>open("transaction")}
+      onDiscardQueued={id=>void dropQueued(id)}
+      onEdit={transaction=>edit("transaction",transaction)}
+      onDelete={transaction=>setTarget({entity:"transaction",id:transaction.id,label:transaction.note||transaction.category})}
+    />}
+    {tab==="budget"&&<BudgetTab
+      month={month}
+      onMonthChange={changeMonth}
+      budgetPercent={budgetPercent}
+      budgetedSpend={budgetedSpend}
+      budgetTotal={budgetTotal}
+      budgets={shown.budgets}
+      expenses={expenses}
+      formatMoney={fmt}
+      onAdd={()=>open("budget")}
+      onEdit={budget=>edit("budget",budget)}
+      onDelete={budget=>setTarget({entity:"budget",id:budget.id,label:budget.category})}
+    />}
+    {tab==="analytics"&&<AnalyticsTab
+      month={month}
+      onMonthChange={changeMonth}
+      income={income}
+      out={out}
+      byCategory={byCategory}
+      formatMoney={fmt}
+    />}
+    {tab==="settings"&&<SettingsTab
+      pwa={pwa}
+      categories={data.categories}
+      accounts={shown.accounts}
+      queued={queued}
+      offline={offline}
+      queueError={queueError}
+      syncingQueue={syncingQueue}
+      formatMoney={fmt}
+      fileRef={fileRef}
+      onRefresh={refresh}
+      onOpenInstallGuide={()=>setInstallGuideOpen(true)}
+      onExportBackup={()=>void exportBackup()}
+      onExportCsv={()=>void exportCsv()}
+      onSelectBackup={file=>void selectBackup(file)}
+      onSyncQueue={()=>void syncQueue()}
+      onDiscardQueued={id=>void dropQueued(id)}
+      onRemoveDeviceCache={()=>void removeDeviceCache()}
+    />}
     </>}</div></main>
     <nav className="bottom-nav" aria-label="Navigasi utama"><button className={tab==="home"?"selected":""} aria-label="Beranda" onClick={()=>changeTab("home")}><Home size={23}/></button><button className={tab==="accounts"?"selected":""} aria-label="Akun" onClick={()=>changeTab("accounts")}><Wallet size={23}/></button><button className="nav-add" aria-label="Catat cepat lewat teks" onClick={()=>open("quick")}><Plus size={26}/></button><button className={tab==="transactions"?"selected":""} aria-label="Transaksi" onClick={()=>changeTab("transactions")}><ArrowLeftRight size={23}/></button><button className={tab==="analytics"||tab==="budget"?"selected":""} aria-label="Analitik" onClick={()=>changeTab("analytics")}><BarChart3 size={23}/></button></nav>
     <Drawer open={installGuideOpen} onOpenChange={setInstallGuideOpen} direction="bottom"><DrawerContent className="form-sheet install-guide-sheet"><DrawerHeader><div className="drawer-heading"><DrawerTitle>Pasang Arus di HP</DrawerTitle><button aria-label="Tutup panduan" onClick={()=>setInstallGuideOpen(false)}><X size={19}/></button></div><DrawerDescription>Buka dari layar utama seperti aplikasi biasa.</DrawerDescription></DrawerHeader><div className="form-sheet-scroll install-guide-body" data-vaul-no-drag><p className="install-guide-callout">Jika Arus dibuka di dalam ChatGPT, salin tautannya lalu buka di Chrome (Android) atau Safari (iPhone).</p><div className="install-guide-link"><span>{typeof window!=="undefined"?window.location.origin+"/":"Tautan Arus"}</span><button onClick={()=>void copyAppLink()}>Salin tautan</button></div><h3>{pwa.ios?"Di iPhone · Safari":"Di Android · Chrome"}</h3><ol>{pwa.ios?<><li>Buka tautan Arus di Safari, lalu masuk dengan akun yang sama jika diminta.</li><li>Ketuk tombol Bagikan, kemudian pilih <b>Tambahkan ke Layar Utama</b>.</li><li>Ketuk <b>Tambah</b>. Ikon Arus akan muncul di layar utama.</li></>:<><li>Buka tautan Arus di Chrome, lalu masuk dengan akun yang sama jika diminta.</li><li>Ketuk menu <b>⋮</b> di Chrome, lalu pilih <b>Tambahkan ke layar utama</b> atau <b>Instal aplikasi</b>.</li><li>Konfirmasi <b>Instal</b>. Ikon Arus akan muncul di layar utama.</li></>}</ol>{pwa.canInstall&&<button className="save-button" onClick={()=>{setInstallGuideOpen(false);void pwa.install();}}>Pasang sekarang <Download size={17}/></button>}</div></DrawerContent></Drawer>
