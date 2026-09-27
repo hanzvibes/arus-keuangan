@@ -13,10 +13,6 @@ function friendlyAuthError(message: string) {
 }
 
 export default function LoginPage() {
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,9 +21,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("error");
-    if (reason === "config") {
-      setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
-    } else if (reason === "verification") {
+    if (reason === "verification") {
       setError("Tautan verifikasi tidak valid atau sudah kedaluwarsa. Coba daftar atau masuk kembali.");
     }
   }, []);
@@ -35,11 +29,6 @@ export default function LoginPage() {
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-
-    if (!configured) {
-      setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
-      return;
-    }
 
     setSubmitting(true);
     try {

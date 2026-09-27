@@ -13,10 +13,6 @@ function friendlySignupError(message: string) {
 }
 
 export default function RegisterPage() {
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,10 +37,6 @@ export default function RegisterPage() {
     }
     if (password !== confirmation) {
       setError("Konfirmasi password belum sama.");
-      return;
-    }
-    if (!configured) {
-      setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
       return;
     }
 
