@@ -126,7 +126,7 @@ pnpm build
 pnpm start
 ```
 
-Cloudflare/Vinext tidak lagi dipakai oleh script runtime aplikasi. Database dan auth berada di Supabase.
+Arus menggunakan Next.js native di Vercel. Database dan auth berada di Supabase. Legacy Cloudflare D1, Drizzle SQLite, Vinext, Vite runtime, dan Wrangler telah dihapus dari repository aktif.
 
 ### Vercel
 
@@ -162,8 +162,10 @@ Baseline keamanan database:
 - Fungsi mutasi atomik memakai `SECURITY INVOKER`.
 - Supabase security advisor dicek setelah perubahan schema.
 
-## Catatan migrasi D1
+## Database schema di version control
 
-Implementasi aktif tidak lagi membaca atau menulis Cloudflare D1. File legacy D1/Drizzle yang masih tersisa di repository hanya artefak starter lama dan dapat dihapus pada cleanup dependency terpisah.
+Schema aplikasi Supabase dicatat di `supabase/schemas/arus.sql`. File tersebut adalah snapshot deklaratif dari object aplikasi yang aktif: tabel finance, profil, RLS, RPC, dan trigger profil.
 
-Data D1 lama tidak otomatis dipindahkan karena runtime/database D1 production tidak tersedia melalui migrasi ini. Bila ada data lama yang perlu dipertahankan, ekspor dari instalasi D1 lama lalu restore melalui menu backup user setelah login.
+Karena finance schema awal dibuat sebelum workflow Supabase CLI dibakukan, repository belum memiliki baseline migration hasil `supabase db pull`. Ikuti `supabase/README.md` sebelum perubahan schema berikutnya agar migration history dan repository kembali sinkron.
+
+Data D1 lama tidak otomatis dipindahkan. Bila ada backup D1 yang masih perlu dipertahankan, restore melalui menu cadangan setelah user login.
