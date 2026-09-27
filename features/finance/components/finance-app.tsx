@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeftRight, ArrowDownLeft, ArrowUpRight, BarChart3, Check, ChevronLeft, ChevronRight, CreditCard, Download, Eye, EyeOff, Home, Landmark, LayoutGrid, MessageCircle, Minus, Pencil, Plus, Search, Settings2, Scale, Trash2, Upload, Wallet, WifiOff, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,18 +9,17 @@ import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
 import { accountBalance as balance, budgetSummary, reconciliationDelta } from "@/lib/finance";
 import { allCategories, defaultCategories } from "@/lib/categories";
-import { readQueue, readSnapshot, enqueueTransaction, removeQueuedTransaction, writeSnapshot, clearDeviceCache } from "@/lib/offline";
 import { RecurringSection } from "@/features/finance/components/recurring-section";
 import { AuthUser } from "@/components/auth-user";
 import { CategoryManager } from "@/features/finance/components/category-manager";
 import { usePwa } from "@/lib/use-pwa";
 import { FinanceApiError, financeApi } from "@/data/client/finance-api";
-import type { Account, Transaction, Budget, FinanceData as Data, QueuedTransaction, TransactionType } from "@/domain/finance/types";
+import type { Account, Transaction, Budget, QueuedTransaction, TransactionType } from "@/domain/finance/types";
+import { useFinanceData } from "@/features/finance/hooks/use-finance-data";
 
 type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "settings";
 type Mode = "account" | "transaction" | "budget" | "quick" | null;
 type EntryType = Exclude<TransactionType, "adjustment">;
-const empty: Data = { accounts: [], transactions: [], budgets: [], categories: [], recurring: [] };
 const money = (n: number) => "Rp " + Math.round(n).toLocaleString("id-ID");
 const day = (d = new Date()) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
 const dateText = (s: string) => new Date(s + "T12:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short" });
@@ -29,14 +28,15 @@ const navigation: { id: Tab; label: string; icon: typeof Home }[] = [
 ];
 const emoji = (c: string) => ({ "Makanan & Minuman":"☕",Transportasi:"🚗",Belanja:"🛍",Tagihan:"🧾",Kesehatan:"✚",Hiburan:"🎾",Pendidikan:"📚",Gaji:"↗",Transfer:"⇄" } as Record<string,string>)[c] || "◈";
 export function FinanceApp() {
-  const [data,setData]=useState<Data>(empty), [loading,setLoading]=useState(true), [error,setError]=useState(false);
+  const {
+    data, loading, error, queued, shown, offline, queueError, syncingQueue,
+    refresh, syncQueue, queueTransaction, discardQueued, hasPending,
+    hasPendingForAccount, runExclusive, clearOfflineCache,
+  } = useFinanceData();
   const [tab,setTab]=useState<Tab>("home"), [mode,setMode]=useState<Mode>(null), [type,setType]=useState<EntryType>("expense");
   const [hidden,setHidden]=useState(false), [query,setQuery]=useState(""), [saving,setSaving]=useState(false);
   const [weekEnd]=useState(()=>day());
   const [month,setMonth]=useState(day().slice(0,7)), [filterType,setFilterType]=useState("all"), [filterAccount,setFilterAccount]=useState("all"), [filterCategory,setFilterCategory]=useState("all"), [transactionView,setTransactionView]=useState<"history"|"schedule">("history");
-  const [queued,setQueued]=useState<QueuedTransaction[]>([]), [stale,setStale]=useState(false), [connected,setConnected]=useState(true);
-  const [queueError,setQueueError]=useState(""), [syncingQueue,setSyncingQueue]=useState(false);
-  const syncing=useRef(false);
   const pwa=usePwa();
   const [installTipDismissed,setInstallTipDismissed]=useState(()=>typeof window!=="undefined"&&sessionStorage.getItem("arus_install_tip_dismissed")==="1");
   const [installGuideOpen,setInstallGuideOpen]=useState(false);
@@ -49,32 +49,7 @@ export function FinanceApp() {
   const [category,setCategory]=useState(defaultCategories[0]), [note,setNote]=useState(""), [date,setDate]=useState(day());
   const [reconcileAccount,setReconcileAccount]=useState<Account|null>(null), [expectedBalance,setExpectedBalance]=useState(0);
   const [actualBalance,setActualBalance]=useState(""), [reconcileNote,setReconcileNote]=useState(""), [reconcileSaving,setReconcileSaving]=useState(false);
-  const refresh=useCallback(async()=>{
-    try { const d=await financeApi.read(); setData(d); void writeSnapshot(d).catch(console.error); setStale(false); setConnected(true); setError(false); }
-    catch { const cached=await readSnapshot<Data>().catch(()=>null); if(cached){setData(cached);setStale(true);setError(false);}else setError(true); } finally { setLoading(false); }
-  },[]);
-  const syncQueue=useCallback(async()=>{
-    if(syncing.current || !navigator.onLine)return;
-    syncing.current=true;setSyncingQueue(true);
-    try {
-      const pending=(await readQueue<QueuedTransaction>()).sort((a,b)=>a.queuedAt.localeCompare(b.queuedAt));
-      for(const item of pending){
-        const transaction={id:item.id,type:item.type,amount:item.amount,accountId:item.accountId,toAccountId:item.toAccountId,category:item.category,note:item.note,date:item.date};
-        try { await financeApi.save("POST",{...transaction,entity:"transaction"}); }
-        catch(e){setQueueError(e instanceof FinanceApiError?e.message:"Koneksi terputus. Coba kirim lagi saat tersambung.");break;}
-        await removeQueuedTransaction(item.id);setQueued(await readQueue<QueuedTransaction>());
-        setQueueError("");
-      }
-      if(pending.length)await refresh();
-    }catch{setQueueError("Koneksi terputus. Coba kirim lagi saat tersambung.");}
-    finally{syncing.current=false;setSyncingQueue(false);}
-  },[refresh]);
-  useEffect(()=>{queueMicrotask(()=>void refresh());void readQueue<QueuedTransaction>().then(setQueued).catch(console.error);},[refresh]);
-  useEffect(()=>{queueMicrotask(()=>void syncQueue());const onOnline=()=>{setConnected(true);void syncQueue();void refresh();};const onOffline=()=>setConnected(false);window.addEventListener("online",onOnline);window.addEventListener("offline",onOffline);return()=>{window.removeEventListener("online",onOnline);window.removeEventListener("offline",onOffline);};},[syncQueue,refresh]);
-  const offline=stale||!connected;
-  const shownBase=data;
-  const shown={...shownBase,transactions:[...queued.filter(t=>!shownBase.transactions.some(saved=>saved.id===t.id)),...shownBase.transactions].sort((a,b)=>b.date.localeCompare(a.date)||(b.queuedAt||b.createdAt||"").localeCompare(a.queuedAt||a.createdAt||""))};
-  const categories=allCategories(shownBase.categories), fmt=(n:number)=>hidden?"Rp •••••••":money(n);
+  const categories=allCategories(data.categories), fmt=(n:number)=>hidden?"Rp •••••••":money(n);
   const total=shown.accounts.reduce((s,a)=>s+balance(a,shown.transactions),0);
   useEffect(()=>{
     type Context = { registerTool: (tool: Record<string, unknown>, options: {signal:AbortSignal})=>void|Promise<void> };
@@ -99,20 +74,14 @@ export function FinanceApp() {
   const changeMonth=(delta:number)=>{const [year,number]=month.split("-").map(Number);const next=new Date(year,number-1+delta,1);setMonth([next.getFullYear(),String(next.getMonth()+1).padStart(2,"0")].join("-"));};
   const periodControls=<div className="period-control"><button aria-label="Bulan sebelumnya" onClick={()=>changeMonth(-1)}><ChevronLeft size={19}/></button><span>{new Date(month+"-01T12:00:00").toLocaleDateString("id-ID",{month:"long",year:"numeric"})}</span><button aria-label="Bulan berikutnya" onClick={()=>changeMonth(1)}><ChevronRight size={19}/></button></div>;
   async function dropQueued(id:string){
-    if(syncing.current){toast.info("Tunggu pengiriman transaksi selesai.");return;}
-    syncing.current=true;
     try{
-      if(navigator.onLine){
-        const current=await financeApi.read();
-        if(current.transactions.some(t=>t.id===id)){
-          await removeQueuedTransaction(id);setQueued(await readQueue<QueuedTransaction>());setData(current);void writeSnapshot(current).catch(console.error);setQueueError("");
-          toast.info("Transaksi sudah tercatat. Hapus dari riwayat jika ingin membatalkannya.");return;
-        }
-      }
-      await removeQueuedTransaction(id);setQueued(await readQueue<QueuedTransaction>());setQueueError("");
-      toast.success(navigator.onLine?"Transaksi dibatalkan dari antrean.":"Dihapus dari antrean perangkat. Periksa riwayat saat online.");
-    }catch(e){toast.error(e instanceof Error?e.message:"Antrean belum bisa diubah.");}
-    finally{syncing.current=false;}
+      const result=await discardQueued(id);
+      if(result==="already-synced") toast.info("Transaksi sudah tercatat. Hapus dari riwayat jika ingin membatalkannya.");
+      else toast.success(navigator.onLine?"Transaksi dibatalkan dari antrean.":"Dihapus dari antrean perangkat. Periksa riwayat saat online.");
+    }catch(e){
+      if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
+      else toast.error(e instanceof Error?e.message:"Antrean belum bisa diubah.");
+    }
   }
   const displayTx=(items:Transaction[],deletable=false)=><div className="transaction-list">{items.length?items.map(t=>{const waiting=queued.some(q=>q.id===t.id), adjustment=t.type==="adjustment";return <div className="transaction-row" key={t.id}><span className={"transaction-icon "+t.type}>{adjustment?<Scale size={18}/>:t.type==="transfer"?<ArrowLeftRight size={18}/>:emoji(t.category)}</span><div className="transaction-info"><b>{adjustment?"Penyesuaian saldo · "+t.note:t.note||t.category}</b><small>{shown.accounts.find(a=>a.id===t.accountId)?.name||"Akun"} · {dateText(t.date)}{waiting?" · Menunggu sinkronisasi":""}</small></div><strong className={t.type==="income"||adjustment&&t.amount>0?"green":""}>{adjustment?(t.amount>0?"+ ":"− ")+fmt(Math.abs(t.amount)):(t.type==="income"?"+ ":t.type==="expense"?"− ":"")+fmt(t.amount)}</strong>{deletable&&(adjustment?<span className="immutable-note">Tercatat</span>:waiting?<button className="row-delete" disabled={syncingQueue} aria-label={"Batalkan antrean "+(t.note||t.category)} onClick={()=>void dropQueued(t.id)}><Trash2 size={16}/></button>:<><button className="row-edit" aria-label={"Edit "+(t.note||t.category)} onClick={()=>edit("transaction",t)}><Pencil size={16}/></button><button className="row-delete" aria-label={"Hapus "+(t.note||t.category)} onClick={()=>setTarget({entity:"transaction",id:t.id,label:t.note||t.category})}><Trash2 size={16}/></button></>)}</div>}):<div className="empty-inside">Belum ada transaksi untuk filter ini.</div>}</div>;
   const budgetRow=(b:Budget)=>{const spent=expenses.filter(t=>t.category===b.category).reduce((s,t)=>s+t.amount,0),percent=Math.round(spent/b.amount*100),ratio=spent/b.amount;return <div className="budget-row"><div className="budget-line"><div><span className="budget-icon">{emoji(b.category)}</span><b>{b.category}</b></div><strong className={ratio>=1?"red":ratio>=.8?"amber":"green"}>{percent}%</strong></div><div className="progress"><span style={{width:Math.min(percent,100)+"%",background:ratio>=1?"#df5a55":ratio>=.8?"#d79b2d":undefined}}/></div><div className="budget-numbers"><span>Terpakai {fmt(spent)}</span><span>Sisa {fmt(Math.max(0,b.amount-spent))}</span></div>{ratio>=.8&&<small className={"budget-warning "+(ratio>=1?"red":"amber")}>{ratio>1?"Budget terlampaui":ratio===1?"Budget habis":"Mendekati batas budget"}</small>}</div>};
@@ -135,7 +104,7 @@ export function FinanceApp() {
     if(!reconcileNote.trim()){toast.error("Isi alasan penyesuaian.");return;}
     setReconcileSaving(true);
     try{
-      if((await readQueue<QueuedTransaction>()).some(t=>t.accountId===reconcileAccount.id||t.toAccountId===reconcileAccount.id))throw Error("Selesaikan transaksi tertunda untuk akun ini dulu.");
+      if(await hasPendingForAccount(reconcileAccount.id))throw Error("Selesaikan transaksi tertunda untuk akun ini dulu.");
       await financeApi.reconcile({accountId:reconcileAccount.id,expectedBalance,actualBalance:actual,note:reconcileNote.trim(),date:day()});
       setReconcileAccount(null);await refresh();toast.success("Saldo berhasil dicocokkan. Penyesuaian tercatat di riwayat.");
     }catch(e){
@@ -167,27 +136,33 @@ export function FinanceApp() {
     try{await financeApi.save(editing?"PATCH":"POST",{...body,id});setMode(null);setEditing(null);await refresh();toast.success(editing?"Perubahan disimpan.":"Berhasil disimpan.");}
     catch(e){
       if(mode==="transaction"&&!editing&&e instanceof TypeError){
-        try{const transaction:QueuedTransaction={id,type,amount:Number(amount),accountId:account,toAccountId:type==="transfer"?destination:null,category:type==="transfer"?"Transfer":category,note,date,queuedAt:new Date().toISOString()};await enqueueTransaction(transaction);setQueued(await readQueue<QueuedTransaction>());setMode(null);toast.info("Tersimpan di perangkat. Akan dikirim saat online.");}
+        try{const transaction:QueuedTransaction={id,type,amount:Number(amount),accountId:account,toAccountId:type==="transfer"?destination:null,category:type==="transfer"?"Transfer":category,note,date,queuedAt:new Date().toISOString()};await queueTransaction(transaction);setMode(null);toast.info("Tersimpan di perangkat. Akan dikirim saat online.");}
         catch{toast.error("Penyimpanan offline gagal. Formulir tetap terbuka.");}
       }else toast.error(e instanceof Error?e.message:"Gagal menyimpan.");
     }finally{setSaving(false);}
   }
   async function remove(){
     if(!target)return;
-    if(target.entity==="account"){
-      if(syncing.current){toast.info("Tunggu pengiriman transaksi selesai.");return;}
-      syncing.current=true;
-    }
+    const action=async()=>{
+      if(target.entity==="account"&&await hasPendingForAccount(target.id)){
+        throw Error("Akun dipakai transaksi tertunda. Kirim atau batalkan transaksi itu lebih dulu.");
+      }
+      await financeApi.remove(target);
+      await refresh();
+      toast.success("Berhasil dihapus.");
+    };
     try{
-      if(target.entity==="account"&&(await readQueue<QueuedTransaction>()).some(t=>t.accountId===target.id||t.toAccountId===target.id))throw Error("Akun dipakai transaksi tertunda. Kirim atau batalkan transaksi itu lebih dulu.");
-      await financeApi.remove(target);await refresh();toast.success("Berhasil dihapus.");
-    }catch(e){toast.error(e instanceof Error?e.message:"Gagal menghapus.");}
-    finally{if(target.entity==="account")syncing.current=false;setTarget(null);}
+      if(target.entity==="account") await runExclusive(action);
+      else await action();
+    }catch(e){
+      if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
+      else toast.error(e instanceof Error?e.message:"Gagal menghapus.");
+    }finally{setTarget(null);}
   }
   function download(filename:string,contents:string,mime:string){const url=URL.createObjectURL(new Blob([contents],{type:mime}));const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  async function exportBackup(){try{if((await readQueue<QueuedTransaction>()).length)throw Error("Selesaikan transaksi tertunda agar cadangan lengkap.");const backup=await financeApi.backup();download("arus-cadangan-"+day()+".json",JSON.stringify(backup,null,2),"application/json");toast.success("Cadangan berhasil diunduh.");}catch(e){toast.error(e instanceof Error?e.message:"Cadangan belum bisa diunduh.");}}
+  async function exportBackup(){try{if(await hasPending())throw Error("Selesaikan transaksi tertunda agar cadangan lengkap.");const backup=await financeApi.backup();download("arus-cadangan-"+day()+".json",JSON.stringify(backup,null,2),"application/json");toast.success("Cadangan berhasil diunduh.");}catch(e){toast.error(e instanceof Error?e.message:"Cadangan belum bisa diunduh.");}}
   async function exportCsv(){
-    try{if((await readQueue<QueuedTransaction>()).length)throw Error("Selesaikan transaksi tertunda agar CSV lengkap.");}
+    try{if(await hasPending())throw Error("Selesaikan transaksi tertunda agar CSV lengkap.");}
     catch(e){toast.error(e instanceof Error?e.message:"CSV belum bisa diunduh.");return;}
     const cell=(value:string|number)=>{const text=String(value);return '"'+(/^[\s\u0000-\u001f]*[=+@-]/.test(text)?"'":"")+text.replace(/"/g,'""')+'"';};
     const rows=[["Tanggal","Jenis","Jumlah","Akun","Akun tujuan","Kategori","Catatan"],...data.transactions.map(t=>[t.date,t.type,t.amount,data.accounts.find(a=>a.id===t.accountId)?.name||"",data.accounts.find(a=>a.id===t.toAccountId)?.name||"",t.category,t.note])];
@@ -202,20 +177,29 @@ export function FinanceApp() {
   }
   async function restoreBackup(){
     if(!pendingBackup)return;
-    if(syncing.current){toast.info("Tunggu pengiriman transaksi selesai.");return;}
-    syncing.current=true;setRestoring(true);
+    setRestoring(true);
     try{
-      if((await readQueue<QueuedTransaction>()).length)throw Error("Sinkronkan atau batalkan transaksi tertunda sebelum memulihkan cadangan.");
-      await financeApi.restore(pendingBackup);setPendingBackup(null);await refresh();toast.success("Cadangan berhasil dipulihkan.");changeTab("home");
-    }catch(e){toast.error(e instanceof Error?e.message:"Pemulihan gagal.");}
-    finally{syncing.current=false;setRestoring(false);}
+      await runExclusive(async()=>{
+        if(await hasPending())throw Error("Sinkronkan atau batalkan transaksi tertunda sebelum memulihkan cadangan.");
+        await financeApi.restore(pendingBackup);
+        setPendingBackup(null);
+        await refresh();
+      });
+      toast.success("Cadangan berhasil dipulihkan.");
+      changeTab("home");
+    }catch(e){
+      if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
+      else toast.error(e instanceof Error?e.message:"Pemulihan gagal.");
+    }finally{setRestoring(false);}
   }
   async function removeDeviceCache(){
-    if(syncing.current){toast.info("Tunggu pengiriman transaksi selesai.");return;}
-    syncing.current=true;
-    try{if((await readQueue<QueuedTransaction>()).length)throw Error("Selesaikan transaksi tertunda sebelum menghapus data offline.");await clearDeviceCache();toast.success("Salinan perangkat dihapus.");}
-    catch(e){toast.error(e instanceof Error?e.message:"Data offline belum bisa dihapus.");}
-    finally{syncing.current=false;}
+    try{
+      await clearOfflineCache();
+      toast.success("Salinan perangkat dihapus.");
+    }catch(e){
+      if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
+      else toast.error(e instanceof Error?e.message:"Data offline belum bisa dihapus.");
+    }
   }
   const screenTitle=(title:string,subtitle:string,action?:string,click?:()=>void)=><div className="screen-title"><div><h1>{title}</h1><p>{subtitle}</p></div>{action&&<button onClick={click}><Plus size={16}/>{action}</button>}</div>;
   const emptyState=(title:string,body:string,action:string,click:()=>void)=><div className="empty-state"><span><Wallet size={25}/></span><h2>{title}</h2><p>{body}</p><button onClick={click}><Plus size={16}/>{action}</button></div>;
