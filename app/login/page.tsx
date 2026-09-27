@@ -24,8 +24,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("error") === "config") {
+    const reason = new URLSearchParams(window.location.search).get("error");
+    if (reason === "config") {
       setError("Konfigurasi Supabase belum tersedia di environment aplikasi.");
+    } else if (reason === "verification") {
+      setError("Tautan verifikasi tidak valid atau sudah kedaluwarsa. Coba daftar atau masuk kembali.");
     }
   }, []);
 
@@ -146,8 +149,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="auth-footnote">
-            Akses hanya untuk akun yang sudah terdaftar di Supabase Auth.
+          <p className="auth-footnote auth-switch">
+            Belum punya akun? <a href="/register">Buat akun Arus</a>
           </p>
         </div>
       </section>

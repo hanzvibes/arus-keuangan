@@ -19,8 +19,9 @@ Tabel utama:
 - `budgets`
 - `categories`
 - `recurring`
+- `profiles`
 
-Semua tabel mempunyai ownership per-user. Foreign key akun juga mengikat pasangan `(user_id, id)`, sehingga transaksi milik satu user tidak dapat menunjuk akun milik user lain.
+Semua tabel finansial mempunyai ownership per-user. Tabel `profiles` memakai `id = auth.users.id` dan hanya bisa dibaca/diubah oleh pemiliknya. Foreign key akun juga mengikat pasangan `(user_id, id)`, sehingga transaksi milik satu user tidak dapat menunjuk akun milik user lain.
 
 Operasi yang harus atomik dijalankan sebagai fungsi Postgres:
 
@@ -51,14 +52,19 @@ Gunakan **publishable key** pada aplikasi. Jangan menaruh `service_role` atau se
 
 Variable yang sama perlu dikonfigurasi di Vercel atau platform hosting lain.
 
-## Auth
+## Auth dan profil
 
-Halaman `/login` memakai Supabase email/password.
-
+- `/register` membuat akun Supabase Auth dengan email, password, dan nama.
+- Jika email confirmation aktif, verifikasi kembali ke `/auth/callback` dan PKCE code ditukar menjadi session server-side.
+- `/login` memakai email + password.
+- `/profile` memungkinkan user mengubah nama profil; email tetap berasal dari Supabase Auth.
+- Record `profiles` dibuat otomatis saat user Auth dibuat.
 - Route aplikasi dilindungi melalui `proxy.ts`.
 - Identity diverifikasi menggunakan `supabase.auth.getClaims()`.
 - Request `/api/*` tanpa session valid mendapat HTTP 401.
 - Sign out membersihkan cache perangkat Arus agar snapshot finansial user sebelumnya tidak terbaca user berikutnya pada perangkat bersama.
+
+Untuk email confirmation di deployment, URL origin aplikasi perlu tersedia sebagai redirect URL yang diizinkan pada konfigurasi Supabase Auth.
 
 ## Isolasi multi-user
 
