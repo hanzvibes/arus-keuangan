@@ -5,19 +5,18 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { defaultCategories } from "@/lib/categories";
 import { financeApi } from "@/data/client/finance-api";
-import { readQueue } from "@/lib/offline";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Category = { id: string; name: string };
-type Props = { custom: Category[]; offline: boolean; pendingCount: number; onChange: () => Promise<void> };
+type Props = { custom: Category[]; offline: boolean; pendingCount: number; hasPending: () => Promise<boolean>; onChange: () => Promise<void> };
 
-export function CategoryManager({ custom, offline, pendingCount, onChange }: Props) {
+export function CategoryManager({ custom, offline, pendingCount, hasPending, onChange }: Props) {
   const [name, setName] = useState(""), [editing, setEditing] = useState<string | null>(null), [deleting, setDeleting] = useState<Category | null>(null), [busy, setBusy] = useState(false);
   async function request(method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) {
     if (pendingCount) { toast.error("Kirim atau batalkan transaksi tertunda sebelum mengubah kategori."); return; }
     setBusy(true);
     try {
-      if ((await readQueue()).length) throw Error("Kirim atau batalkan transaksi tertunda sebelum mengubah kategori.");
+      if (await hasPending()) throw Error("Kirim atau batalkan transaksi tertunda sebelum mengubah kategori.");
       await financeApi.category(method, body);
       await onChange(); setName(""); setEditing(null); setDeleting(null); toast.success(method === "DELETE" ? "Kategori dihapus." : "Kategori disimpan.");
     } catch (error) { toast.error(error instanceof Error ? error.message : "Kategori belum bisa diproses."); }
