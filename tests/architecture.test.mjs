@@ -283,3 +283,15 @@ test("offline transaction fallback recognizes the hardened API network errors", 
   assert.match(route, /result === "duplicate"/);
   assert.match(route, /status: 200/);
 });
+
+
+test("logout preserves offline data until Supabase confirms the session is signed out", async () => {
+  const source = await readFile("features/auth/components/auth-user.tsx", "utf8");
+  const signOutIndex = source.indexOf("supabase.auth.signOut()");
+  const clearCacheIndex = source.indexOf("clearDeviceCache(userId)", signOutIndex);
+
+  assert.ok(signOutIndex >= 0, "logout must call Supabase signOut");
+  assert.ok(clearCacheIndex > signOutIndex, "device cache must only clear after signOut succeeds");
+  assert.match(source, /Post-signout cache cleanup failed/);
+  assert.match(source, /window\.location\.assign\("\/login"\)/);
+});

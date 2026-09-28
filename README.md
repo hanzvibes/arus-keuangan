@@ -65,7 +65,7 @@ Variable yang sama perlu dikonfigurasi di Vercel atau platform hosting lain.
 - Route aplikasi dilindungi melalui `proxy.ts`.
 - Identity diverifikasi menggunakan `supabase.auth.getClaims()`.
 - Request `/api/*` tanpa session valid mendapat HTTP 401.
-- Sign out membersihkan cache perangkat Arus agar snapshot finansial user sebelumnya tidak terbaca user berikutnya pada perangkat bersama.
+- Sign out lebih dulu memastikan session Supabase berakhir, lalu membersihkan cache perangkat Arus agar kegagalan jaringan tidak menghapus data offline saat user sebenarnya masih login. Jika pembersihan lokal gagal karena tab lain masih aktif, Arus memberi peringatan sebelum login berikutnya pada perangkat bersama.
 
 Untuk email confirmation di deployment, URL origin aplikasi perlu tersedia sebagai redirect URL yang diizinkan pada konfigurasi Supabase Auth.
 

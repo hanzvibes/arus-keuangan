@@ -89,13 +89,24 @@ export function AuthUser({ variant }: AuthUserProps) {
           }
         }
 
-        await clearDeviceCache(userId);
-      } else {
-        await clearAppShellCache();
       }
 
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      try {
+        if (userId) {
+          await clearDeviceCache(userId);
+        } else {
+          await clearAppShellCache();
+        }
+      } catch (cleanupError) {
+        console.error("Post-signout cache cleanup failed", cleanupError);
+        await clearAppShellCache().catch(() => {});
+        window.alert(
+          "Kamu sudah keluar, tetapi salinan perangkat belum sepenuhnya terhapus. Tutup tab Arus lain sebelum login lagi di perangkat bersama.",
+        );
+      }
 
       window.location.assign("/login");
     } catch (error) {
