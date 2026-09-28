@@ -46,13 +46,54 @@ test("finance API keeps the existing internal endpoint contract", async t => {
 
 test("finance API surfaces server errors with status and message", async t => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => response({ error: "Sesi login diperlukan." }, { status: 401 });
+  globalThis.fetch = async () => response(
+    { error: "Sesi login diperlukan.", requestId: "req-401" },
+    { status: 401, headers: { "content-type": "application/json", "x-request-id": "req-401" } },
+  );
   t.after(() => { globalThis.fetch = originalFetch; });
 
   await assert.rejects(
     () => financeApi.read(),
     error => error instanceof FinanceApiError &&
       error.status === 401 &&
-      error.message === "Sesi login diperlukan.",
+      error.message === "Sesi login diperlukan." &&
+      error.requestId === "req-401" &&
+      error.kind === "http",
   );
+});
+
+
+test("finance API retries safe GET once after a transient upstream failure", async t => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+
+  globalThis.fetch = async () => {
+    calls += 1;
+    if (calls === 1) return response({ error: "temporary" }, { status: 503 });
+    return response({ accounts: [], transactions: [], budgets: [], categories: [], recurring: [] });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const data = await financeApi.read();
+  assert.equal(calls, 2);
+  assert.deepEqual(data.transactions, []);
+});
+
+test("finance API never retries state-changing requests automatically", async t => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+
+  globalThis.fetch = async () => {
+    calls += 1;
+    return response({ error: "temporary" }, { status: 503 });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  await assert.rejects(
+    () => financeApi.save("POST", { entity: "account", name: "Cash" }),
+    error => error instanceof FinanceApiError &&
+      error.status === 503 &&
+      error.kind === "http",
+  );
+  assert.equal(calls, 1);
 });

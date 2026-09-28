@@ -253,3 +253,16 @@ test("finance server errors emit correlation IDs without exposing raw errors to 
   assert.match(shared, /requestId: context\.requestId/);
   assert.match(shared, /Data belum bisa diproses\. Coba lagi\./);
 });
+
+
+test("finance client has bounded requests and retries only safe reads", async () => {
+  const source = await readFile("data/client/finance-api.ts", "utf8");
+
+  assert.match(source, /DEFAULT_TIMEOUT_MS\s*=\s*10_000/);
+  assert.match(source, /BACKUP_TIMEOUT_MS\s*=\s*30_000/);
+  assert.match(source, /AbortController/);
+  assert.match(source, /safeToRetry\s*=\s*method === "GET"/);
+  assert.match(source, /RETRYABLE_STATUS/);
+  assert.match(source, /requestId/);
+  assert.match(source, /kind: FinanceApiErrorKind/);
+});

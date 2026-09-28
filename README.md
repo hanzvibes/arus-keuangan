@@ -173,6 +173,9 @@ Baseline keamanan database:
 - `/api/health` menyediakan probe uptime publik yang minimal, tanpa membaca session, database, atau data user.
 - Error server finance memiliki correlation ID melalui header `X-Request-Id`; log production dicatat sebagai JSON terstruktur tanpa body request.
 - CI menjalankan lint, typecheck, test, dan production build sebelum perubahan dianggap layak deploy.
+- Finance API client membatasi request biasa 10 detik dan operasi backup/restore 30 detik agar UI tidak menggantung tanpa batas.
+- Retry otomatis hanya berlaku untuk GET yang aman, maksimal satu kali pada gangguan jaringan atau HTTP 502/503/504. POST/PATCH/DELETE tidak pernah diulang otomatis.
+- `FinanceApiError` membawa status, jenis kegagalan, dan correlation `requestId` dari server bila tersedia untuk membantu troubleshooting.
 
 ## Database schema di version control
 
