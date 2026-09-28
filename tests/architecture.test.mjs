@@ -138,3 +138,17 @@ test("finance app composes overlays instead of rendering primitive drawers inlin
   }
   assert.doesNotMatch(source, /<Drawer\b|<Select\b|<AlertDialog\b/);
 });
+
+test("password recovery routes use the existing Supabase PKCE callback", async () => {
+  const forgot = await readFile("app/forgot-password/page.tsx", "utf8");
+  const update = await readFile("app/update-password/page.tsx", "utf8");
+  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
+  const callback = await readFile("app/auth/callback/route.ts", "utf8");
+
+  assert.match(forgot, /resetPasswordForEmail/);
+  assert.match(forgot, /auth\/callback\?next=\/update-password/);
+  assert.match(update, /auth\.updateUser\(\{ password \}\)/);
+  assert.match(proxy, /"\/forgot-password"/);
+  assert.doesNotMatch(proxy, /PUBLIC_PATHS[\s\S]*"\/update-password"/);
+  assert.match(callback, /"recovery"/);
+});
