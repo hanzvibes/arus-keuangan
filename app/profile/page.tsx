@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { ArrowLeft, CalendarDays, Check, Mail, Save, ShieldCheck, UserRound, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -117,9 +118,9 @@ export default function ProfilePage() {
   return (
     <main className="profile-page">
       <header className="profile-topbar">
-        <a className="profile-back" href="/" aria-label="Kembali ke Arus">
+        <Link className="profile-back" href="/" aria-label="Kembali ke Arus">
           <ArrowLeft size={19} />
-        </a>
+        </Link>
         <div className="profile-brand">
           <span><Wallet size={20} /></span>
           arus<span className="auth-brand-dot">.</span>

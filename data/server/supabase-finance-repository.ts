@@ -5,6 +5,54 @@ import { FinanceRepositoryError } from "./finance-repository";
 
 type QueryError = { message: string; code?: string } | null;
 
+type AccountRow = {
+  id: string;
+  name: string;
+  kind: string;
+  opening_balance: number | string;
+  created_at: string;
+};
+
+type TransactionRow = {
+  id: string;
+  type: "income" | "expense" | "transfer" | "adjustment";
+  amount: number | string;
+  account_id: string;
+  to_account_id: string | null;
+  category: string;
+  note: string;
+  date: string;
+  created_at: string;
+};
+
+type BudgetRow = {
+  id: string;
+  category: string;
+  amount: number | string;
+  created_at: string;
+};
+
+type CategoryRow = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
+type RecurringRow = {
+  id: string;
+  type: "income" | "expense" | "transfer";
+  amount: number | string;
+  account_id: string;
+  to_account_id: string | null;
+  category: string;
+  note: string;
+  next_date: string;
+  frequency: "weekly" | "monthly";
+  anchor_day: number;
+  active: boolean;
+  created_at: string;
+};
+
 function assertQuery(error: QueryError) {
   if (error) {
     throw new FinanceRepositoryError(
@@ -22,7 +70,7 @@ function asNumber(value: number | string) {
   return parsed;
 }
 
-const mapAccount = (row: any) => ({
+const mapAccount = (row: AccountRow) => ({
   id: row.id,
   name: row.name,
   kind: row.kind,
@@ -30,7 +78,7 @@ const mapAccount = (row: any) => ({
   createdAt: row.created_at,
 });
 
-const mapTransaction = (row: any) => ({
+const mapTransaction = (row: TransactionRow) => ({
   id: row.id,
   type: row.type,
   amount: asNumber(row.amount),
@@ -42,20 +90,20 @@ const mapTransaction = (row: any) => ({
   createdAt: row.created_at,
 });
 
-const mapBudget = (row: any) => ({
+const mapBudget = (row: BudgetRow) => ({
   id: row.id,
   category: row.category,
   amount: asNumber(row.amount),
   createdAt: row.created_at,
 });
 
-const mapCategory = (row: any) => ({
+const mapCategory = (row: CategoryRow) => ({
   id: row.id,
   name: row.name,
   createdAt: row.created_at,
 });
 
-const mapRecurring = (row: any) => ({
+const mapRecurring = (row: RecurringRow) => ({
   id: row.id,
   type: row.type,
   amount: asNumber(row.amount),

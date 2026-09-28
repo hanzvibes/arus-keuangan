@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
     return Response.json({ id }, { status: 201 });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -134,7 +134,7 @@ export async function PATCH(request: Request) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -149,6 +149,6 @@ export async function DELETE(request: Request) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }

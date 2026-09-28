@@ -141,7 +141,7 @@ export function useFinanceData() {
   useEffect(() => {
     if (!userId) return;
     queueMicrotask(() => void refresh());
-    void reloadQueue().catch(console.error);
+    queueMicrotask(() => void reloadQueue().catch(console.error));
   }, [refresh, reloadQueue, userId]);
 
   useEffect(() => {

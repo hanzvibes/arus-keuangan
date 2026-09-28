@@ -11,13 +11,13 @@ const positive = (value: unknown) => Number.isSafeInteger(Number(value)) && Numb
 const money = (value: unknown) => Number.isSafeInteger(Number(value)) && Math.abs(Number(value)) <= 1_000_000_000_000 ? Number(value) : null;
 const bad = (message: string) => Response.json({ error: message }, { status: 400 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const repository = await createFinanceRepository();
     const data = await repository.readSnapshot();
     return Response.json(data, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
     return Response.json({ id }, { status: 201 });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -170,7 +170,7 @@ export async function PATCH(request: Request) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -200,6 +200,6 @@ export async function DELETE(request: Request) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }

@@ -35,6 +35,6 @@ export async function POST(request: Request) {
 
     return Response.json({ id }, { status: 201 });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }

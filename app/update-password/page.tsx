@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -89,9 +90,9 @@ export default function UpdatePasswordPage() {
                 <h2>Password baru aktif</h2>
                 <p>Akses akunmu sudah menggunakan password yang baru.</p>
               </div>
-              <a className="auth-secondary-link" href="/">
+              <Link className="auth-secondary-link" href="/">
                 Lanjut ke Arus <ArrowRight size={17} />
-              </a>
+              </Link>
             </div>
           ) : (
             <>

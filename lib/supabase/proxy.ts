@@ -10,6 +10,7 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const PUBLIC_API_PATHS = new Set(["/api/health"]);
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.has(pathname);
@@ -39,6 +40,10 @@ function trustedMutationOrigin(request: NextRequest) {
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   let response = NextResponse.next({ request });
+
+  if (PUBLIC_API_PATHS.has(pathname) && SAFE_METHODS.has(request.method)) {
+    return response;
+  }
 
   if (pathname.startsWith("/api/") && !trustedMutationOrigin(request)) {
     return NextResponse.json(

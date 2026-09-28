@@ -2,7 +2,7 @@ import { validateBackup } from "@/lib/backup";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
 import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const repository = await createFinanceRepository();
     const snapshot = await repository.readSnapshot();
@@ -13,7 +13,7 @@ export async function GET() {
       ...snapshot,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }
 
@@ -36,6 +36,6 @@ export async function POST(request: Request) {
     const counts = await repository.restoreBackup(validation.data);
     return Response.json({ ok: true, counts });
   } catch (error) {
-    return financeRouteError(error);
+    return financeRouteError(error, request);
   }
 }

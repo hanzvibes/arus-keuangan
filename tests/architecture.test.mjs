@@ -220,3 +220,36 @@ test("API proxy rejects cross-site state-changing requests before data access", 
   assert.match(source, /Permintaan lintas situs ditolak/);
   assert.match(source, /pathname\.startsWith\("\/api\/"\)/);
 });
+
+
+test("CI runs lint as a production quality gate", async () => {
+  const source = await readFile(".github/workflows/ci.yml", "utf8");
+  assert.match(source, /- name: Lint\s+run: pnpm lint/);
+});
+
+test("health endpoint is public, cache-free, and does not touch auth or finance data", async () => {
+  const health = await readFile("app/api/health/route.ts", "utf8");
+  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
+
+  assert.match(health, /status: "ok"/);
+  assert.match(health, /service: "arus"/);
+  assert.match(health, /Cache-Control/);
+  assert.match(health, /no-store/);
+  assert.match(health, /X-Robots-Tag/);
+  assert.doesNotMatch(health, /supabase|createFinanceRepository|auth\./i);
+
+  assert.match(proxy, /PUBLIC_API_PATHS/);
+  assert.match(proxy, /"\/api\/health"/);
+  assert.match(proxy, /PUBLIC_API_PATHS\.has\(pathname\)/);
+});
+
+test("finance server errors emit correlation IDs without exposing raw errors to clients", async () => {
+  const shared = await readFile("app/api/_shared/finance-route.ts", "utf8");
+
+  assert.match(shared, /crypto\.randomUUID\(\)/);
+  assert.match(shared, /X-Request-Id/);
+  assert.match(shared, /finance_route_error/);
+  assert.match(shared, /x-vercel-id/);
+  assert.match(shared, /requestId: context\.requestId/);
+  assert.match(shared, /Data belum bisa diproses\. Coba lagi\./);
+});

@@ -75,24 +75,63 @@ export async function readFinanceJson<T extends Record<string, unknown>>(
   return value as T;
 }
 
-export function financeRouteError(error: unknown) {
+function routeContext(request?: Request) {
+  let path = "";
+  if (request) {
+    try {
+      path = new URL(request.url).pathname;
+    } catch {
+      path = "";
+    }
+  }
+
+  return {
+    requestId: crypto.randomUUID(),
+    method: request?.method ?? "UNKNOWN",
+    path,
+    vercelId: request?.headers.get("x-vercel-id") || undefined,
+  };
+}
+
+function errorHeaders(requestId: string) {
+  return {
+    "Cache-Control": "no-store",
+    "X-Request-Id": requestId,
+  };
+}
+
+export function financeRouteError(error: unknown, request?: Request) {
+  const context = routeContext(request);
+
   if (error instanceof FinanceRequestError) {
     return Response.json(
-      { error: error.message },
-      { status: error.status, headers: { "Cache-Control": "no-store" } },
+      { error: error.message, requestId: context.requestId },
+      { status: error.status, headers: errorHeaders(context.requestId) },
     );
   }
 
   if (error instanceof FinanceRepositoryError && error.kind === "UNAUTHENTICATED") {
     return Response.json(
-      { error: "Sesi login tidak valid." },
-      { status: 401, headers: { "Cache-Control": "no-store" } },
+      { error: "Sesi login tidak valid.", requestId: context.requestId },
+      { status: 401, headers: errorHeaders(context.requestId) },
     );
   }
 
-  console.error("Finance route error", error);
+  const detail = error instanceof FinanceRepositoryError
+    ? { name: error.name, kind: error.kind, message: error.message }
+    : error instanceof Error
+      ? { name: error.name, message: error.message }
+      : { name: "UnknownError", message: "Non-error value thrown" };
+
+  console.error(JSON.stringify({
+    level: "error",
+    event: "finance_route_error",
+    ...context,
+    error: detail,
+  }));
+
   return Response.json(
-    { error: "Data belum bisa diproses. Coba lagi." },
-    { status: 500, headers: { "Cache-Control": "no-store" } },
+    { error: "Data belum bisa diproses. Coba lagi.", requestId: context.requestId },
+    { status: 500, headers: errorHeaders(context.requestId) },
   );
 }

@@ -170,6 +170,9 @@ Baseline keamanan database:
 - Mutasi `/api/*` menolak request browser cross-site berdasarkan `Origin` / `Sec-Fetch-Site` sebelum data diakses.
 - Body API wajib `application/json`, JSON rusak menghasilkan 4xx, dan payload biasa dibatasi 64 KB; restore backup memiliki batas 3 MB.
 - Pesan registrasi tidak mengonfirmasi secara eksplisit apakah sebuah email sudah memiliki akun.
+- `/api/health` menyediakan probe uptime publik yang minimal, tanpa membaca session, database, atau data user.
+- Error server finance memiliki correlation ID melalui header `X-Request-Id`; log production dicatat sebagai JSON terstruktur tanpa body request.
+- CI menjalankan lint, typecheck, test, dan production build sebelum perubahan dianggap layak deploy.
 
 ## Database schema di version control
 
