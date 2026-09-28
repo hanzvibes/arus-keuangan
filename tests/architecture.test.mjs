@@ -152,3 +152,20 @@ test("password recovery routes use the existing Supabase PKCE callback", async (
   assert.doesNotMatch(proxy, /PUBLIC_PATHS[\s\S]*"\/update-password"/);
   assert.match(callback, /"recovery"/);
 });
+
+
+test("Supabase schema tracks covering indexes for recurring account foreign keys", async () => {
+  const schema = await readFile("supabase/schemas/arus.sql", "utf8");
+  const migration = await readFile(
+    "supabase/migrations/20260928060444_add_recurring_fk_indexes.sql",
+    "utf8",
+  );
+
+  for (const indexName of [
+    "recurring_user_account_idx",
+    "recurring_user_to_account_idx",
+  ]) {
+    assert.match(schema, new RegExp(indexName));
+    assert.match(migration, new RegExp(indexName));
+  }
+});

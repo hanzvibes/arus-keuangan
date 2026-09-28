@@ -1,5 +1,5 @@
 -- Arus declarative schema snapshot.
--- Captured from the live Supabase project on 2026-09-27.
+-- Baseline captured from the live Supabase project on 2026-09-27; synchronized through migration 20260928060444.
 -- This file covers application-owned objects only. Supabase-managed auth schema is not duplicated here.
 
 create schema if not exists private;
@@ -111,6 +111,13 @@ create table public.recurring (
 
 create index recurring_user_next_date_idx
   on public.recurring (user_id, next_date);
+
+create index recurring_user_account_idx
+  on public.recurring (user_id, account_id);
+
+create index recurring_user_to_account_idx
+  on public.recurring (user_id, to_account_id)
+  where to_account_id is not null;
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

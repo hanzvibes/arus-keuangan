@@ -18,20 +18,23 @@ Arus uses Supabase Postgres as the primary data store.
 
 Supabase-managed Auth tables are intentionally not duplicated.
 
-## Important limitation
+## Migration history
 
-This repository did not originally contain the full migration history for the finance schema. The declarative schema was captured from the live project during the architecture cleanup.
+The original finance schema predates repository migration history, so `schemas/arus.sql` remains the baseline snapshot.
 
-Before the next database schema change, initialize/link the Supabase CLI and pull/generate a migration using the current CLI instead of inventing a migration filename manually:
+New database changes are tracked from this point forward in `migrations/`. The first source-controlled post-baseline migration is:
+
+- `20260928060444_add_recurring_fk_indexes.sql` — adds covering indexes for the composite recurring-account foreign keys.
+
+For future schema changes, use the current Supabase CLI to create the migration first, then verify the linked project and local migration history before committing:
 
 ```sh
-supabase init
-supabase login
+supabase --version
+supabase migration new <descriptive_name>
 supabase link --project-ref mtoswyittiipcuewrheo
-supabase db pull
 supabase migration list --local
 ```
 
-Review the generated baseline before committing it. Future schema changes should be represented in version control and verified with a local `supabase db reset`.
+Keep `schemas/arus.sql` synchronized with the resulting production schema and run Supabase advisors after DDL changes.
 
 Do not commit production data, database passwords, service-role keys, or other secrets.
