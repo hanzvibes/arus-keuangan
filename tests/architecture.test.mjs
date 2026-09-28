@@ -185,3 +185,38 @@ test("Next.js applies production security headers and disables API caching", asy
   assert.match(source, /source:\s*"\/api\/:path\*"/);
   assert.match(source, /no-store, max-age=0/);
 });
+
+
+test("finance mutations use the shared bounded JSON parser", async () => {
+  const shared = await readFile("app/api/_shared/finance-route.ts", "utf8");
+  assert.match(shared, /Content-Type application\/json/);
+  assert.match(shared, /DEFAULT_BODY_LIMIT\s*=\s*64_000/);
+  assert.match(shared, /TextEncoder\(\)\.encode\(text\)\.byteLength/);
+  assert.match(shared, /Format JSON tidak valid/);
+  assert.match(shared, /assertSameOrigin\(request\)/);
+
+  for (const path of [
+    "app/api/data/route.ts",
+    "app/api/backup/route.ts",
+    "app/api/categories/route.ts",
+    "app/api/recurring/route.ts",
+    "app/api/reconcile/route.ts",
+  ]) {
+    const source = await readFile(path, "utf8");
+    assert.match(source, /readFinanceJson/);
+    assert.doesNotMatch(source, /request\.json\(\)/);
+  }
+
+  const backup = await readFile("app/api/backup/route.ts", "utf8");
+  assert.match(backup, /3_000_000/);
+  assert.doesNotMatch(backup, /JSON\.parse\(text\)/);
+});
+
+test("API proxy rejects cross-site state-changing requests before data access", async () => {
+  const source = await readFile("lib/supabase/proxy.ts", "utf8");
+  assert.match(source, /SAFE_METHODS/);
+  assert.match(source, /sec-fetch-site/);
+  assert.match(source, /trustedMutationOrigin/);
+  assert.match(source, /Permintaan lintas situs ditolak/);
+  assert.match(source, /pathname\.startsWith\("\/api\/"\)/);
+});

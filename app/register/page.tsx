@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 function friendlySignupError(message: string) {
   const value = message.toLowerCase();
-  if (value.includes("already registered") || value.includes("already been registered")) return "Email ini sudah terdaftar. Silakan masuk.";
+  if (value.includes("already registered") || value.includes("already been registered")) return "Pendaftaran belum bisa diselesaikan. Jika kamu pernah membuat akun dengan email ini, coba masuk.";
   if (value.includes("password")) return "Password belum memenuhi persyaratan keamanan.";
   if (value.includes("rate limit")) return "Terlalu banyak percobaan. Coba lagi sebentar.";
   return "Pendaftaran belum berhasil. Periksa data lalu coba lagi.";

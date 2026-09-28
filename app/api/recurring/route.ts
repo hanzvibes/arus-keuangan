@@ -1,7 +1,7 @@
 import { isCalendarDate } from "@/lib/backup";
 import type { FinanceRepository } from "@/data/server/finance-repository";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
-import { financeRouteError } from "@/app/api/_shared/finance-route";
+import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
 type Payload = Record<string, unknown>;
 
@@ -55,7 +55,7 @@ async function validate(repository: FinanceRepository, payload: Payload) {
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json() as Payload;
+    const payload = await readFinanceJson<Payload>(request);
     const repository = await createFinanceRepository();
 
     if (payload.action === "record" || payload.action === "skip") {
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const payload = await request.json() as Payload;
+    const payload = await readFinanceJson<Payload>(request);
     const id = clean(payload.id, 100);
     const repository = await createFinanceRepository();
 
@@ -140,7 +140,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { id } = await request.json() as { id?: unknown };
+    const { id } = await readFinanceJson<{ id?: unknown }>(request);
     const repository = await createFinanceRepository();
 
     if (!await repository.deleteRecurring(clean(id, 100))) {

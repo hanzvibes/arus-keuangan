@@ -1,6 +1,6 @@
 import { validateBackup } from "@/lib/backup";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
-import { financeRouteError } from "@/app/api/_shared/finance-route";
+import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
 export async function GET() {
   try {
@@ -19,16 +19,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    if (Number(request.headers.get("content-length") || 0) > 3_000_000) {
-      return Response.json({ error: "File cadangan terlalu besar." }, { status: 413 });
-    }
-
-    const text = await request.text();
-    if (text.length > 3_000_000) {
-      return Response.json({ error: "File cadangan terlalu besar." }, { status: 413 });
-    }
-
-    const input = JSON.parse(text) as { confirm?: string; backup?: unknown };
+    const input = await readFinanceJson<{ confirm?: string; backup?: unknown }>(
+      request,
+      3_000_000,
+    );
     if (input.confirm !== "GANTI DATA") {
       return Response.json({ error: "Konfirmasi pemulihan diperlukan." }, { status: 400 });
     }

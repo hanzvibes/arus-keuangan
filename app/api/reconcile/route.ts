@@ -1,11 +1,11 @@
 import { isCalendarDate } from "@/lib/backup";
 import { ADJUSTMENT_CATEGORY, reconciliationDelta } from "@/lib/finance";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
-import { financeRouteError } from "@/app/api/_shared/finance-route";
+import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json() as Record<string, unknown>;
+    const input = await readFinanceJson<Record<string, unknown>>(request);
     const accountId = typeof input.accountId === "string" ? input.accountId.trim() : "";
     const note = typeof input.note === "string" ? input.note.trim() : "";
     const date = typeof input.date === "string" ? input.date : "";

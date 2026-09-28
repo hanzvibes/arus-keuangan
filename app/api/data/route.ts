@@ -1,6 +1,6 @@
 import { isCalendarDate } from "@/lib/backup";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
-import { financeRouteError } from "@/app/api/_shared/finance-route";
+import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
 type Payload = Record<string, unknown>;
 
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json() as Payload;
+    const payload = await readFinanceJson<Payload>(request);
     const repository = await createFinanceRepository();
     const id = payload.entity === "transaction" &&
       typeof payload.id === "string" &&
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const payload = await request.json() as Payload;
+    const payload = await readFinanceJson<Payload>(request);
     const repository = await createFinanceRepository();
     const id = clean(payload.id);
     if (!id) return bad("Data yang akan diubah tidak ditemukan.");
@@ -176,7 +176,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { entity, id } = await request.json() as Payload;
+    const { entity, id } = await readFinanceJson<Payload>(request);
     const key = clean(id);
     const repository = await createFinanceRepository();
     if (!key) return bad("ID tidak tersedia.");

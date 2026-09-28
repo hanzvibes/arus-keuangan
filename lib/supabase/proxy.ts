@@ -9,6 +9,8 @@ const PUBLIC_PATHS = new Set([
   "/forgot-password",
 ]);
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.has(pathname);
 }
@@ -23,9 +25,27 @@ function redirectToLogin(request: NextRequest, reason?: string) {
   return NextResponse.redirect(loginUrl);
 }
 
+function trustedMutationOrigin(request: NextRequest) {
+  if (SAFE_METHODS.has(request.method)) return true;
+
+  if (request.headers.get("sec-fetch-site") === "cross-site") return false;
+
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+
+  return origin === request.nextUrl.origin;
+}
+
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   let response = NextResponse.next({ request });
+
+  if (pathname.startsWith("/api/") && !trustedMutationOrigin(request)) {
+    return NextResponse.json(
+      { error: "Permintaan lintas situs ditolak." },
+      { status: 403, headers: { "Cache-Control": "no-store" } },
+    );
+  }
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {

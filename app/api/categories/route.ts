@@ -1,7 +1,7 @@
 import { defaultCategories } from "@/lib/categories";
 import type { FinanceRepository } from "@/data/server/finance-repository";
 import { createFinanceRepository } from "@/data/server/supabase-finance-repository";
-import { financeRouteError } from "@/app/api/_shared/finance-route";
+import { financeRouteError, readFinanceJson } from "@/app/api/_shared/finance-route";
 
 const clean = (value: unknown) => typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 const bad = (error: string) => Response.json({ error }, { status: 400 });
@@ -16,7 +16,7 @@ async function available(repository: FinanceRepository, name: string, except = "
 
 export async function POST(request: Request) {
   try {
-    const { name } = await request.json() as { name?: unknown };
+    const { name } = await readFinanceJson<{ name?: unknown }>(request);
     const label = clean(name);
     const repository = await createFinanceRepository();
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const { id, name } = await request.json() as { id?: unknown; name?: unknown };
+    const { id, name } = await readFinanceJson<{ id?: unknown; name?: unknown }>(request);
     const key = clean(id);
     const label = clean(name);
     const repository = await createFinanceRepository();
@@ -70,7 +70,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { id } = await request.json() as { id?: unknown };
+    const { id } = await readFinanceJson<{ id?: unknown }>(request);
     const key = clean(id);
     const repository = await createFinanceRepository();
 

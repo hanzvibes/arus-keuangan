@@ -167,6 +167,9 @@ Baseline keamanan database:
 - Response aplikasi membawa header anti-clickjacking, MIME sniffing protection, referrer policy, permissions policy, HSTS, dan CSP minimal.
 - Response `/api/*` memakai `Cache-Control: no-store` agar data finansial terautentikasi tidak disimpan sebagai cache browser atau shared proxy.
 - Header `X-Powered-By` Next.js dinonaktifkan.
+- Mutasi `/api/*` menolak request browser cross-site berdasarkan `Origin` / `Sec-Fetch-Site` sebelum data diakses.
+- Body API wajib `application/json`, JSON rusak menghasilkan 4xx, dan payload biasa dibatasi 64 KB; restore backup memiliki batas 3 MB.
+- Pesan registrasi tidak mengonfirmasi secara eksplisit apakah sebuah email sudah memiliki akun.
 
 ## Database schema di version control
 
