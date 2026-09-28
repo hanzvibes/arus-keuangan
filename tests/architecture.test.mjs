@@ -125,3 +125,16 @@ test("auth-specific account UI lives in the auth feature", async () => {
   assert.match(finance, /features\/auth\/components\/auth-user/);
   assert.match(settings, /features\/auth\/components\/auth-user/);
 });
+
+test("finance app composes overlays instead of rendering primitive drawers inline", async () => {
+  const source = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  for (const component of [
+    "FinanceEntryDrawer",
+    "InstallGuideDrawer",
+    "ReconcileDrawer",
+    "ConfirmationDialogs",
+  ]) {
+    assert.match(source, new RegExp(component));
+  }
+  assert.doesNotMatch(source, /<Drawer\b|<Select\b|<AlertDialog\b/);
+});
