@@ -23,6 +23,8 @@ export default function LoginPage() {
     const reason = new URLSearchParams(window.location.search).get("error");
     if (reason === "verification") {
       setError("Tautan verifikasi tidak valid atau sudah kedaluwarsa. Coba daftar atau masuk kembali.");
+    } else if (reason === "recovery") {
+      setError("Tautan pemulihan tidak valid atau sudah kedaluwarsa. Minta tautan password baru.");
     }
   }, []);
 
@@ -129,6 +131,10 @@ export default function LoginPage() {
                 </button>
               </div>
             </label>
+
+            <div className="auth-form-help">
+              <a href="/forgot-password">Lupa password?</a>
+            </div>
 
             {error && <div className="auth-error" role="alert">{error}</div>}
 

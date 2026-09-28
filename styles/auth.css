@@ -130,3 +130,7 @@
   .profile-security-badge{grid-column:1/3;margin-top:18px}
   .profile-form-card{padding:21px}
 }
+
+.auth-form-help{display:flex;justify-content:flex-end;margin-top:-7px}
+.auth-form-help a{color:#438b0b;font-size:12px;font-weight:800;text-decoration:none}
+.auth-form-help a:hover{text-decoration:underline}

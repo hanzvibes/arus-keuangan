@@ -8,6 +8,10 @@ function safeDestination(requestUrl: URL) {
   return candidate;
 }
 
+function callbackError(requestUrl: URL) {
+  return safeDestination(requestUrl).pathname === "/update-password" ? "recovery" : "verification";
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -15,7 +19,7 @@ export async function GET(request: Request) {
 
   if (!code) {
     const login = new URL("/login", requestUrl.origin);
-    login.searchParams.set("error", "verification");
+    login.searchParams.set("error", callbackError(requestUrl));
     return NextResponse.redirect(login);
   }
 
@@ -26,9 +30,9 @@ export async function GET(request: Request) {
   );
 
   if (error) {
-    console.error("Supabase email verification failed", error);
+    console.error("Supabase email callback failed", error);
     const login = new URL("/login", requestUrl.origin);
-    login.searchParams.set("error", "verification");
+    login.searchParams.set("error", callbackError(requestUrl));
     return NextResponse.redirect(login);
   }
 

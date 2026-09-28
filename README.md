@@ -57,6 +57,9 @@ Variable yang sama perlu dikonfigurasi di Vercel atau platform hosting lain.
 - `/register` membuat akun Supabase Auth dengan email, password, dan nama.
 - Jika email confirmation aktif, verifikasi kembali ke `/auth/callback` dan PKCE code ditukar menjadi session server-side.
 - `/login` memakai email + password.
+- `/forgot-password` mengirim tautan pemulihan melalui Supabase Auth tanpa mengungkap apakah email terdaftar.
+- Tautan recovery kembali melalui `/auth/callback?next=/update-password`, lalu PKCE code ditukar menjadi session server-side.
+- `/update-password` hanya dapat dibuka dengan session terautentikasi dan memperbarui password menggunakan `auth.updateUser`.
 - `/profile` memungkinkan user mengubah nama profil; email tetap berasal dari Supabase Auth.
 - Record `profiles` dibuat otomatis saat user Auth dibuat.
 - Route aplikasi dilindungi melalui `proxy.ts`.
