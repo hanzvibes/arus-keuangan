@@ -6,13 +6,10 @@ const PUBLIC_PATHS = new Set([
   "/login",
   "/register",
   "/auth/callback",
-  "/signin-with-chatgpt",
-  "/signout-with-chatgpt",
-  "/callback",
 ]);
 
 function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.has(pathname) || pathname.startsWith("/.well-known/");
+  return PUBLIC_PATHS.has(pathname);
 }
 
 function redirectToLogin(request: NextRequest, reason?: string) {

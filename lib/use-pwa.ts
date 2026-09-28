@@ -92,3 +92,4 @@ export function usePwa() {
 
   return { canInstall: !!installPrompt && !installed, installed, ios, ready, updateAvailable: !!waiting, install, applyUpdate };
 }
+export type PwaState = ReturnType<typeof usePwa>;
