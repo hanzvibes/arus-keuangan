@@ -132,7 +132,10 @@ export function FinanceApp() {
     const id=editing||crypto.randomUUID();
     try{await financeApi.save(editing?"PATCH":"POST",{...body,id});setMode(null);setEditing(null);await refresh();toast.success(editing?"Perubahan disimpan.":"Berhasil disimpan.");}
     catch(e){
-      if(mode==="transaction"&&!editing&&e instanceof TypeError){
+      const canQueueOffline =
+        e instanceof TypeError ||
+        (e instanceof FinanceApiError && (e.kind === "network" || e.kind === "timeout"));
+      if(mode==="transaction"&&!editing&&canQueueOffline){
         try{const transaction:QueuedTransaction={id,type,amount:Number(amount),accountId:account,toAccountId:type==="transfer"?destination:null,category:type==="transfer"?"Transfer":category,note,date,queuedAt:new Date().toISOString()};await queueTransaction(transaction);setMode(null);toast.info("Tersimpan di perangkat. Akan dikirim saat online.");}
         catch{toast.error("Penyimpanan offline gagal. Formulir tetap terbuka.");}
       }else toast.error(e instanceof Error?e.message:"Gagal menyimpan.");

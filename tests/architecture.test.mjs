@@ -266,3 +266,20 @@ test("finance client has bounded requests and retries only safe reads", async ()
   assert.match(source, /requestId/);
   assert.match(source, /kind: FinanceApiErrorKind/);
 });
+
+
+test("offline transaction fallback recognizes the hardened API network errors", async () => {
+  const app = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  const route = await readFile("app/api/data/route.ts", "utf8");
+
+  assert.match(app, /e instanceof FinanceApiError/);
+  assert.match(app, /e\.kind === "network"/);
+  assert.match(app, /e\.kind === "timeout"/);
+  assert.match(app, /queueTransaction\(transaction\)/);
+
+  // Client-generated transaction IDs make timeout recovery idempotent.
+  assert.match(route, /payload\.entity === "transaction"/);
+  assert.match(route, /payload\.id/);
+  assert.match(route, /result === "duplicate"/);
+  assert.match(route, /status: 200/);
+});

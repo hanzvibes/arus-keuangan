@@ -99,7 +99,7 @@ Record + advance dilakukan secara atomik di database.
 
 ## Offline
 
-PWA menyimpan snapshot terakhir di perangkat untuk pengalaman offline. Transaksi yang gagal dikirim dapat masuk antrean perangkat dan dicoba lagi saat online.
+PWA menyimpan snapshot terakhir di perangkat untuk pengalaman offline. Transaksi baru yang gagal karena jaringan atau timeout dapat masuk antrean perangkat dan dicoba lagi saat online. ID transaksi dibuat di client, sehingga sinkronisasi ulang tetap idempotent bila respons server sempat terputus setelah transaksi tersimpan.
 
 Supabase Postgres tetap menjadi source of truth. Cache perangkat dibersihkan saat logout.
 
