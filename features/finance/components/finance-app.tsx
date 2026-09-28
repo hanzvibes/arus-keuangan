@@ -1,9 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeftRight, ArrowDownLeft, ArrowUpRight, BarChart3, Check, ChevronLeft, ChevronRight, CreditCard, Download, Eye, EyeOff, Home, Landmark, LayoutGrid, MessageCircle, Minus, Pencil, Plus, Search, Settings2, Scale, Trash2, Upload, Wallet, WifiOff, X } from "lucide-react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ArrowLeftRight, BarChart3, Eye, EyeOff, Home, LayoutGrid, Plus, Settings2, Wallet, WifiOff, X } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
@@ -12,7 +9,7 @@ import { allCategories, defaultCategories } from "@/lib/categories";
 import { AuthUser } from "@/features/auth/components/auth-user";
 import { usePwa } from "@/lib/use-pwa";
 import { FinanceApiError, financeApi } from "@/data/client/finance-api";
-import type { Account, Transaction, Budget, QueuedTransaction, TransactionType } from "@/domain/finance/types";
+import type { Account, Transaction, Budget, QueuedTransaction } from "@/domain/finance/types";
 import { useFinanceData } from "@/features/finance/hooks/use-finance-data";
 import { day, money } from "@/features/finance/lib/presentation";
 import { AccountsTab } from "@/features/finance/components/tabs/accounts-tab";
@@ -21,10 +18,12 @@ import { BudgetTab } from "@/features/finance/components/tabs/budget-tab";
 import { HomeTab } from "@/features/finance/components/tabs/home-tab";
 import { SettingsTab } from "@/features/finance/components/tabs/settings-tab";
 import { TransactionsTab } from "@/features/finance/components/tabs/transactions-tab";
+import { ConfirmationDialogs } from "@/features/finance/components/drawers/confirmation-dialogs";
+import { FinanceEntryDrawer, type FinanceEntryMode as Mode, type FinanceEntryType as EntryType } from "@/features/finance/components/drawers/finance-entry-drawer";
+import { InstallGuideDrawer } from "@/features/finance/components/drawers/install-guide-drawer";
+import { ReconcileDrawer } from "@/features/finance/components/drawers/reconcile-drawer";
 
 type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "settings";
-type Mode = "account" | "transaction" | "budget" | "quick" | null;
-type EntryType = Exclude<TransactionType, "adjustment">;
 const navigation: { id: Tab; label: string; icon: typeof Home }[] = [
   { id:"home",label:"Beranda",icon:Home },{ id:"accounts",label:"Akun",icon:Wallet },{ id:"transactions",label:"Transaksi",icon:ArrowLeftRight },{ id:"budget",label:"Budget",icon:LayoutGrid },{ id:"analytics",label:"Analitik",icon:BarChart3 },{ id:"settings",label:"Data & Cadangan",icon:Settings2 },
 ];
@@ -313,16 +312,71 @@ export function FinanceApp() {
     />}
     </>}</div></main>
     <nav className="bottom-nav" aria-label="Navigasi utama"><button className={tab==="home"?"selected":""} aria-label="Beranda" onClick={()=>changeTab("home")}><Home size={23}/></button><button className={tab==="accounts"?"selected":""} aria-label="Akun" onClick={()=>changeTab("accounts")}><Wallet size={23}/></button><button className="nav-add" aria-label="Catat cepat lewat teks" onClick={()=>open("quick")}><Plus size={26}/></button><button className={tab==="transactions"?"selected":""} aria-label="Transaksi" onClick={()=>changeTab("transactions")}><ArrowLeftRight size={23}/></button><button className={tab==="analytics"||tab==="budget"?"selected":""} aria-label="Analitik" onClick={()=>changeTab("analytics")}><BarChart3 size={23}/></button></nav>
-    <Drawer open={installGuideOpen} onOpenChange={setInstallGuideOpen} direction="bottom"><DrawerContent className="form-sheet install-guide-sheet"><DrawerHeader><div className="drawer-heading"><DrawerTitle>Pasang Arus di HP</DrawerTitle><button aria-label="Tutup panduan" onClick={()=>setInstallGuideOpen(false)}><X size={19}/></button></div><DrawerDescription>Buka dari layar utama seperti aplikasi biasa.</DrawerDescription></DrawerHeader><div className="form-sheet-scroll install-guide-body" data-vaul-no-drag><p className="install-guide-callout">Jika Arus dibuka di dalam ChatGPT, salin tautannya lalu buka di Chrome (Android) atau Safari (iPhone).</p><div className="install-guide-link"><span>{typeof window!=="undefined"?window.location.origin+"/":"Tautan Arus"}</span><button onClick={()=>void copyAppLink()}>Salin tautan</button></div><h3>{pwa.ios?"Di iPhone · Safari":"Di Android · Chrome"}</h3><ol>{pwa.ios?<><li>Buka tautan Arus di Safari, lalu masuk dengan akun yang sama jika diminta.</li><li>Ketuk tombol Bagikan, kemudian pilih <b>Tambahkan ke Layar Utama</b>.</li><li>Ketuk <b>Tambah</b>. Ikon Arus akan muncul di layar utama.</li></>:<><li>Buka tautan Arus di Chrome, lalu masuk dengan akun yang sama jika diminta.</li><li>Ketuk menu <b>⋮</b> di Chrome, lalu pilih <b>Tambahkan ke layar utama</b> atau <b>Instal aplikasi</b>.</li><li>Konfirmasi <b>Instal</b>. Ikon Arus akan muncul di layar utama.</li></>}</ol>{pwa.canInstall&&<button className="save-button" onClick={()=>{setInstallGuideOpen(false);void pwa.install();}}>Pasang sekarang <Download size={17}/></button>}</div></DrawerContent></Drawer>
-    <Drawer open={mode!==null} onOpenChange={v=>!v&&setMode(null)} direction="bottom"><DrawerContent className="form-sheet"><DrawerHeader><div className="drawer-heading"><DrawerTitle>{mode==="quick"?"Catat Cepat":editing?"Edit "+(mode==="account"?"Akun":mode==="budget"?"Budget":"Transaksi"):mode==="account"?"Tambah Akun":mode==="budget"?"Tambah Budget":"Catat Transaksi"}</DrawerTitle><button aria-label="Tutup formulir" onClick={()=>setMode(null)}><X size={19}/></button></div><DrawerDescription>{mode==="quick"?"Tulis satu transaksi, lalu tinjau hasilnya sebelum menyimpan.":mode==="account"?"Saldo awal hanya dapat diubah sebelum ada transaksi. Gunakan Cocokkan saldo untuk memperbaiki saldo terkini.":mode==="budget"?"Batas berlaku setiap bulan.":"Periksa nominal dan akun sebelum menyimpan."}</DrawerDescription></DrawerHeader>
-    <div className="form-sheet-scroll" key={mode} data-vaul-no-drag>{mode==="quick"?<div className="quick-entry-form"><label htmlFor="quick-text">Apa transaksinya?</label><textarea id="quick-text" autoFocus maxLength={150} value={quickText} onChange={e=>setQuickText(e.target.value)} placeholder="Contoh: beli kopi 25rb"/><p>Contoh lain: “gaji 4,5 juta” atau “transfer 200rb”. Kamu tetap memilih akun dan mengonfirmasi nominal.</p><button className="save-button" type="button" onClick={readQuick}>Tinjau transaksi <ChevronRight size={18}/></button><button className="manual-link" type="button" onClick={()=>setMode("transaction")}>Isi formulir manual</button></div>:<form onSubmit={save} className="form-body">
-      {mode==="account"&&<><label>Nama akun<input required maxLength={50} placeholder="Contoh: BCA, GoPay, Cash" value={name} onChange={e=>setName(e.target.value)}/></label><label>Jenis akun<Select value={kind} onValueChange={setKind}><SelectTrigger className="select-control"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="bank">Bank</SelectItem><SelectItem value="ewallet">E-Wallet</SelectItem><SelectItem value="cash">Cash</SelectItem></SelectContent></Select></label><label>Saldo awal (Rp)<input type="number" step="1" inputMode="numeric" placeholder="0" value={opening} disabled={!!editing&&data.transactions.some(t=>t.accountId===editing||t.toAccountId===editing)} onChange={e=>setOpening(e.target.value)}/></label></>}
-      {mode==="transaction"&&<><div className="type-pills">{(["expense","income","transfer"] as const).map(t=><button type="button" className={type===t?"chosen":""} key={t} onClick={()=>{setType(t);if(t!=="transfer"&&category==="Transfer")setCategory(t==="income"?"Gaji":categories[0]);}}>{t==="expense"?"Pengeluaran":t==="income"?"Pemasukan":"Transfer"}</button>)}</div><label>Jumlah (Rp)<input required autoFocus type="number" min="1" step="1" inputMode="numeric" placeholder="0" value={amount} onChange={e=>setAmount(e.target.value)}/></label><label>{type==="transfer"?"Dari akun":"Akun"}<Select value={account} onValueChange={setAccount}><SelectTrigger className="select-control"><SelectValue placeholder="Pilih akun"/></SelectTrigger><SelectContent>{data.accounts.map(a=><SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></label>{type==="transfer"?<label>Ke akun<Select value={destination} onValueChange={setDestination}><SelectTrigger className="select-control"><SelectValue placeholder="Pilih akun tujuan"/></SelectTrigger><SelectContent>{data.accounts.filter(a=>a.id!==account).map(a=><SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></label>:<label>Kategori<Select value={category} onValueChange={setCategory}><SelectTrigger className="select-control"><SelectValue/></SelectTrigger><SelectContent>{categories.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></label>}<label>Catatan<input maxLength={150} placeholder="Contoh: Kopi pagi" value={note} onChange={e=>setNote(e.target.value)}/></label><label>Tanggal<input required type="date" value={date} onChange={e=>setDate(e.target.value)}/></label>{activeBudget&&<div className={"budget-insight "+(afterBudget>=activeBudget.amount?"over":afterBudget>=activeBudget.amount*.8?"near":"")}><strong>Budget {category} · {date.slice(0,7)}</strong><span>Terpakai {fmt(beforeBudget)} dari {fmt(activeBudget.amount)}</span><b>{amount&&Number(amount)>0?afterBudget>activeBudget.amount?`Melewati batas ${fmt(afterBudget-activeBudget.amount)}`:`Sisa setelah transaksi ${fmt(activeBudget.amount-afterBudget)}`:`Sisa ${fmt(Math.max(0,activeBudget.amount-beforeBudget))}`}</b></div>}</>}
-      {mode==="budget"&&<><label>Kategori<Select value={category} onValueChange={setCategory}><SelectTrigger className="select-control"><SelectValue/></SelectTrigger><SelectContent>{categories.filter(c=>c!=="Gaji").map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></label><label>Budget bulanan (Rp)<input required autoFocus type="number" min="1" step="1" inputMode="numeric" placeholder="0" value={amount} onChange={e=>setAmount(e.target.value)}/></label></>}
-      <button className="save-button" type="submit" disabled={saving}>{saving?"Menyimpan...":editing?"Simpan Perubahan":"Simpan"} <Check size={18}/></button>
-    </form>}</div></DrawerContent></Drawer>
-    <Drawer open={!!reconcileAccount} onOpenChange={value=>!value&&!reconcileSaving&&setReconcileAccount(null)} direction="bottom"><DrawerContent className="form-sheet"><DrawerHeader><div className="drawer-heading"><DrawerTitle>Cocokkan saldo</DrawerTitle><button aria-label="Tutup pencocokan saldo" disabled={reconcileSaving} onClick={()=>setReconcileAccount(null)}><X size={19}/></button></div><DrawerDescription>Bandingkan saldo {reconcileAccount?.name} dengan saldo sebenarnya. Selisih dicatat sebagai penyesuaian di riwayat.</DrawerDescription></DrawerHeader><div className="form-sheet-scroll" data-vaul-no-drag><form className="form-body" onSubmit={e=>void saveReconciliation(e)}><div className="reconcile-summary"><span>Saldo tercatat</span><strong>{money(expectedBalance)}</strong></div><label>Saldo sebenarnya (Rp)<input required autoFocus type="number" step="1" inputMode="numeric" value={actualBalance} onChange={e=>setActualBalance(e.target.value)} placeholder="Contoh: 1250000"/></label>{actualBalance.trim()!==""&&reconciliationDelta(expectedBalance,Number(actualBalance))!==null&&<div className="reconcile-summary"><span>Selisih yang akan dicatat</span><strong className={Number(actualBalance)-expectedBalance>=0?"green":"red"}>{Number(actualBalance)-expectedBalance>=0?"+ ":"− "}{money(Math.abs(Number(actualBalance)-expectedBalance))}</strong></div>}<label>Alasan penyesuaian<input required maxLength={150} value={reconcileNote} onChange={e=>setReconcileNote(e.target.value)} placeholder="Contoh: Saldo bank berbeda setelah cek mutasi"/></label><p className="reconcile-hint">Penyesuaian tidak dihitung sebagai pemasukan, pengeluaran, atau penggunaan budget. Jika perlu koreksi lagi, buat penyesuaian baru.</p><button className="save-button" type="submit" disabled={reconcileSaving||!actualBalance.trim()||!reconcileNote.trim()}>{reconcileSaving?"Mencocokkan...":"Simpan penyesuaian"} <Check size={18}/></button></form></div></DrawerContent></Drawer>
-    <AlertDialog open={!!target} onOpenChange={v=>!v&&setTarget(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Hapus {target?.label}?</AlertDialogTitle><AlertDialogDescription>Data ini akan dihapus permanen. Ringkasan dan saldo akan dihitung ulang.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Batal</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={()=>void remove()}>Hapus</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-    <AlertDialog open={!!pendingBackup} onOpenChange={v=>!v&&!restoring&&setPendingBackup(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Ganti semua data saat ini?</AlertDialogTitle><AlertDialogDescription>Cadangan ini berisi {pendingBackup?.accounts.length||0} akun, {pendingBackup?.transactions.length||0} transaksi, dan {pendingBackup?.budgets.length||0} budget. Semua catatan saat ini akan diganti. Unduh cadangan saat ini dahulu bila masih dibutuhkan.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={restoring}>Batal</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={restoring} onClick={()=>void restoreBackup()}>{restoring?"Memulihkan...":"Ganti dan pulihkan"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <InstallGuideDrawer
+      open={installGuideOpen}
+      onOpenChange={setInstallGuideOpen}
+      pwa={pwa}
+      onCopyAppLink={()=>void copyAppLink()}
+    />
+    <FinanceEntryDrawer
+      mode={mode}
+      editing={editing}
+      saving={saving}
+      quickText={quickText}
+      name={name}
+      kind={kind}
+      opening={opening}
+      amount={amount}
+      account={account}
+      destination={destination}
+      category={category}
+      note={note}
+      date={date}
+      type={type}
+      accounts={data.accounts}
+      transactions={data.transactions}
+      categories={categories}
+      activeBudget={activeBudget}
+      beforeBudget={beforeBudget}
+      afterBudget={afterBudget}
+      formatMoney={fmt}
+      onModeChange={setMode}
+      onQuickTextChange={setQuickText}
+      onReadQuick={readQuick}
+      onNameChange={setName}
+      onKindChange={setKind}
+      onOpeningChange={setOpening}
+      onAmountChange={setAmount}
+      onAccountChange={setAccount}
+      onDestinationChange={setDestination}
+      onCategoryChange={setCategory}
+      onNoteChange={setNote}
+      onDateChange={setDate}
+      onTypeChange={nextType=>{
+        setType(nextType);
+        if(nextType!=="transfer"&&category==="Transfer")setCategory(nextType==="income"?"Gaji":categories[0]);
+      }}
+      onSubmit={save}
+    />
+    <ReconcileDrawer
+      account={reconcileAccount}
+      expectedBalance={expectedBalance}
+      actualBalance={actualBalance}
+      note={reconcileNote}
+      saving={reconcileSaving}
+      onActualBalanceChange={setActualBalance}
+      onNoteChange={setReconcileNote}
+      onClose={()=>setReconcileAccount(null)}
+      onSubmit={e=>void saveReconciliation(e)}
+    />
+    <ConfirmationDialogs
+      target={target}
+      onTargetChange={setTarget}
+      onDelete={()=>void remove()}
+      pendingBackup={pendingBackup}
+      restoring={restoring}
+      onPendingBackupChange={setPendingBackup}
+      onRestore={()=>void restoreBackup()}
+    />
   </div></>;
 }
