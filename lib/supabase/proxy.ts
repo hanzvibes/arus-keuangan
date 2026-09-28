@@ -6,6 +6,7 @@ const PUBLIC_PATHS = new Set([
   "/login",
   "/register",
   "/auth/callback",
+  "/forgot-password",
 ]);
 
 function isPublicPath(pathname: string) {
@@ -63,7 +64,7 @@ export async function updateSession(request: NextRequest) {
     return redirectToLogin(request);
   }
 
-  if (authenticated && (pathname === "/login" || pathname === "/register")) {
+  if (authenticated && (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password")) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/";
     homeUrl.search = "";
