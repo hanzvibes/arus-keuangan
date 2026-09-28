@@ -169,3 +169,19 @@ test("Supabase schema tracks covering indexes for recurring account foreign keys
     assert.match(migration, new RegExp(indexName));
   }
 });
+
+
+test("Next.js applies production security headers and disables API caching", async () => {
+  const source = await readFile("next.config.ts", "utf8");
+
+  assert.match(source, /poweredByHeader:\s*false/);
+  assert.match(source, /Content-Security-Policy/);
+  assert.match(source, /frame-ancestors 'none'/);
+  assert.match(source, /X-Frame-Options/);
+  assert.match(source, /X-Content-Type-Options/);
+  assert.match(source, /Permissions-Policy/);
+  assert.match(source, /Referrer-Policy/);
+  assert.match(source, /Strict-Transport-Security/);
+  assert.match(source, /source:\s*"\/api\/:path\*"/);
+  assert.match(source, /no-store, max-age=0/);
+});

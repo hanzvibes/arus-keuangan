@@ -164,6 +164,9 @@ Baseline keamanan database:
 - `anon` tidak punya CRUD access.
 - Fungsi mutasi atomik memakai `SECURITY INVOKER`.
 - Supabase security advisor dicek setelah perubahan schema.
+- Response aplikasi membawa header anti-clickjacking, MIME sniffing protection, referrer policy, permissions policy, HSTS, dan CSP minimal.
+- Response `/api/*` memakai `Cache-Control: no-store` agar data finansial terautentikasi tidak disimpan sebagai cache browser atau shared proxy.
+- Header `X-Powered-By` Next.js dinonaktifkan.
 
 ## Database schema di version control
 
