@@ -152,5 +152,6 @@ export const financeApi = {
   backup: () => request<Backup>("/api/backup", "Cadangan belum bisa diunduh.", { cache: "no-store" }, { timeoutMs: BACKUP_TIMEOUT_MS }),
   restore: (backup: Backup) => request<{ ok: boolean }>("/api/backup", "Pemulihan gagal.", json("POST", { confirm: "GANTI DATA", backup }), { timeoutMs: BACKUP_TIMEOUT_MS }),
   category: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok?: boolean }>("/api/categories", "Kategori belum bisa diproses.", json(method, body)),
+  goal: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok: boolean }>("/api/goals", "Target belum bisa disimpan.", json(method, body)),
   recurring: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok?: boolean }>("/api/recurring", "Jadwal belum bisa diproses.", json(method, body)),
 };
