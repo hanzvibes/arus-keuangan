@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const snapshot = await repository.readSnapshot();
 
     return Response.json({
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       ...snapshot,
     }, { headers: { "Cache-Control": "no-store" } });
