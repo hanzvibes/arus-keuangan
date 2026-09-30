@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 
 const PUBLIC_PATHS = new Set([
+  "/",
   "/login",
   "/register",
   "/auth/callback",
@@ -21,7 +22,7 @@ function redirectToLogin(request: NextRequest, reason?: string) {
   loginUrl.pathname = "/login";
   loginUrl.search = "";
   const returnTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  if (returnTo !== "/") loginUrl.searchParams.set("next", returnTo);
+  if (returnTo !== "/app") loginUrl.searchParams.set("next", returnTo);
   if (reason) loginUrl.searchParams.set("error", reason);
   return NextResponse.redirect(loginUrl);
 }
@@ -78,6 +79,13 @@ export async function updateSession(request: NextRequest) {
   const { data, error } = await supabase.auth.getClaims();
   const authenticated = !error && Boolean(data?.claims?.sub);
 
+  if (authenticated && pathname === "/") {
+    const appUrl = request.nextUrl.clone();
+    appUrl.pathname = "/app";
+    appUrl.search = "";
+    return NextResponse.redirect(appUrl);
+  }
+
   if (!authenticated && pathname.startsWith("/api/")) {
     return NextResponse.json(
       { error: "Sesi login diperlukan." },
@@ -91,7 +99,7 @@ export async function updateSession(request: NextRequest) {
 
   if (authenticated && (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password")) {
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/";
+    homeUrl.pathname = "/app";
     homeUrl.search = "";
     return NextResponse.redirect(homeUrl);
   }

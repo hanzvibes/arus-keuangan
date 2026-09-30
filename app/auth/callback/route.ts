@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 function safeDestination(requestUrl: URL) {
-  const requested = requestUrl.searchParams.get("next") || "/";
+  const requested = requestUrl.searchParams.get("next") || "/app";
   const candidate = new URL(requested, requestUrl.origin);
-  if (candidate.origin !== requestUrl.origin) return new URL("/", requestUrl.origin);
+  if (candidate.origin !== requestUrl.origin) return new URL("/app", requestUrl.origin);
   return candidate;
 }
 

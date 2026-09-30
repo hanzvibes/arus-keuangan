@@ -1,5 +1,5 @@
 /* Static service worker for Next.js/Vercel. Bump CACHE when shell behavior changes. */
-const CACHE = "arus-shell-v1";
+const CACHE = "arus-shell-v2";
 const PRECACHE = [
   "/manifest.webmanifest",
   "/icon-192.png",
@@ -15,8 +15,8 @@ async function isAppHtml(response) {
 
 async function cacheShell() {
   try {
-    const response = await fetch(new Request("/", { credentials: "include", cache: "reload" }));
-    if (await isAppHtml(response)) await (await caches.open(CACHE)).put("/", response.clone());
+    const response = await fetch(new Request("/app", { credentials: "include", cache: "reload" }));
+    if (await isAppHtml(response)) await (await caches.open(CACHE)).put("/app", response.clone());
   } catch { /* The static offline page remains available. */ }
 }
 
@@ -61,12 +61,16 @@ self.addEventListener("fetch", event => {
     event.respondWith((async () => {
       try {
         const response = await fetch(request);
-        if (url.pathname === "/" && await isAppHtml(response)) {
-          try { await (await caches.open(CACHE)).put("/", response.clone()); } catch { /* Use the network response. */ }
+        if (url.pathname === "/app" && await isAppHtml(response)) {
+          try { await (await caches.open(CACHE)).put("/app", response.clone()); } catch { /* Use the network response. */ }
         }
         return response;
       } catch {
-        return (await caches.match("/")) || (await caches.match("/offline.html")) || Response.error();
+        if (url.pathname === "/app") {
+          const shell = await caches.match("/app");
+          if (shell) return shell;
+        }
+        return (await caches.match("/offline.html")) || Response.error();
       }
     })());
     return;

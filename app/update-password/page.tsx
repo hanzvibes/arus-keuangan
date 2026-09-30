@@ -90,7 +90,7 @@ export default function UpdatePasswordPage() {
                 <h2>Password baru aktif</h2>
                 <p>Akses akunmu sudah menggunakan password yang baru.</p>
               </div>
-              <Link className="auth-secondary-link" href="/">
+              <Link className="auth-secondary-link" href="/app">
                 Lanjut ke Arus <ArrowRight size={17} />
               </Link>
             </div>

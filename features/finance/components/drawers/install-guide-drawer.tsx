@@ -29,7 +29,7 @@ export function InstallGuideDrawer({ open, onOpenChange, pwa, onCopyAppLink }: P
             Jika Arus dibuka di dalam ChatGPT, salin tautannya lalu buka di Chrome (Android) atau Safari (iPhone).
           </p>
           <div className="install-guide-link">
-            <span>{typeof window !== "undefined" ? window.location.origin + "/" : "Tautan Arus"}</span>
+            <span>{typeof window !== "undefined" ? window.location.origin + "/app" : "Tautan Arus"}</span>
             <button onClick={onCopyAppLink}>Salin tautan</button>
           </div>
           <h3>{pwa.ios ? "Di iPhone · Safari" : "Di Android · Chrome"}</h3>

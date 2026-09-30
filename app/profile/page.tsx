@@ -118,7 +118,7 @@ export default function ProfilePage() {
   return (
     <main className="profile-page">
       <header className="profile-topbar">
-        <Link className="profile-back" href="/" aria-label="Kembali ke Arus">
+        <Link className="profile-back" href="/app" aria-label="Kembali ke Arus">
           <ArrowLeft size={19} />
         </Link>
         <div className="profile-brand">

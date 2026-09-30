@@ -35,7 +35,8 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
     if (!online) throw new TypeError("offline");
     const path = key(input);
     if (path === "/offline.html") return new Response("Arus sedang offline", { headers: { "content-type": "text/html" } });
-    if (path === "/") return new Response(shell, { headers: { "content-type": "text/html" } });
+    if (path === "/app") return new Response(shell, { headers: { "content-type": "text/html" } });
+    if (path === "/") return new Response("<html>Landing page</html>", { headers: { "content-type": "text/html" } });
     return new Response("asset", { headers: { "content-type": "text/javascript" } });
   };
   vm.runInNewContext(await readFile(new URL("../public/sw.js", import.meta.url), "utf8"),
@@ -44,7 +45,8 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
   const installWork = [];
   listeners.get("install")({ waitUntil: promise => installWork.push(promise) });
   await Promise.all(installWork);
-  assert.match(await (await caches.match("/")).text(), /arus-app-shell/);
+  assert.match(await (await caches.match("/app")).text(), /arus-app-shell/);
+  assert.equal(await caches.match("/"), undefined);
   assert.match(await (await caches.match("/offline.html")).text(), /Arus sedang offline/);
 
   let intercepted;
@@ -53,10 +55,14 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
     listeners.get("fetch")({ request: { method: "GET", mode: "navigate", url: "https://arus.test" + path }, respondWith: response => { intercepted = response; } });
     return intercepted;
   };
+  assert.match(await (await await navigate("/")).text(), /Landing page/);
+  assert.equal(await caches.match("/"), undefined);
   shell = "<html>Sign in</html>";
-  assert.match(await (await await navigate("/")).text(), /Sign in/);
+  assert.match(await (await await navigate("/app")).text(), /Sign in/);
   online = false;
-  assert.match(await (await await navigate("/")).text(), /arus-app-shell/);
+  assert.match(await (await await navigate("/app")).text(), /arus-app-shell/);
+  assert.match(await (await await navigate("/")).text(), /Arus sedang offline/);
+  assert.match(await (await await navigate("/login")).text(), /Arus sedang offline/);
 
   intercepted = undefined;
   listeners.get("fetch")({ request: { method: "GET", mode: "cors", url: "https://arus.test/api/data" }, respondWith: response => { intercepted = response; } });

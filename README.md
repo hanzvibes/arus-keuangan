@@ -2,6 +2,8 @@
 
 Arus adalah aplikasi personal finance multi-user untuk mencatat akun, transaksi, transfer, budget, kategori pribadi, rekonsiliasi saldo, dan jadwal rutin.
 
+Halaman `/` memperkenalkan Arus kepada pengunjung. Dashboard pengguna berada di `/app`; pengunjung yang belum login akan diarahkan ke `/login` saat membukanya.
+
 ## Arsitektur data
 
 **Supabase adalah source of truth utama.**
@@ -63,6 +65,7 @@ Variable yang sama perlu dikonfigurasi di Vercel atau platform hosting lain.
 - `/profile` memungkinkan user mengubah nama profil; email tetap berasal dari Supabase Auth.
 - Record `profiles` dibuat otomatis saat user Auth dibuat.
 - Route aplikasi dilindungi melalui `proxy.ts`.
+- Pengguna yang sudah login diarahkan dari landing page `/` ke dashboard `/app`.
 - Identity diverifikasi menggunakan `supabase.auth.getClaims()`.
 - Request `/api/*` tanpa session valid mendapat HTTP 401.
 - Sign out lebih dulu memastikan session Supabase berakhir, lalu membersihkan cache perangkat Arus agar kegagalan jaringan tidak menghapus data offline saat user sebenarnya masih login. Jika pembersihan lokal gagal karena tab lain masih aktif, Arus memberi peringatan sebelum login berikutnya pada perangkat bersama.

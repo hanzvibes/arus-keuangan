@@ -4,7 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Arus — Keuangan Pribadi",
   description: "Catat transaksi, kelola akun, dan pantau budget dalam satu tempat.",
-  other: { "arus-app-shell": "1" },
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Arus", statusBarStyle: "default" },
   icons: {

@@ -43,7 +43,7 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback?next=/`;
+      const redirectTo = `${window.location.origin}/auth/callback?next=/app`;
       const { data, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -59,7 +59,7 @@ export default function RegisterPage() {
       }
 
       if (data.session) {
-        window.location.assign("/");
+        window.location.assign("/app");
         return;
       }
 

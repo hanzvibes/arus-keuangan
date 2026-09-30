@@ -84,7 +84,7 @@ export function FinanceApp() {
   }
   const changeTab=(next:Tab)=>{setTab(next);setQuery("");window.scrollTo({top:0,behavior:"smooth"});};
   async function copyAppLink(){
-    try{await navigator.clipboard.writeText(window.location.origin+"/");toast.success("Tautan Arus disalin. Tempel di Chrome atau Safari.");}
+    try{await navigator.clipboard.writeText(window.location.origin+"/app");toast.success("Tautan Arus disalin. Tempel di Chrome atau Safari.");}
     catch{toast.error("Salin tautan yang tertera, lalu buka di browser.");}
   }
   function startReconcile(a:Account) {

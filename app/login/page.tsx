@@ -47,7 +47,7 @@ export default function LoginPage() {
 
       const params = new URLSearchParams(window.location.search);
       const requested = params.get("next");
-      let destination = "/";
+      let destination = "/app";
 
       if (requested) {
         const candidate = new URL(requested, window.location.origin);
