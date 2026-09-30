@@ -1,3 +1,4 @@
+import type { TransactionSort } from "@/lib/reports";
 import { Search } from "lucide-react";
 import type {
   Account,
@@ -29,6 +30,9 @@ type Props = {
   onFilterCategoryChange: (value: string) => void;
   query: string;
   onQueryChange: (value: string) => void;
+  sort: TransactionSort;
+  onSortChange: (sort: TransactionSort) => void;
+  onResetFilters: () => void;
   filteredTransactions: Transaction[];
   recurring: RecurringRule[];
   accounts: Account[];
@@ -59,6 +63,9 @@ export function TransactionsTab({
   onFilterCategoryChange,
   query,
   onQueryChange,
+  sort,
+  onSortChange,
+  onResetFilters,
   filteredTransactions,
   recurring,
   accounts,
@@ -74,6 +81,9 @@ export function TransactionsTab({
 }: Props) {
   const dueCount = recurring.filter(rule => rule.active && rule.nextDate <= day()).length;
 
+  const activeFilters = [filterType !== "all", filterAccount !== "all", filterCategory !== "all", !!query.trim()].filter(Boolean).length;
+  const matchingIncome = filteredTransactions.filter(row => row.type === "income").reduce((sum,row) => sum + row.amount,0);
+  const matchingExpense = filteredTransactions.filter(row => row.type === "expense").reduce((sum,row) => sum + row.amount,0);
   return (
     <section className="screen">
       <ScreenTitle
@@ -131,12 +141,17 @@ export function TransactionsTab({
             <input
               value={query}
               onChange={event => onQueryChange(event.target.value)}
-              placeholder="Cari transaksi..."
+              placeholder="Cari catatan, kategori, atau akun..."
               aria-label="Cari transaksi"
             />
           </label>
 
-          <div className="surface transaction-surface">
+          <div className="transaction-results">
+            <div role="status"><strong>{filteredTransactions.length} transaksi</strong><span>Pemasukan {formatMoney(matchingIncome)} · Pengeluaran {formatMoney(matchingExpense)}</span></div>
+            <label className="sort-control">Urutkan<select value={sort} onChange={event=>onSortChange(event.target.value as TransactionSort)}><option value="newest">Terbaru</option><option value="oldest">Terlama</option><option value="largest">Nominal terbesar</option><option value="smallest">Nominal terkecil</option></select></label>
+            {(activeFilters>0||sort!=="newest")&&<button className="reset-filters" onClick={onResetFilters}>Reset {activeFilters>0 ? activeFilters+" filter" : "urutan"}</button>}
+          </div>
+          {!filteredTransactions.length ? <div className="surface filtered-empty"><Search size={28}/><h2>{activeFilters ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi bulan ini"}</h2><p>{activeFilters ? "Coba kata kunci lain atau hapus filter untuk melihat riwayat." : "Catat pemasukan, pengeluaran, atau transfer pertamamu."}</p><button className="reset-filters" onClick={activeFilters ? onResetFilters : onAdd}>{activeFilters ? "Hapus semua filter" : "Catat transaksi"}</button></div> : <div className="surface transaction-surface">
             <TransactionList
               items={filteredTransactions}
               accounts={accounts}
@@ -148,7 +163,7 @@ export function TransactionsTab({
               onEdit={onEdit}
               onDelete={onDelete}
             />
-          </div>
+          </div>}
         </>
       ) : (
         <RecurringSection
