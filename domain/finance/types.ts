@@ -5,5 +5,6 @@ export type Transaction = { id: string; type: TransactionType; amount: number; a
 export type Budget = { id: string; category: string; amount: number };
 export type Category = { id: string; name: string };
 export type RecurringRule = { id: string; type: Exclude<TransactionType, "adjustment">; amount: number; accountId: string; toAccountId: string | null; category: string; note: string; nextDate: string; frequency: Frequency; anchorDay: number; active: number };
-export type FinanceData = { accounts: Account[]; transactions: Transaction[]; budgets: Budget[]; categories: Category[]; recurring: RecurringRule[] };
+export type SavingsGoal = { id: string; name: string; targetAmount: number; savedAmount: number; targetDate: string | null; createdAt: string; updatedAt: string };
+export type FinanceData = { accounts: Account[]; transactions: Transaction[]; budgets: Budget[]; categories: Category[]; recurring: RecurringRule[]; goals?: SavingsGoal[] };
 export type QueuedTransaction = Omit<Transaction, "type" | "queuedAt"> & { type: Exclude<TransactionType, "adjustment">; queuedAt: string };
