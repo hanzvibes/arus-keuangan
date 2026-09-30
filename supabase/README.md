@@ -38,3 +38,15 @@ supabase migration list --local
 Keep `schemas/arus.sql` synchronized with the resulting production schema and run Supabase advisors after DDL changes.
 
 Do not commit production data, database passwords, service-role keys, or other secrets.
+
+## Proposed savings goals migration
+
+`20260930170000_add_savings_goals.sql` adds per-user savings goals with RLS,
+a database-maintained update timestamp, and backup v3 support in the atomic
+restore function. Apply the migration before deploying the corresponding
+application changes. The schema snapshot on this feature branch includes the
+proposed schema; it is not a claim that production has already been migrated.
+
+Backups v1/v2 omit goals and preserve existing goals on restore. Backups v3
+replace goals together with the other finance records within one transaction.
+Verify migration history against the linked project and run advisors after DDL.
