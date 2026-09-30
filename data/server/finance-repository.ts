@@ -1,3 +1,4 @@
+import type { SavingsInput } from "@/lib/savings";
 import type { Backup } from "@/lib/backup";
 import type {
   Account,
@@ -120,6 +121,10 @@ export interface FinanceRepository {
   getRecurringMeta(id: string): Promise<{ nextDate: string; anchorDay: number; frequency: string } | null>;
   updateRecurring(id: string, input: Omit<RecurringWrite, "id" | "createdAt" | "active">): Promise<boolean>;
   deleteRecurring(id: string): Promise<boolean>;
+
+  createGoal(id: string, input: SavingsInput): Promise<"created" | "duplicate">;
+  updateGoal(id: string, expectedUpdatedAt: string, input: SavingsInput): Promise<boolean>;
+  deleteGoal(id: string, expectedUpdatedAt: string): Promise<boolean>;
 
   reconcile(input: ReconcileInput): Promise<string | null>;
   restoreBackup(backup: Backup): Promise<{ accounts: number; transactions: number; budgets: number }>;
