@@ -1,4 +1,5 @@
 "use client";
+import { accountBalance } from "@/lib/finance";
 
 import type { FormEvent } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
@@ -98,12 +99,12 @@ export function FinanceEntryDrawer({
     "Periksa nominal dan akun sebelum menyimpan.";
 
   return (
-    <Drawer open={mode !== null} onOpenChange={open => !open && onModeChange(null)} direction="bottom">
+    <Drawer open={mode !== null} onOpenChange={open => !open && !saving && onModeChange(null)} direction="bottom">
       <DrawerContent className="form-sheet">
         <DrawerHeader>
           <div className="drawer-heading">
             <DrawerTitle>{title}</DrawerTitle>
-            <button aria-label="Tutup formulir" onClick={() => onModeChange(null)}>
+            <button disabled={saving} aria-label="Tutup formulir" onClick={() => onModeChange(null)}>
               <X size={19} />
             </button>
           </div>
@@ -131,7 +132,7 @@ export function FinanceEntryDrawer({
               </button>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="form-body">
+            <form onSubmit={onSubmit} className="form-body"><fieldset disabled={saving} className="goal-fields">
               {mode === "account" && (
                 <>
                   <label>
@@ -176,6 +177,8 @@ export function FinanceEntryDrawer({
                     {(["expense", "income", "transfer"] as const).map(item => (
                       <button
                         type="button"
+                        aria-pressed={type === item}
+                        disabled={item === "transfer" && accounts.length < 2}
                         className={type === item ? "chosen" : ""}
                         key={item}
                         onClick={() => onTypeChange(item)}
@@ -192,6 +195,7 @@ export function FinanceEntryDrawer({
                       autoFocus
                       type="number"
                       min="1"
+                      max="1000000000000"
                       step="1"
                       inputMode="numeric"
                       placeholder="0"
@@ -200,12 +204,13 @@ export function FinanceEntryDrawer({
                     />
                   </label>
 
+                  {Number(amount) > 0 && <p className="entry-amount-preview" aria-live="polite">{formatMoney(Number(amount))}</p>}
                   <label>
                     {type === "transfer" ? "Dari akun" : "Akun"}
                     <Select value={account} onValueChange={onAccountChange}>
                       <SelectTrigger className="select-control"><SelectValue placeholder="Pilih akun" /></SelectTrigger>
                       <SelectContent>
-                        {accounts.map(item => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                        {accounts.map(item => <SelectItem key={item.id} value={item.id}>{item.name} · {formatMoney(accountBalance(item, transactions))}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </label>
@@ -284,6 +289,7 @@ export function FinanceEntryDrawer({
                       autoFocus
                       type="number"
                       min="1"
+                      max="1000000000000"
                       step="1"
                       inputMode="numeric"
                       placeholder="0"
@@ -294,7 +300,7 @@ export function FinanceEntryDrawer({
                 </>
               )}
 
-              <button className="save-button" type="submit" disabled={saving}>
+              </fieldset><button className="save-button" type="submit" disabled={saving}>
                 {saving ? "Menyimpan..." : editing ? "Simpan Perubahan" : "Simpan"} <Check size={18} />
               </button>
             </form>
