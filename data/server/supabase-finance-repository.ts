@@ -129,14 +129,15 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
 
   return {
     async readSnapshot(): Promise<FinanceSnapshot> {
-      const [accounts, transactions, budgets, categories, recurring] = await Promise.all([
+      const [accounts, transactions, budgets, categories, recurring, goals] = await Promise.all([
         supabase.from("accounts").select("id,name,kind,opening_balance,created_at").order("created_at"),
         supabase.from("transactions").select("id,type,amount,account_id,to_account_id,category,note,date,created_at").order("date", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("budgets").select("id,category,amount,created_at").order("created_at"),
         supabase.from("categories").select("id,name,created_at").order("created_at"),
         supabase.from("recurring").select("id,type,amount,account_id,to_account_id,category,note,next_date,frequency,anchor_day,active,created_at").order("next_date"),
+        supabase.from("savings_goals").select("id,name,target_amount,saved_amount,target_date,created_at,updated_at").order("created_at"),
       ]);
-      [accounts, transactions, budgets, categories, recurring].forEach(result => assertQuery(result.error));
+      [accounts, transactions, budgets, categories, recurring, goals].forEach(result => assertQuery(result.error));
 
       return {
         accounts: (accounts.data ?? []).map(mapAccount),
@@ -144,6 +145,7 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
         budgets: (budgets.data ?? []).map(mapBudget),
         categories: (categories.data ?? []).map(mapCategory),
         recurring: (recurring.data ?? []).map(mapRecurring),
+        goals: (goals.data ?? []).map(row => ({ id: row.id, name: row.name, targetAmount: asNumber(row.target_amount), savedAmount: asNumber(row.saved_amount), targetDate: row.target_date, createdAt: row.created_at, updatedAt: row.updated_at })),
       };
     },
 
@@ -410,6 +412,32 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
 
     async deleteRecurring(id) {
       const result = await supabase.from("recurring").delete().eq("id", id).select("id").maybeSingle();
+      assertQuery(result.error);
+      return Boolean(result.data);
+    },
+
+    async createGoal(id, input) {
+      const result = await supabase.from("savings_goals").insert({
+        user_id: userId, id, name: input.name, target_amount: input.targetAmount,
+        saved_amount: input.savedAmount, target_date: input.targetDate,
+      });
+      if (result.error?.code === "23505") return "duplicate";
+      assertQuery(result.error);
+      return "created";
+    },
+
+    async updateGoal(id, expectedUpdatedAt, input) {
+      const result = await supabase.from("savings_goals").update({
+        name: input.name, target_amount: input.targetAmount, saved_amount: input.savedAmount,
+        target_date: input.targetDate,
+      }).eq("user_id", userId).eq("id", id).eq("updated_at", expectedUpdatedAt).select("id").maybeSingle();
+      assertQuery(result.error);
+      return Boolean(result.data);
+    },
+
+    async deleteGoal(id, expectedUpdatedAt) {
+      const result = await supabase.from("savings_goals").delete()
+        .eq("user_id", userId).eq("id", id).eq("updated_at", expectedUpdatedAt).select("id").maybeSingle();
       assertQuery(result.error);
       return Boolean(result.data);
     },

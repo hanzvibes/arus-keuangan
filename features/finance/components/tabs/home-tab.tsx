@@ -1,9 +1,10 @@
+import type { monthlyReport } from "@/lib/reports";
 import { ChevronRight, Eye, EyeOff, LayoutGrid, MessageCircle, Minus, Plus, Wallet } from "lucide-react";
-import type { Account, Budget, QueuedTransaction, Transaction } from "@/domain/finance/types";
+import type { Account, Budget, QueuedTransaction, SavingsGoal, Transaction } from "@/domain/finance/types";
 import { BudgetRow } from "@/features/finance/components/budget-row";
 import { PeriodControl } from "@/features/finance/components/period-control";
 import { TransactionList } from "@/features/finance/components/transaction-list";
-import { dateText, money } from "@/features/finance/lib/presentation";
+import { dateText } from "@/features/finance/lib/presentation";
 
 type WeekPoint = { date: string; label: string; value: number };
 
@@ -19,6 +20,9 @@ type Props = {
   onQuick: () => void;
   onAnalytics: () => void;
   onTransactions: () => void;
+  onGoals: () => void;
+  report: ReturnType<typeof monthlyReport>;
+  goals: SavingsGoal[];
   week: WeekPoint[];
   high: WeekPoint;
   weekTotal: number;
@@ -44,6 +48,9 @@ export function HomeTab({
   onQuick,
   onAnalytics,
   onTransactions,
+  onGoals,
+  report,
+  goals,
   week,
   high,
   weekTotal,
@@ -82,6 +89,12 @@ export function HomeTab({
         <MessageCircle size={18} /> Catat cepat lewat teks <ChevronRight size={17} />
       </button>
 
+      <section className="surface dashboard-month">
+        <div className="section-head"><div><h2>Ringkasan bulanan</h2><p>Pantau pemasukan, pengeluaran, dan selisihnya</p></div><button className="text-link" onClick={onAnalytics}>Laporan <ChevronRight size={16}/></button></div>
+        <PeriodControl month={month} onChange={onMonthChange}/>
+        <div className="dashboard-stats"><div><span>Pemasukan</span><strong className="green">{formatMoney(report.income)}</strong></div><div><span>Pengeluaran</span><strong>{formatMoney(report.expense)}</strong></div><div><span>Selisih</span><strong className={report.net>=0?"green":"red"}>{formatMoney(report.net)}</strong></div></div>
+      </section>
+      <button className="surface dashboard-goals" onClick={onGoals}><div><strong>Target tabungan</strong><span>{goals.length ? goals.filter(goal=>goal.savedAmount>=goal.targetAmount).length + " dari " + goals.length + " target tercapai" : "Mulai rencanakan dana darurat atau impianmu"}</span></div><ChevronRight size={20}/></button>
       <div className="home-grid">
         <section className="surface week-card">
           <div className="section-head">
@@ -101,7 +114,7 @@ export function HomeTab({
                   <div
                     className={"bar " + (index === 6 ? "current" : "")}
                     style={{ height: Math.max(point.value ? 16 : 7, point.value / peak * 76) + "px" }}
-                    title={dateText(point.date) + ": " + money(point.value)}
+                    title={dateText(point.date) + ": " + formatMoney(point.value)}
                   />
                 </div>
                 <span>{point.label}</span>

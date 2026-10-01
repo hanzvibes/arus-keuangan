@@ -85,11 +85,41 @@ Role `anon` tidak memperoleh akses CRUD ke tabel finansial.
 
 ## Backup dan restore
 
-Menu Data & Cadangan tetap menggunakan format JSON versi 2.
+Menu Data & Cadangan mengekspor format JSON versi 3, termasuk target tabungan.
+Cadangan versi 1 dan 2 tetap bisa dipulihkan. Karena format lama belum memuat target,
+pemulihan cadangan lama mempertahankan target tabungan yang sudah ada.
 
 - Export hanya mengambil data user yang sedang login karena RLS.
 - Restore divalidasi di aplikasi lalu dijalankan secara atomik melalui Postgres function.
 - Restore hanya mengganti data milik user yang sedang login.
+
+## Laporan, target tabungan, dan transaksi
+
+- Laporan bulanan menampilkan pemasukan, pengeluaran, arus kas bersih, perbandingan
+  dengan bulan sebelumnya, tren enam bulan, serta seluruh kategori pengeluaran.
+- Transfer dan penyesuaian saldo tidak dihitung sebagai pemasukan/pengeluaran.
+- Target tabungan menyimpan nama, nominal target, nominal terkumpul, dan tenggat
+  opsional di Supabase. Progres diubah manual dan tidak mengubah saldo akun.
+- Perkiraan setoran bulanan membagi sisa target pada bulan berjalan sampai bulan
+  tenggat (inklusif); ini bukan proyeksi bunga atau penjadwalan debit.
+- Target dapat dilihat dari cache saat offline; perubahan memerlukan koneksi.
+- Perubahan target memakai timestamp database untuk mendeteksi perubahan dari
+  perangkat lain dan mencegah progres tertimpa.
+- Pencarian transaksi mencakup catatan, kategori, akun asal, dan akun tujuan.
+  Riwayat dapat diurutkan menurut tanggal atau nominal absolut, dengan ringkasan
+  hasil dan reset filter.
+- Navigasi mobile memiliki label, akses langsung ke target/laporan, serta tombol
+  pencatatan manual. Catat lewat teks tetap tersedia di Beranda.
+
+### Menyiapkan fitur target tabungan
+
+Sebelum deployment branch ini, verifikasi migration history sesuai
+`supabase/README.md`, lalu terapkan
+`supabase/migrations/20260930170000_add_savings_goals.sql`.
+Migration menambahkan tabel `savings_goals`, RLS per-user, trigger timestamp,
+dan memperbarui restore backup secara atomik. Kode API snapshot membutuhkan
+tabel tersebut; jangan deploy kode sebelum migration berhasil.
+Snapshot schema pada branch ini mencakup perubahan yang diusulkan.
 
 ## Recurring
 

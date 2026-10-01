@@ -1,3 +1,5 @@
+import { validateSavingsInput } from "./savings.ts";
+import type { SavingsGoal } from "../domain/finance/types.ts";
 import { defaultCategories } from "./categories.ts";
 import { ADJUSTMENT_CATEGORY } from "./finance.ts";
 
@@ -6,7 +8,7 @@ export type BackupTransaction = { id: string; type: "income" | "expense" | "tran
 export type BackupBudget = { id: string; category: string; amount: number; createdAt: string };
 export type BackupCategory = { id: string; name: string; createdAt: string };
 export type BackupRecurring = { id: string; type: "income" | "expense" | "transfer"; amount: number; accountId: string; toAccountId: string | null; category: string; note: string; nextDate: string; frequency: "weekly" | "monthly"; anchorDay: number; active: number; createdAt: string };
-export type Backup = { version: 2; exportedAt: string; accounts: BackupAccount[]; transactions: BackupTransaction[]; budgets: BackupBudget[]; categories: BackupCategory[]; recurring: BackupRecurring[] };
+export type Backup = { version: 2 | 3; goals?: SavingsGoal[]; exportedAt: string; accounts: BackupAccount[]; transactions: BackupTransaction[]; budgets: BackupBudget[]; categories: BackupCategory[]; recurring: BackupRecurring[] };
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v: unknown, max: number, canBeEmpty = false) => typeof v === "string" && v.length <= max && (canBeEmpty || !!v.trim());
@@ -21,9 +23,10 @@ export const isCalendarDate = (v: unknown) => {
 const uniqueIds = (rows: { id: string }[]) => new Set(rows.map(row => row.id)).size === rows.length;
 
 export function validateBackup(value: unknown): { data?: Backup; error?: string } {
-  if (!object(value) || ![1, 2].includes(value.version as number) || !Array.isArray(value.accounts) || !Array.isArray(value.transactions) || !Array.isArray(value.budgets)) return { error: "Format cadangan tidak dikenali." };
-  if (value.version === 2 && (!Array.isArray(value.categories) || !Array.isArray(value.recurring))) return { error: "Format cadangan tidak lengkap." };
-  const categories = value.version === 2 ? value.categories as unknown[] : [], recurring = value.version === 2 ? value.recurring as unknown[] : [];
+  if (!object(value) || ![1, 2, 3].includes(value.version as number) || !Array.isArray(value.accounts) || !Array.isArray(value.transactions) || !Array.isArray(value.budgets)) return { error: "Format cadangan tidak dikenali." };
+  if ((value.version === 2 || value.version === 3) && (!Array.isArray(value.categories) || !Array.isArray(value.recurring))) return { error: "Format cadangan tidak lengkap." };
+  if (value.version === 3 && (!Array.isArray(value.goals) || value.goals.length > 100 || !value.goals.every(goal => object(goal) && id(goal.id) && validateSavingsInput(goal) && timestamp(goal.createdAt) && timestamp(goal.updatedAt)) || !uniqueIds(value.goals as SavingsGoal[]))) return { error: "Data target tabungan dalam cadangan tidak valid." };
+  const categories = (value.version === 2 || value.version === 3) ? value.categories as unknown[] : [], recurring = (value.version === 2 || value.version === 3) ? value.recurring as unknown[] : [];
   if (value.accounts.length > 100 || value.budgets.length > 100 || value.transactions.length > 2000 || categories.length > 100 || recurring.length > 100) return { error: "Cadangan terlalu besar untuk dipulihkan sekaligus." };
   const accounts = value.accounts, transactions = value.transactions, budgets = value.budgets;
   if (!accounts.every(a => object(a) && id(a.id) && str(a.name, 50) && ["bank", "ewallet", "cash"].includes(a.kind as string) && amount(a.openingBalance, true) && timestamp(a.createdAt))) return { error: "Data akun dalam cadangan tidak valid." };
@@ -36,5 +39,5 @@ export function validateBackup(value: unknown): { data?: Backup; error?: string 
   if (!uniqueIds(a) || !uniqueIds(t) || !uniqueIds(b) || !uniqueIds(c) || !uniqueIds(r) || new Set(b.map(row => row.category.toLowerCase())).size !== b.length || new Set(c.map(row => row.name.toLowerCase())).size !== c.length || c.some(row => defaultCategories.some(name => name.toLowerCase() === row.name.toLowerCase()))) return { error: "Cadangan berisi ID atau kategori ganda." };
   const accountIds = new Set(a.map(row => row.id));
   if ([...t, ...r].some(row => !accountIds.has(row.accountId) || (row.type === "transfer" ? !row.toAccountId || !accountIds.has(row.toAccountId) || row.toAccountId === row.accountId : row.toAccountId !== null))) return { error: "Ada catatan yang mengacu pada akun yang tidak tersedia." };
-  return { data: { version: 2, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", accounts: a, transactions: t, budgets: b, categories: c, recurring: r } };
+  return { data: { version: value.version === 3 ? 3 : 2, ...(value.version === 3 ? { goals: value.goals as SavingsGoal[] } : {}), exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", accounts: a, transactions: t, budgets: b, categories: c, recurring: r } };
 }

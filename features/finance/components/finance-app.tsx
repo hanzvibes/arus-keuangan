@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeftRight, BarChart3, Eye, EyeOff, Home, LayoutGrid, Plus, Settings2, Wallet, WifiOff, X } from "lucide-react";
+import { ArrowLeftRight, BarChart3, Eye, EyeOff, Home, LayoutGrid, Plus, Settings2, Target, Wallet, WifiOff, X } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
@@ -23,9 +23,12 @@ import { FinanceEntryDrawer, type FinanceEntryMode as Mode, type FinanceEntryTyp
 import { InstallGuideDrawer } from "@/features/finance/components/drawers/install-guide-drawer";
 import { ReconcileDrawer } from "@/features/finance/components/drawers/reconcile-drawer";
 
-type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "settings";
+import { GoalsTab } from "@/features/finance/components/tabs/goals-tab";
+import { monthlyReport, searchTransactions, sortTransactions, type TransactionSort } from "@/lib/reports";
+
+type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "goals" | "settings";
 const navigation: { id: Tab; label: string; icon: typeof Home }[] = [
-  { id:"home",label:"Beranda",icon:Home },{ id:"accounts",label:"Akun",icon:Wallet },{ id:"transactions",label:"Transaksi",icon:ArrowLeftRight },{ id:"budget",label:"Budget",icon:LayoutGrid },{ id:"analytics",label:"Analitik",icon:BarChart3 },{ id:"settings",label:"Data & Cadangan",icon:Settings2 },
+  { id:"home",label:"Beranda",icon:Home },{ id:"accounts",label:"Akun",icon:Wallet },{ id:"transactions",label:"Transaksi",icon:ArrowLeftRight },{ id:"budget",label:"Budget",icon:LayoutGrid },{ id:"analytics",label:"Laporan",icon:BarChart3 },{ id:"goals",label:"Target Tabungan",icon:Target },{ id:"settings",label:"Data & Cadangan",icon:Settings2 },
 ];
 export function FinanceApp() {
   const {
@@ -35,6 +38,7 @@ export function FinanceApp() {
   } = useFinanceData();
   const [tab,setTab]=useState<Tab>("home"), [mode,setMode]=useState<Mode>(null), [type,setType]=useState<EntryType>("expense");
   const [hidden,setHidden]=useState(false), [query,setQuery]=useState(""), [saving,setSaving]=useState(false);
+  const [transactionSort,setTransactionSort]=useState<TransactionSort>("newest");
   const [weekEnd]=useState(()=>day());
   const [month,setMonth]=useState(day().slice(0,7)), [filterType,setFilterType]=useState("all"), [filterAccount,setFilterAccount]=useState("all"), [filterCategory,setFilterCategory]=useState("all"), [transactionView,setTransactionView]=useState<"history"|"schedule">("history");
   const pwa=usePwa();
@@ -66,8 +70,8 @@ export function FinanceApp() {
   const {total:budgetTotal,spent:budgetedSpend,percent:budgetPercent}=budgetSummary(shown.budgets,shown.transactions,month);
   const week=Array.from({length:7},(_,i)=>{const date=new Date(weekEnd+"T12:00:00");date.setDate(date.getDate()-(6-i));const target=day(date);return {date:target,label:date.toLocaleDateString("id-ID",{weekday:"short"}).slice(0,3),value:shown.transactions.filter(t=>t.type==="expense"&&t.date===target).reduce((s,t)=>s+t.amount,0)};});
   const weekTotal=week.reduce((s,d)=>s+d.value,0), high=week.reduce((a,b)=>b.value>a.value?b:a,week[0]), peak=Math.max(...week.map(d=>d.value),1);
-  const byCategory=categories.map(c=>({category:c,amount:expenses.filter(t=>t.category===c).reduce((s,t)=>s+t.amount,0)})).filter(x=>x.amount).sort((a,b)=>b.amount-a.amount);
-  const filteredTransactions=shown.transactions.filter(t=>t.date.startsWith(month)&&(filterType==="all"||t.type===filterType)&&(filterAccount==="all"||t.accountId===filterAccount||t.toAccountId===filterAccount)&&(filterCategory==="all"||t.category===filterCategory)&&(t.note+" "+t.category).toLowerCase().includes(query.toLowerCase()));
+  const report=monthlyReport(shown.transactions,month);
+  const filteredTransactions=sortTransactions(searchTransactions(shown.transactions.filter(t=>t.date.startsWith(month)&&(filterType==="all"||t.type===filterType)&&(filterAccount==="all"||t.accountId===filterAccount||t.toAccountId===filterAccount)&&(filterCategory==="all"||t.category===filterCategory)),shown.accounts,query),transactionSort);
   const activeBudget=type==="expense"?shown.budgets.find(b=>b.category===category):undefined;
   const beforeBudget=activeBudget?shown.transactions.filter(t=>t.type==="expense"&&t.category===category&&t.date.startsWith(date.slice(0,7))&&t.id!==editing).reduce((sum,t)=>sum+t.amount,0):0;
   const afterBudget=beforeBudget+Number(amount||0);
@@ -203,7 +207,8 @@ export function FinanceApp() {
   }
   return <><Toaster position="top-center" richColors/><div className="app-shell">
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
-    <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions"><button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button><button aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button><button aria-label="Lihat analitik" onClick={()=>changeTab("analytics")}><BarChart3 size={19}/></button></div></header>
+    <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions"><button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button><button aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button><button aria-label="Lihat laporan" onClick={()=>changeTab("analytics")}><BarChart3 size={19}/></button></div></header>
+    <div className="workspace-links"><button aria-pressed={tab==="accounts"} onClick={()=>changeTab("accounts")}><Wallet size={16}/>Akun</button><button aria-pressed={tab==="budget"} onClick={()=>changeTab("budget")}><LayoutGrid size={16}/>Budget</button></div>
     {loading?<div className="load-state">Memuat catatan keuangan…</div>:error?<div className="error-state">Data belum bisa dimuat. <button onClick={()=>void refresh()}>Coba lagi</button></div>:<>
     {pwa.updateAvailable&&<div className="update-strip" role="status"><span>Versi baru Arus siap digunakan.</span><button onClick={pwa.applyUpdate}>Perbarui</button></div>}
     {!pwa.installed&&!installTipDismissed&&<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>}
@@ -220,6 +225,9 @@ export function FinanceApp() {
       onQuick={()=>open("quick")}
       onAnalytics={()=>changeTab("analytics")}
       onTransactions={()=>changeTab("transactions")}
+      onGoals={()=>changeTab("goals")}
+      report={report}
+      goals={shown.goals||[]}
       week={week}
       high={high}
       weekTotal={weekTotal}
@@ -259,6 +267,9 @@ export function FinanceApp() {
       onFilterCategoryChange={setFilterCategory}
       query={query}
       onQueryChange={setQuery}
+      sort={transactionSort}
+      onSortChange={setTransactionSort}
+      onResetFilters={()=>{setQuery("");setFilterType("all");setFilterAccount("all");setFilterCategory("all");setTransactionSort("newest");}}
       filteredTransactions={filteredTransactions}
       recurring={shown.recurring}
       accounts={data.accounts}
@@ -288,11 +299,10 @@ export function FinanceApp() {
     {tab==="analytics"&&<AnalyticsTab
       month={month}
       onMonthChange={changeMonth}
-      income={income}
-      out={out}
-      byCategory={byCategory}
+      transactions={shown.transactions}
       formatMoney={fmt}
     />}
+    {tab==="goals"&&<GoalsTab goals={shown.goals||[]} offline={offline} formatMoney={fmt} onRefresh={refresh}/>}
     {tab==="settings"&&<SettingsTab
       pwa={pwa}
       categories={data.categories}
@@ -314,7 +324,13 @@ export function FinanceApp() {
       onRemoveDeviceCache={()=>void removeDeviceCache()}
     />}
     </>}</div></main>
-    <nav className="bottom-nav" aria-label="Navigasi utama"><button className={tab==="home"?"selected":""} aria-label="Beranda" onClick={()=>changeTab("home")}><Home size={23}/></button><button className={tab==="accounts"?"selected":""} aria-label="Akun" onClick={()=>changeTab("accounts")}><Wallet size={23}/></button><button className="nav-add" aria-label="Catat cepat lewat teks" onClick={()=>open("quick")}><Plus size={26}/></button><button className={tab==="transactions"?"selected":""} aria-label="Transaksi" onClick={()=>changeTab("transactions")}><ArrowLeftRight size={23}/></button><button className={tab==="analytics"||tab==="budget"?"selected":""} aria-label="Analitik" onClick={()=>changeTab("analytics")}><BarChart3 size={23}/></button></nav>
+    <nav className="bottom-nav" aria-label="Navigasi utama">
+      <button className={tab==="home"?"selected":""} aria-current={tab==="home"?"page":undefined} onClick={()=>changeTab("home")}><Home size={21}/><span>Beranda</span></button>
+      <button className={tab==="transactions"?"selected":""} aria-current={tab==="transactions"?"page":undefined} onClick={()=>changeTab("transactions")}><ArrowLeftRight size={21}/><span>Transaksi</span></button>
+      <button className="nav-add" aria-label="Catat transaksi" onClick={()=>open("transaction")}><Plus size={26}/></button>
+      <button className={tab==="goals"?"selected":""} aria-current={tab==="goals"?"page":undefined} onClick={()=>changeTab("goals")}><Target size={21}/><span>Target</span></button>
+      <button className={tab==="analytics"?"selected":""} aria-current={tab==="analytics"?"page":undefined} onClick={()=>changeTab("analytics")}><BarChart3 size={21}/><span>Laporan</span></button>
+    </nav>
     <InstallGuideDrawer
       open={installGuideOpen}
       onOpenChange={setInstallGuideOpen}
@@ -350,7 +366,7 @@ export function FinanceApp() {
       onKindChange={setKind}
       onOpeningChange={setOpening}
       onAmountChange={setAmount}
-      onAccountChange={setAccount}
+      onAccountChange={nextAccount=>{setAccount(nextAccount);if(destination===nextAccount)setDestination(data.accounts.find(item=>item.id!==nextAccount)?.id||"");}}
       onDestinationChange={setDestination}
       onCategoryChange={setCategory}
       onNoteChange={setNote}

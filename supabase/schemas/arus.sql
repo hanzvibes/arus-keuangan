@@ -1,5 +1,6 @@
 -- Arus declarative schema snapshot.
 -- Baseline captured from the live Supabase project on 2026-09-27; synchronized through migration 20260928060444.
+-- Proposed additions: savings_goals and backup v3; apply migration 20260930170000 before deploying this branch.
 -- This file covers application-owned objects only. Supabase-managed auth schema is not duplicated here.
 
 create schema if not exists private;
@@ -118,6 +119,40 @@ create index recurring_user_account_idx
 create index recurring_user_to_account_idx
   on public.recurring (user_id, to_account_id)
   where to_account_id is not null;
+
+create table public.savings_goals (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  id text not null check (id ~ '^[A-Za-z0-9_-]{1,100}$'),
+  name text not null check (char_length(btrim(name)) between 1 and 80),
+  target_amount bigint not null check (target_amount > 0 and target_amount <= 1000000000000),
+  saved_amount bigint not null default 0 check (saved_amount >= 0 and saved_amount <= 1000000000000),
+  target_date date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.savings_goals enable row level security;
+create policy savings_goals_owner_access on public.savings_goals
+  for all to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+revoke all on public.savings_goals from public, anon;
+grant select, insert, update, delete on public.savings_goals to authenticated;
+
+create or replace function public.arus_touch_savings_goal()
+returns trigger language plpgsql security invoker set search_path = ''
+as $$
+begin
+  new.updated_at := clock_timestamp();
+  return new;
+end;
+$$;
+revoke all on function public.arus_touch_savings_goal() from public, anon;
+grant execute on function public.arus_touch_savings_goal() to authenticated;
+create trigger arus_touch_savings_goal
+before update on public.savings_goals
+for each row execute function public.arus_touch_savings_goal();
+
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -394,6 +429,19 @@ declare
 begin
   if uid is null then raise exception 'authentication required'; end if;
 
+  -- Legacy backups preserve goals because they did not contain this feature.
+  if p_backup ? 'goals' then
+    delete from public.savings_goals where user_id = uid;
+    for row_data in select value from jsonb_array_elements(p_backup->'goals')
+    loop
+      insert into public.savings_goals(user_id, id, name, target_amount, saved_amount, target_date, created_at, updated_at)
+      values (uid, row_data->>'id', row_data->>'name',
+        (row_data->>'targetAmount')::bigint, (row_data->>'savedAmount')::bigint,
+        (row_data->>'targetDate')::date, (row_data->>'createdAt')::timestamptz,
+        (row_data->>'updatedAt')::timestamptz);
+    end loop;
+  end if;
+
   delete from public.transactions where user_id = uid;
   delete from public.recurring where user_id = uid;
   delete from public.budgets where user_id = uid;
@@ -458,6 +506,7 @@ begin
   );
 end;
 $$;
+
 
 create or replace function private.arus_handle_new_user()
 returns trigger

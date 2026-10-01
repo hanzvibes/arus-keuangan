@@ -8,6 +8,7 @@ const financeRoutes = [
   "app/api/categories/route.ts",
   "app/api/recurring/route.ts",
   "app/api/reconcile/route.ts",
+  "app/api/goals/route.ts",
 ];
 
 test("finance API routes depend on the repository boundary, not Supabase queries", async () => {

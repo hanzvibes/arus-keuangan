@@ -1,0 +1,46 @@
+name: Database integration
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  savings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        schema: [migration, snapshot]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bootstrap test Auth
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/bootstrap.sql
+      - name: Verify additive migration from pre-feature baseline
+        if: matrix.schema == 'migration'
+        run: |
+          git show 6b3e37ad27630e1eed9e809b8887e8381b5f0ca6:supabase/schemas/arus.sql | psql -v ON_ERROR_STOP=1
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20260930170000_add_savings_goals.sql
+      - name: Verify proposed schema snapshot
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f supabase/schemas/arus.sql
+      - name: Verify ownership, stale updates, backup compatibility and rollback
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/savings.sql
