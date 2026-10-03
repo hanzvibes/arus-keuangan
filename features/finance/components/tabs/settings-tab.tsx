@@ -95,7 +95,7 @@ export function SettingsTab({
           <Download size={22} />
           <div>
             <h2>Unduh data</h2>
-            <p>Cadangan JSON memuat metadata struk, tetapi tidak memuat foto atau draft scan. CSV untuk membuka transaksi di spreadsheet.</p>
+            <p>Cadangan JSON memuat catatan keuangan dan metadata struk. Foto struk serta draft scan tidak ikut dicadangkan dan tidak dapat dipulihkan dari file ini.</p>
           </div>
         </div>
         <div className="data-actions">
@@ -116,7 +116,7 @@ export function SettingsTab({
           <Upload size={22} />
           <div>
             <h2>Pulihkan cadangan</h2>
-            <p>Isi saat ini akan diganti seluruhnya. Unduh cadangan terbaru sebelum memulihkan.</p>
+            <p>Isi saat ini akan diganti seluruhnya. Unduh cadangan terbaru sebelum memulihkan. Foto struk dan draft scan tidak dipulihkan.</p>
           </div>
         </div>
         <input
