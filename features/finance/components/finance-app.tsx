@@ -44,6 +44,7 @@ export function FinanceApp() {
   const [tab,setTab]=useState<Tab>("home"), [mode,setMode]=useState<Mode>(null), [type,setType]=useState<EntryType>("expense");
   const [hidden,setHidden]=useState(false), [query,setQuery]=useState(""), [saving,setSaving]=useState(false);
   const [receiptOpen,setReceiptOpen]=useState(false), [receiptInitial,setReceiptInitial]=useState<ReceiptScan|null>(null);
+  const [scanReturnTo,setScanReturnTo]=useState<"choice"|"transaction"|null>(null);
   const [receiptDetail,setReceiptDetail]=useState<Transaction|null>(null);
   const [transactionSort,setTransactionSort]=useState<TransactionSort>("newest");
   const [weekEnd]=useState(()=>day());
@@ -124,6 +125,13 @@ export function FinanceApp() {
     if((next==="transaction"||next==="quick")&&!data.accounts.length){next="account";setTab("accounts");toast.info("Tambahkan akunmu dulu untuk mulai mencatat.");}
     setEditing(null);setMode(next);setType(kindOfTx);setName("");setKind("bank");setOpening("");setAmount("");setAccount(data.accounts[0]?.id||"");setDestination(data.accounts[1]?.id||"");setCategory(kindOfTx==="income"?"Gaji":defaultCategories[0]);setNote("");setDate(day());setQuickText("");
   }
+  function startScan(returnTo: "choice"|"transaction"|null = null) {
+    if(!data.accounts.length){open("account");setTab("accounts");toast.info("Tambahkan akunmu dulu untuk mulai mencatat.");return;}
+    setScanReturnTo(returnTo);setMode(null);setReceiptInitial(null);setReceiptOpen(true);
+  }
+  function closeScan() {
+    setReceiptOpen(false);setReceiptInitial(null);setMode(scanReturnTo);setScanReturnTo(null);
+  }
   function edit(entity:"account"|"transaction"|"budget", item:Account|Transaction|Budget) {
     setEditing(item.id);setMode(entity);
     if(entity==="account"){const a=item as Account;setName(a.name);setKind(a.kind);setOpening(String(a.openingBalance));}
@@ -138,7 +146,7 @@ export function FinanceApp() {
     toast.info("Cek akun, kategori, dan nominal sebelum menyimpan.");
   }
   async function save(e:React.FormEvent) {
-    e.preventDefault();if(!mode||mode==="quick")return;setSaving(true);
+    e.preventDefault();if(!mode||mode==="quick"||mode==="choice")return;setSaving(true);
     const body=mode==="account"?{entity:mode,name,kind,openingBalance:Number(opening||0)}:mode==="budget"?{entity:mode,category,amount:Number(amount)}:{entity:mode,type,amount:Number(amount),accountId:account,toAccountId:destination,category,note,date};
     const id=editing||crypto.randomUUID();
     try{await financeApi.save(editing?"PATCH":"POST",{...body,id});setMode(null);setEditing(null);await refresh();toast.success(editing?"Perubahan disimpan.":"Berhasil disimpan.");}
@@ -212,13 +220,14 @@ export function FinanceApp() {
       else toast.error(e instanceof Error?e.message:"Data offline belum bisa dihapus.");
     }
   }
+  const installBanner=!pwa.installed&&!installTipDismissed?<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>:null;
   return <><Toaster position="top-center" richColors/><div className="app-shell">
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
     <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions"><button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button><button aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button><button aria-label="Lihat laporan" onClick={()=>changeTab("analytics")}><BarChart3 size={19}/></button></div></header>
     <div className="workspace-links"><button aria-pressed={tab==="accounts"} onClick={()=>changeTab("accounts")}><Wallet size={16}/>Akun</button><button aria-pressed={tab==="budget"} onClick={()=>changeTab("budget")}><LayoutGrid size={16}/>Budget</button></div>
     {loading?<FinanceLoading/>:error?<div className="error-state" role="alert">Data belum bisa dimuat. <button onClick={()=>void refresh()}>Coba lagi</button></div>:<>
     {pwa.updateAvailable&&<div className="update-strip" role="status"><span>Versi baru Arus siap digunakan.</span><button onClick={pwa.applyUpdate}>Perbarui</button></div>}
-    {!pwa.installed&&!installTipDismissed&&<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>}
+    {tab!=="home"&&installBanner}
     {(offline||queued.length>0)&&<div className="offline-strip"><WifiOff size={18}/><span>{offline?"Menampilkan salinan terakhir. Transaksi baru akan menunggu koneksi.":queueError?`${queued.length} transaksi tertunda: ${queueError}`:`${queued.length} transaksi menunggu sinkronisasi.`}</span>{queued.length>0&&<button onClick={()=>changeTab("settings")}>Tinjau</button>}{offline?<button onClick={()=>void refresh()}>Coba lagi</button>:queued.length>0&&<button disabled={syncingQueue} onClick={()=>void syncQueue()}>{syncingQueue?"Mengirim...":"Kirim"}</button>}</div>}
     {tab==="home"&&<HomeTab
       hidden={hidden}
@@ -229,7 +238,8 @@ export function FinanceApp() {
       onIncome={()=>open("transaction","income")}
       onExpense={()=>open("transaction","expense")}
       onBudget={()=>changeTab("budget")}
-      onQuick={()=>open("quick")}
+      onScan={()=>startScan()}
+      installBanner={installBanner}
       onAnalytics={()=>changeTab("analytics")}
       onTransactions={()=>changeTab("transactions")}
       onGoals={()=>changeTab("goals")}
@@ -285,9 +295,9 @@ export function FinanceApp() {
       queued={queued}
       syncingQueue={syncingQueue}
       onRefresh={refresh}
-      onAdd={()=>open("transaction")}
-      onScanReceipt={()=>{setReceiptInitial(null);setReceiptOpen(true);}}
-      onOpenScan={scan=>{if(scan.transactionId){setReceiptDetail(data.transactions.find(row=>row.id===scan.transactionId)||null);}else{setReceiptInitial(scan);setReceiptOpen(true);}}}
+      onAdd={()=>open("choice")}
+      onScanReceipt={()=>startScan()}
+      onOpenScan={scan=>{if(scan.transactionId){setReceiptDetail(data.transactions.find(row=>row.id===scan.transactionId)||null);}else{setScanReturnTo(null);setReceiptInitial(scan);setReceiptOpen(true);}}}
       onViewReceipt={setReceiptDetail}
       onDiscardQueued={id=>void dropQueued(id)}
       onEdit={transaction=>transaction.hasReceipt?setReceiptDetail(transaction):edit("transaction",transaction)}
@@ -337,7 +347,7 @@ export function FinanceApp() {
     <nav className="bottom-nav" aria-label="Navigasi utama">
       <button className={tab==="home"?"selected":""} aria-current={tab==="home"?"page":undefined} onClick={()=>changeTab("home")}><Home size={21}/><span>Beranda</span></button>
       <button className={tab==="transactions"?"selected":""} aria-current={tab==="transactions"?"page":undefined} onClick={()=>changeTab("transactions")}><ArrowLeftRight size={21}/><span>Transaksi</span></button>
-      <button className="nav-add" aria-label="Catat transaksi" onClick={()=>open("transaction")}><Plus size={26}/></button>
+      <button className="nav-add" aria-label="Catat transaksi" onClick={()=>open("choice")}><Plus size={26}/></button>
       <button className={tab==="goals"?"selected":""} aria-current={tab==="goals"?"page":undefined} onClick={()=>changeTab("goals")}><Target size={21}/><span>Target</span></button>
       <button className={tab==="analytics"?"selected":""} aria-current={tab==="analytics"?"page":undefined} onClick={()=>changeTab("analytics")}><BarChart3 size={21}/><span>Laporan</span></button>
     </nav>
@@ -386,10 +396,12 @@ export function FinanceApp() {
         if(nextType!=="transfer"&&category==="Transfer")setCategory(nextType==="income"?"Gaji":categories[0]);
       }}
       onSubmit={save}
-      onScanReceipt={()=>{setMode(null);setReceiptInitial(null);setReceiptOpen(true);}}
+      onScanReceipt={()=>startScan(mode==="choice"?"choice":"transaction")}
+      onChooseManual={()=>open("transaction")}
+      onChooseQuick={()=>open("quick")}
     />}
-    {receiptOpen && <ReceiptScanner open={receiptOpen} onClose={()=>{setReceiptOpen(false);setReceiptInitial(null);}} onSaved={refresh} accounts={data.accounts} transactions={data.transactions} categories={categories} initialScan={receiptInitial} initialAccountId={receiptInitial?.transactionId ? data.transactions.find(row=>row.id===receiptInitial.transactionId)?.accountId : undefined}/>}
-    <ReceiptDetail transaction={receiptDetail} onClose={()=>setReceiptDetail(null)} onEdit={id=>{void receiptApi.get(id).then(scan=>{setReceiptDetail(null);setReceiptInitial(scan);setReceiptOpen(true);}).catch(error=>toast.error(error instanceof Error?error.message:"Draft struk belum bisa dibuka."));}}/>
+    {receiptOpen && <ReceiptScanner open={receiptOpen} onClose={closeScan} onSaved={async()=>{setReceiptOpen(false);setReceiptInitial(null);setScanReturnTo(null);try{await refresh();}catch{toast.info("Transaksi tersimpan. Segarkan halaman untuk memperbarui daftar.");}}} accounts={data.accounts} transactions={data.transactions} categories={categories} initialScan={receiptInitial} initialAccountId={receiptInitial?.transactionId ? data.transactions.find(row=>row.id===receiptInitial.transactionId)?.accountId : undefined}/>}
+    <ReceiptDetail transaction={receiptDetail} onClose={()=>setReceiptDetail(null)} onEdit={id=>{void receiptApi.get(id).then(scan=>{setReceiptDetail(null);setScanReturnTo(null);setReceiptInitial(scan);setReceiptOpen(true);}).catch(error=>toast.error(error instanceof Error?error.message:"Draft struk belum bisa dibuka."));}}/>
     <ReconcileDrawer
       account={reconcileAccount}
       expectedBalance={expectedBalance}

@@ -167,11 +167,11 @@ export function ReceiptScanner({ open, onClose, onSaved, accounts, transactions,
         setMessage("Struk ini mungkin sudah dicatat. Periksa transaksi yang cocok sebelum lanjut.");
         return;
       }
-      await onSaved(); onClose();
+      await onSaved();
     } catch (error) {
       try {
         const remote = (await receiptApi.list()).scans.find(item => item.id === scan.id);
-        if (remote?.transactionId && !scan.transactionId) { await onSaved(); onClose(); return; }
+        if (remote?.transactionId && !scan.transactionId) { await onSaved(); return; }
       } catch { /* Keep the draft and show the original failure. */ }
       setMessage(error instanceof Error ? error.message : "Gagal menyimpan struk.");
     }
@@ -186,10 +186,10 @@ export function ReceiptScanner({ open, onClose, onSaved, accounts, transactions,
       <div className="form-sheet-scroll receipt-body" data-vaul-no-drag>
         {stage === "capture" && <div className="receipt-capture">
           <video ref={video} autoPlay playsInline muted className={cameraActive ? "receipt-video" : "hidden"}/>
-          {!cameraActive && <><span className="receipt-capture-art"><ScanLine size={48} strokeWidth={1.3}/></span><h3>Satu foto, lebih praktis</h3><p>Letakkan struk di permukaan datar.<br/>Pastikan seluruh teks terlihat dan cukup terang.</p></>}
           {cameraActive && <button className="save-button" onClick={() => void capture()}><Camera size={19}/> Ambil foto</button>}
           <div className="receipt-capture-choices"><button onClick={() => void startCamera()}><Camera size={24}/><strong>Buka kamera</strong><small>Ambil foto sekarang</small></button><button onClick={() => gallery.current?.click()}><Upload size={24}/><strong>Pilih foto</strong><small>Dari galeri perangkat</small></button></div>
           <button className="receipt-native-camera" onClick={() => cameraInput.current?.click()}>Gunakan kamera perangkat</button>
+          {!cameraActive && <><span className="receipt-capture-art"><ScanLine size={48} strokeWidth={1.3}/></span><h3>Satu foto, lebih praktis</h3><p>Letakkan struk di permukaan datar.<br/>Pastikan seluruh teks terlihat dan cukup terang.</p></>}
           <p className="receipt-privacy"><ShieldCheck size={15}/> Foto tidak disimpan secara default</p>
         </div>}
         <input ref={reviewPhotoInput} type="file" accept="image/*" hidden onChange={event => { void selectReviewPhoto(event.target.files?.[0]); event.target.value = ""; }}/>

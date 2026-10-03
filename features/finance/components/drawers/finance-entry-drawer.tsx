@@ -2,12 +2,12 @@
 import { accountBalance } from "@/lib/finance";
 
 import type { FormEvent } from "react";
-import { Check, ChevronRight, ScanLine, X } from "lucide-react";
+import { Check, ChevronRight, MessageCircle, PenLine, ScanLine, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Account, Budget, Transaction, TransactionType } from "@/domain/finance/types";
 
-export type FinanceEntryMode = "account" | "transaction" | "budget" | "quick" | null;
+export type FinanceEntryMode = "account" | "transaction" | "budget" | "quick" | "choice" | null;
 export type FinanceEntryType = Exclude<TransactionType, "adjustment">;
 
 type Props = {
@@ -47,6 +47,8 @@ type Props = {
   onTypeChange: (type: FinanceEntryType) => void;
   onSubmit: (event: FormEvent) => void;
   onScanReceipt?: () => void;
+  onChooseManual: () => void;
+  onChooseQuick: () => void;
 };
 
 export function FinanceEntryDrawer({
@@ -86,8 +88,11 @@ export function FinanceEntryDrawer({
   onTypeChange,
   onSubmit,
   onScanReceipt,
+  onChooseManual,
+  onChooseQuick,
 }: Props) {
   const title =
+    mode === "choice" ? "Pilih cara mencatat" :
     mode === "quick" ? "Catat Cepat" :
     editing ? "Edit " + (mode === "account" ? "Akun" : mode === "budget" ? "Budget" : "Transaksi") :
     mode === "account" ? "Tambah Akun" :
@@ -95,6 +100,7 @@ export function FinanceEntryDrawer({
     "Catat Transaksi";
 
   const description =
+    mode === "choice" ? "Pilih cara yang paling cepat buatmu hari ini." :
     mode === "quick" ? "Tulis satu transaksi, lalu tinjau hasilnya sebelum menyimpan." :
     mode === "account" ? "Saldo awal hanya dapat diubah sebelum ada transaksi. Gunakan Cocokkan saldo untuk memperbaiki saldo terkini." :
     mode === "budget" ? "Batas berlaku setiap bulan." :
@@ -114,7 +120,13 @@ export function FinanceEntryDrawer({
         </DrawerHeader>
 
         <div className="form-sheet-scroll" key={mode} data-vaul-no-drag>
-          {mode === "quick" ? (
+          {mode === "choice" ? (
+            <div className="entry-choices">
+              <button type="button" onClick={onChooseManual}><span className="entry-choice-icon"><PenLine size={21}/></span><span><strong>Manual</strong><small>Isi nominal dan detail transaksi</small></span><ChevronRight size={18}/></button>
+              <button type="button" onClick={onScanReceipt}><span className="entry-choice-icon"><ScanLine size={21}/></span><span><strong>Scan Struk</strong><small>Ambil foto, lalu periksa hasilnya</small></span><ChevronRight size={18}/></button>
+              <button type="button" onClick={onChooseQuick}><span className="entry-choice-icon"><MessageCircle size={21}/></span><span><strong>Catat Cepat</strong><small>Tulis transaksi dengan kalimat singkat</small></span><ChevronRight size={18}/></button>
+            </div>
+          ) : mode === "quick" ? (
             <div className="quick-entry-form">
               <label htmlFor="quick-text">Apa transaksinya?</label>
               <textarea
@@ -175,7 +187,7 @@ export function FinanceEntryDrawer({
 
               {mode === "transaction" && (
                 <>
-                  {!editing && type === "expense" && onScanReceipt && <button className="receipt-entry-button" type="button" onClick={onScanReceipt}><ScanLine size={20} /><span>Scan Struk<small>Isi otomatis dari foto struk</small></span><ChevronRight size={18} /></button>}
+                  {!editing && type === "expense" && onScanReceipt && <button className="receipt-entry-button receipt-entry-compact" type="button" onClick={onScanReceipt}><ScanLine size={18} /><span>Scan Struk<small>Isi otomatis dari foto struk</small></span><ChevronRight size={16} /></button>}
                   <div className="type-pills">
                     {(["expense", "income", "transfer"] as const).map(item => (
                       <button

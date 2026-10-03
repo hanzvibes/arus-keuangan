@@ -204,3 +204,44 @@
   .app-shell .greeting strong {font-size:16px;line-height:1.25}
 }
 @media(prefers-reduced-motion:reduce) {.skeleton::after {animation:none}.app-shell button,.form-sheet button {transition:none}}
+
+.entry-choices {display:grid;gap:10px;padding:4px 0 12px}
+.entry-choices>button {width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:#fff;border:1px solid #e3e7e0;border-radius:16px;padding:14px;min-height:76px;color:var(--native-text)}
+.entry-choices>button:hover {border-color:var(--native-green);background:#f6faf2}
+.entry-choices>button:focus-visible,.app-shell .quick-actions button:focus-visible,.app-shell .scan-pending-banner:focus-visible {outline:3px solid #83bd56;outline-offset:2px}
+.entry-choice-icon {display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:13px;background:#e6f0df;color:var(--native-green)}
+.entry-choices>button>span:nth-child(2) {display:grid;gap:3px;flex:1;min-width:0}
+.entry-choices strong {font-size:15px}.entry-choices small {font-size:12px;color:var(--native-secondary);line-height:1.35}
+.form-sheet .receipt-entry-compact {min-height:52px;padding:10px 13px;margin:0 0 10px;border-radius:13px}
+.form-sheet .receipt-entry-compact small {display:none}
+.app-shell .scan-pending-banner {width:100%;display:flex;align-items:center;gap:11px;text-align:left;margin:10px 0 14px;padding:12px 14px;min-height:60px;border:1px solid #d9e7c9;border-radius:15px;background:#f1f8e9;color:var(--native-green)}
+.scan-pending-banner>span {display:grid;gap:3px;flex:1}.scan-pending-banner strong {font-size:13px}.scan-pending-banner small {font-size:12px;color:#57764a}
+.app-shell .transactions-scan-button {min-height:56px;padding:11px 14px;margin:0 0 12px}
+.app-shell .quick-actions {margin-top:0}
+.app-shell .quick-actions button {min-width:0}
+.app-shell .quick-actions .action-icon.scan {color:var(--native-green)}
+.app-shell .mini-stats {margin-top:22px}
+.app-shell .receipt-history {margin-top:14px}
+@media(max-width:600px) {
+  .app-shell .topbar {min-width:0;margin-bottom:14px}
+  .app-shell .greeting {min-width:0;flex:1}
+  .app-shell .greeting>div {min-width:0}
+  .app-shell .greeting strong {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .app-shell .top-actions {flex:none}
+  .app-shell .top-actions button[aria-label="Lihat laporan"] {display:none}
+  .app-shell .quick-actions {gap:8px;margin:8px 0 12px}
+  .app-shell .quick-actions button {flex:1;min-height:78px;flex-direction:column;gap:7px;padding:9px 4px;white-space:normal;text-align:center;line-height:1.15;font-size:12px;border-radius:16px}
+  .app-shell .quick-actions .action-icon {width:31px;height:31px}
+  .app-shell .balance-card {min-height:168px;padding:18px 20px 0}
+  .app-shell .balance-value {margin:15px 0 13px;font-size:clamp(26px,7vw,37px)}
+  .app-shell .balance-bottom {padding:10px 0 14px}
+  .app-shell .balance-bottom strong {font-size:15px}
+  .app-shell .balance-art {width:82px;height:82px;top:-17px}
+  .app-shell .install-strip {margin-bottom:12px}
+  .app-shell .screen-title h1 {font-size:27px}
+}
+@media(max-width:360px) {
+  .app-shell .top-actions button {width:36px;padding-inline:5px}
+  .app-shell .greeting .avatar {width:36px;height:36px;font-size:15px}
+  .app-shell .quick-actions button {font-size:11px}
+}

@@ -97,6 +97,7 @@ export function TransactionsTab({
   const activeFilters = [filterType !== "all", filterAccount !== "all", filterCategory !== "all", !!query.trim()].filter(Boolean).length;
   const matchingIncome = filteredTransactions.filter(row => row.type === "income").reduce((sum,row) => sum + row.amount,0);
   const matchingExpense = filteredTransactions.filter(row => row.type === "expense").reduce((sum,row) => sum + row.amount,0);
+  const pendingScans = scans.filter(scan => !scan.transactionId);
   return (
     <section className="screen">
       <ScreenTitle
@@ -106,13 +107,7 @@ export function TransactionsTab({
         onAction={onAdd}
       />
       <PeriodControl month={month} onChange={onMonthChange} />
-      <button className="receipt-entry-button" onClick={onScanReceipt}><ScanLine size={22}/><span>Scan Struk<small>Foto, periksa, lalu simpan</small></span><ChevronRight size={18}/></button>
-      <details className="surface receipt-history"><summary>Riwayat Scan ({scans.length})</summary>{scans.length ? scans.map(scan=><div key={scan.id} className="receipt-history-row"><span>{scan.draft?.merchant.value||"Struk"} · {scan.status === "processing" ? "Processing" : scan.status === "success" ? "Berhasil" : scan.status === "review" ? "Perlu diperiksa" : "Gagal dibaca"} · {scan.transactionId ? "Tersimpan" : "Draft"}</span><button onClick={()=>onOpenScan(scan)}>{scan.transactionId ? "Lihat" : "Lanjutkan"}</button></div>) : <p>Belum ada scan.</p>}</details>
-
-      <div className="mini-stats">
-        <div><span>Pemasukan</span><strong className="green">{formatMoney(income)}</strong></div>
-        <div><span>Pengeluaran</span><strong>{formatMoney(out)}</strong></div>
-      </div>
+      {pendingScans.length>0 && <button className="scan-pending-banner" onClick={()=>onOpenScan(pendingScans[0])}><ScanLine size={18}/><span><strong>{pendingScans.length} draft scan perlu dilanjutkan</strong><small>Lanjutkan review struk</small></span><ChevronRight size={17}/></button>}
 
       <div className="view-switch" role="group" aria-label="Tampilan transaksi">
         <button
@@ -130,6 +125,8 @@ export function TransactionsTab({
           Jadwal {dueCount > 0 && <span className="view-count">{dueCount}</span>}
         </button>
       </div>
+
+      <button className="receipt-entry-button transactions-scan-button" onClick={onScanReceipt}><ScanLine size={20}/><span>Scan Struk<small>Foto, periksa, lalu simpan</small></span><ChevronRight size={18}/></button>
 
       {transactionView === "history" ? (
         <>
@@ -200,6 +197,11 @@ export function TransactionsTab({
           money={formatMoney}
         />
       )}
+      <div className="mini-stats">
+        <div><span>Pemasukan</span><strong className="green">{formatMoney(income)}</strong></div>
+        <div><span>Pengeluaran</span><strong>{formatMoney(out)}</strong></div>
+      </div>
+      <details className="surface receipt-history"><summary>Riwayat Scan ({scans.length})</summary>{scans.length ? scans.map(scan=><div key={scan.id} className="receipt-history-row"><span>{scan.draft?.merchant.value||"Struk"} · {scan.status === "processing" ? "Processing" : scan.status === "success" ? "Berhasil" : scan.status === "review" ? "Perlu diperiksa" : "Gagal dibaca"} · {scan.transactionId ? "Tersimpan" : "Draft"}</span><button onClick={()=>onOpenScan(scan)}>{scan.transactionId ? "Lihat" : "Lanjutkan"}</button></div>) : <p>Belum ada scan.</p>}</details>
     </section>
   );
 }

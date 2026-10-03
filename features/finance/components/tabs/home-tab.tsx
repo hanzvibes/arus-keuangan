@@ -1,5 +1,6 @@
 import type { monthlyReport } from "@/lib/reports";
-import { ChevronRight, Eye, EyeOff, LayoutGrid, MessageCircle, Minus, Plus, Wallet } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Minus, Plus, ScanLine, Wallet } from "lucide-react";
+import type { ReactNode } from "react";
 import type { Account, Budget, QueuedTransaction, SavingsGoal, Transaction } from "@/domain/finance/types";
 import { BudgetRow } from "@/features/finance/components/budget-row";
 import { PeriodControl } from "@/features/finance/components/period-control";
@@ -17,7 +18,8 @@ type Props = {
   onIncome: () => void;
   onExpense: () => void;
   onBudget: () => void;
-  onQuick: () => void;
+  onScan: () => void;
+  installBanner?: ReactNode;
   onAnalytics: () => void;
   onTransactions: () => void;
   onGoals: () => void;
@@ -45,7 +47,8 @@ export function HomeTab({
   onIncome,
   onExpense,
   onBudget,
-  onQuick,
+  onScan,
+  installBanner,
   onAnalytics,
   onTransactions,
   onGoals,
@@ -65,6 +68,14 @@ export function HomeTab({
 }: Props) {
   return (
     <>
+      <div className="quick-actions" aria-label="Aksi utama">
+        <button onClick={onExpense}><span className="action-icon expense"><Minus size={22} /></span>Pengeluaran</button>
+        <button onClick={onIncome}><span className="action-icon income"><Plus size={22} /></span>Pemasukan</button>
+        <button onClick={onScan}><span className="action-icon scan"><ScanLine size={22} /></span>Scan Struk</button>
+      </div>
+
+      {installBanner}
+
       <section className="balance-card">
         <div className="balance-top">
           <span>TOTAL SALDO</span>
@@ -78,16 +89,6 @@ export function HomeTab({
           <Wallet className="balance-art" size={128} strokeWidth={1.2} />
         </div>
       </section>
-
-      <div className="quick-actions">
-        <button onClick={onIncome}><span className="action-icon income"><Plus size={22} /></span>Pemasukan</button>
-        <button onClick={onExpense}><span className="action-icon expense"><Minus size={22} /></span>Pengeluaran</button>
-        <button className="all-actions" aria-label="Lihat budget" onClick={onBudget}><LayoutGrid size={23} /></button>
-      </div>
-
-      <button className="quick-text-cta" onClick={onQuick}>
-        <MessageCircle size={18} /> Catat cepat lewat teks <ChevronRight size={17} />
-      </button>
 
       <section className="surface dashboard-month">
         <div className="section-head"><div><h2>Ringkasan bulanan</h2><p>Pantau pemasukan, pengeluaran, dan selisihnya</p></div><button className="text-link" onClick={onAnalytics}>Laporan <ChevronRight size={16}/></button></div>
