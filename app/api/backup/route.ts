@@ -6,11 +6,13 @@ export async function GET(request: Request) {
   try {
     const repository = await createFinanceRepository();
     const snapshot = await repository.readSnapshot();
+    const receipts = await repository.listReceiptBackup();
 
     return Response.json({
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       ...snapshot,
+      receipts,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return financeRouteError(error, request);

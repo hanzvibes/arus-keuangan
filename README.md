@@ -48,9 +48,11 @@ Variable yang dibutuhkan:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+SUPABASE_SECRET_KEY=...
+CRON_SECRET=...
 ```
 
-Gunakan **publishable key** pada aplikasi. Jangan menaruh `service_role` atau secret key di variable `NEXT_PUBLIC_*`.
+Gunakan **publishable key** pada aplikasi. `SUPABASE_SECRET_KEY` hanya untuk job cleanup foto di server; `CRON_SECRET` melindungi endpoint jadwal. Jangan menaruh secret key di variable `NEXT_PUBLIC_*`.
 
 Variable yang sama perlu dikonfigurasi di Vercel atau platform hosting lain.
 
@@ -85,8 +87,9 @@ Role `anon` tidak memperoleh akses CRUD ke tabel finansial.
 
 ## Backup dan restore
 
-Menu Data & Cadangan mengekspor format JSON versi 3, termasuk target tabungan.
-Cadangan versi 1 dan 2 tetap bisa dipulihkan. Karena format lama belum memuat target,
+Menu Data & Cadangan mengekspor format JSON versi 4, termasuk target tabungan dan
+metadata struk transaksi. Berkas foto dan riwayat draft scan tidak disertakan.
+Cadangan versi 1–3 tetap bisa dipulihkan. Karena format lama belum memuat target,
 pemulihan cadangan lama mempertahankan target tabungan yang sudah ada.
 
 - Export hanya mengambil data user yang sedang login karena RLS.
@@ -113,13 +116,37 @@ pemulihan cadangan lama mempertahankan target tabungan yang sudah ada.
 
 ### Menyiapkan fitur target tabungan
 
-Sebelum deployment branch ini, verifikasi migration history sesuai
-`supabase/README.md`, lalu terapkan
-`supabase/migrations/20260930170000_add_savings_goals.sql`.
+Migration `supabase/migrations/20260930170000_add_savings_goals.sql` sudah
+diterapkan pada project FinanceTracker dan dicatat dalam riwayat remote.
 Migration menambahkan tabel `savings_goals`, RLS per-user, trigger timestamp,
 dan memperbarui restore backup secara atomik. Kode API snapshot membutuhkan
 tabel tersebut; jangan deploy kode sebelum migration berhasil.
 Snapshot schema pada branch ini mencakup perubahan yang diusulkan.
+
+## Scan Struk
+
+Pada formulir pengeluaran, pilih **Scan Struk** untuk mengambil foto atau memilih
+gambar dari galeri. OCR bahasa Indonesia dan Inggris berjalan di perangkat dengan
+Tesseract.js. Pengguna memeriksa merchant, tanggal, nominal, akun, kategori, metode
+pembayaran, dan item sebelum menyimpan. Hasil scan tidak otomatis mengubah saldo.
+
+Draft dan riwayat scan tersimpan per pengguna; saat offline draft disimpan sementara
+di perangkat dan disinkronkan saat koneksi kembali. Foto tidak dikirim ke server
+kecuali pengguna memilih **Simpan foto bersama transaksi**. Foto yang disimpan berada
+di bucket privat dan dapat dibuka dari Detail Struk.
+
+Migration `supabase/migrations/20261002152109_add_receipt_scans.sql` sudah
+diterapkan pada project FinanceTracker. Migration membuat tabel, kebijakan RLS,
+bucket privat, dan RPC transaksi struk. Untuk lingkungan Supabase lain, terapkan
+migration ini dan `supabase/migrations/20261002152428_add_receipt_scan_fk_index.sql`
+sebelum kode aplikasi. Isi
+`SUPABASE_SECRET_KEY` (server only) dan `CRON_SECRET` agar cleanup foto harian berjalan.
+Gunakan secret key Supabase khusus server dan jangan menaruhnya pada variabel
+`NEXT_PUBLIC_*`. Model OCR dilayani dari `/ocr` pada origin aplikasi.
+
+OCR lokal dapat salah membaca struk buram atau format yang tidak umum. Hasil dengan
+confidence rendah dan rincian nominal yang tidak cocok ditandai untuk diperiksa.
+Backup JSON versi 4 memulihkan metadata struk tanpa berkas foto.
 
 ## Recurring
 

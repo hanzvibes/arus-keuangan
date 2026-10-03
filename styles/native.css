@@ -1,0 +1,206 @@
+/* App-only visual system. Auth and marketing retain their own presentation. */
+.app-shell,.form-sheet,.profile-page,.native-action-menu {
+  --native-background:#f2f2f7;
+  --native-surface:#fff;
+  --native-text:#1c1c1e;
+  --native-secondary:#636366;
+  --native-line:#e5e5ea;
+  --native-green:#367a0a;
+  --native-tint:#eaf3e4;
+  --native-red:#bd303b;
+  --native-radius:20px;
+  --surface:var(--native-surface);
+  --border:var(--native-line);
+  --background:var(--native-background);
+  --foreground:var(--native-text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--native-text);
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.app-shell,.profile-page {background:var(--native-background);min-height:100dvh}
+.app-shell button,.form-sheet button,.profile-page button {touch-action:manipulation;transition:background .18s ease,box-shadow .18s ease,transform .15s ease}
+.app-shell button:active:not(:disabled),.form-sheet button:active:not(:disabled),.profile-page button:active:not(:disabled) {transform:scale(.98)}
+.app-shell :is(button,a,input,select,textarea):focus-visible,.form-sheet :is(button,a,input,select,textarea):focus-visible,.profile-page :is(button,a,input,select,textarea):focus-visible {outline:3px solid #6ba846;outline-offset:3px}
+.app-shell button:disabled,.form-sheet button:disabled {opacity:.45;cursor:not-allowed}
+.app-shell .content {max-width:1160px;padding-top:max(24px,env(safe-area-inset-top));padding-bottom:calc(118px + env(safe-area-inset-bottom))}
+.app-shell .topbar {margin-bottom:24px;gap:12px;min-height:48px}
+.app-shell .greeting div span {color:var(--native-secondary);font-size:13px}
+.app-shell .greeting strong {font-size:20px;letter-spacing:-.035em}
+.app-shell .avatar {background:var(--native-tint);color:var(--native-green);font-weight:650}
+.app-shell .top-actions {gap:4px}
+.app-shell .top-actions button {width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--native-secondary)}
+.app-shell .top-actions button:hover {background:#e7e7ec;color:var(--native-green)}
+.app-shell .workspace-links {gap:8px;margin:0 0 24px}
+.app-shell .workspace-links button {background:#e7e7ed;color:var(--native-secondary);border:0;padding:10px 16px;box-shadow:none}
+.app-shell .workspace-links button[aria-pressed=true] {background:var(--native-surface);color:var(--native-green);box-shadow:0 1px 5px #0000000b}
+.app-shell :is(.surface,.balance-card) {background:var(--native-surface);border:0;border-radius:var(--native-radius);box-shadow:0 2px 8px #1c1c1e03}
+.app-shell .surface {padding:24px}
+.app-shell .balance-card {padding:28px 28px 0;min-height:232px}
+.app-shell .balance-top {font-size:12px;letter-spacing:.1em;color:var(--native-secondary)}
+.app-shell .balance-top button {min-width:44px;min-height:44px}
+.app-shell .balance-value {font-weight:700;letter-spacing:-.045em;line-height:1.12;margin:22px 0 28px;overflow-wrap:anywhere}
+.app-shell .balance-bottom {border-color:var(--native-line);padding:20px 0 24px}
+.app-shell .balance-bottom span {color:var(--native-secondary)}
+.app-shell .balance-art {opacity:.5}
+.app-shell .quick-actions {gap:10px;margin:16px 0 24px}
+.app-shell .quick-actions button {border:0;border-radius:16px;box-shadow:none;font-weight:600;min-height:58px}
+.app-shell .quick-actions .all-actions {background:var(--native-green);border-radius:16px;width:58px}
+.app-shell .action-icon {background:transparent}
+.app-shell .screen-title {margin-bottom:24px;align-items:center}
+.app-shell .screen-title h1 {font-size:32px;line-height:1.13;letter-spacing:-.045em;font-weight:750}
+.app-shell .screen-title p {color:var(--native-secondary);line-height:1.5;margin-top:7px}
+.app-shell :is(.screen-title button,.empty-state button,.reset-filters,.restore-select) {border:0;background:var(--native-tint);color:var(--native-green);min-height:44px;border-radius:12px;padding:10px 14px;font-weight:600}
+.app-shell .section-head h2 {font-size:18px;letter-spacing:-.025em;font-weight:650}
+.app-shell :is(.section-head p,.account-summary small,.account-name small,.transaction-info small,.budget-numbers,.empty-inline,.empty-inside) {color:var(--native-secondary);line-height:1.5}
+.app-shell .text-link {color:var(--native-green);min-height:36px;font-weight:600}
+.app-shell .green {color:var(--native-green)!important}
+.app-shell .red {color:var(--native-red)!important}
+.app-shell .period-control {background:#e7e7ed;border:0;border-radius:12px;padding:2px;margin-bottom:20px}
+.app-shell .period-control button {background:transparent;width:44px;height:40px;color:var(--native-green);border-radius:10px}
+.app-shell .period-control span {font-weight:600;min-width:140px}
+.app-shell .mini-stats {gap:12px;margin:20px 0}
+.app-shell .mini-stats>div {background:var(--native-surface);border-radius:18px;padding:18px;gap:10px}
+.app-shell .mini-stats span {color:var(--native-secondary);font-size:13px}
+.app-shell .mini-stats strong {font-size:21px;font-weight:650;overflow-wrap:anywhere}
+.app-shell :is(.view-switch,.type-pills) {background:#e5e5eb;border:0;border-radius:12px;padding:4px;gap:4px}
+.app-shell .view-switch button {min-height:40px;color:var(--native-secondary);border:0;border-radius:9px;font-weight:600}
+.app-shell .view-switch button.active {background:#fff;color:var(--native-text);box-shadow:0 2px 5px #0000000d}
+.transaction-search {display:flex;gap:10px;margin:20px 0 8px;align-items:stretch}
+.app-shell .search-box {background:#e7e7ed;border:0;border-radius:12px;margin:0;min-width:0;flex:1;height:46px;color:var(--native-secondary)}
+.app-shell .search-box input {font-size:16px;color:var(--native-text)}
+.app-shell .filter-trigger {display:flex;align-items:center;gap:7px;border:0;background:#fff;padding:10px 12px;border-radius:12px;min-height:46px;color:var(--native-green);font-weight:600}
+.filter-trigger b {font-size:11px;background:var(--native-green);color:white;border-radius:50%;min-width:20px;height:20px;display:grid;place-items:center}
+.app-shell .transaction-results {gap:12px;margin:16px 0}
+.app-shell .transaction-results span {font-size:12px;color:var(--native-secondary)}
+.app-shell .sort-control select {border:0;background:transparent;font-size:13px;color:var(--native-green);padding:8px 4px;max-width:160px}
+.app-shell .transaction-surface {padding:0 20px;overflow:visible}
+.app-shell .transaction-list {margin:0}
+.app-shell .transaction-row {position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) auto auto;gap:4px 12px;padding:18px 0!important;border-bottom:1px solid var(--native-line)}
+.app-shell .transaction-icon {grid-column:1;grid-row:1 / span 2;width:42px;height:42px;border-radius:13px;background:#f1f4ee}
+.app-shell .transaction-info {grid-column:2;grid-row:1;gap:5px}
+.app-shell .transaction-info b {font-size:14px;font-weight:600}
+.app-shell .transaction-info small {font-size:12px;white-space:normal;overflow-wrap:anywhere}
+.app-shell .transaction-row>strong {grid-column:3;grid-row:1;font-size:14px;font-weight:650;align-self:start;padding-top:2px}
+.app-shell .transaction-row :is(.row-menu-trigger,.row-delete,.immutable-note) {grid-column:4;grid-row:1;align-self:center;justify-self:end}
+.app-shell .row-menu-trigger,.app-shell .row-delete {display:grid;place-items:center;min-width:44px;min-height:44px;border:0;border-radius:12px;background:transparent;color:var(--native-secondary);padding:0}
+.app-shell .row-menu-trigger:hover {background:var(--native-background)}
+.app-shell .receipt-row-detail {grid-column:2;grid-row:2;justify-self:start;min-height:32px;padding:3px 0;border:0;background:none;text-decoration:none;color:var(--native-green);font-size:12px;font-weight:600}
+.native-action-menu {z-index:70;min-width:210px;padding:5px;background:#fff;border:1px solid var(--native-line);border-radius:16px;box-shadow:0 10px 40px #1c1c1e24;outline:none}
+.native-action-menu [role=menuitem] {display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:46px;padding:10px 12px;font-size:14px;border-radius:10px;cursor:pointer;outline:none}
+.native-action-menu [data-highlighted] {background:var(--native-background)}
+.native-action-menu .destructive {color:var(--native-red)}
+.app-shell .account-row {margin-bottom:1px;border-radius:0;border-bottom:1px solid var(--native-line);padding:18px}
+.app-shell .account-group .account-row:nth-child(2) {border-radius:16px 16px 0 0}
+.app-shell .account-group .account-row:last-child {border-radius:0 0 16px 16px;border-bottom:0}
+.app-shell .account-group .account-row:nth-child(2):last-child {border-radius:16px}
+.app-shell .group-title {margin:28px 16px 12px;color:var(--native-secondary)}
+.app-shell .group-title h2 {font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.app-shell .account-icon {background:var(--native-tint);color:var(--native-green);border-radius:13px}
+.app-shell .account-row-actions button {min-height:44px}
+.app-shell .account-reconcile {border:0;color:var(--native-green);background:var(--native-tint)}
+.app-shell .budget-row {padding:20px 0 8px}
+.app-shell :is(.progress,.track) {height:6px;background:#eaeaf0}
+.app-shell :is(.progress span,.track i) {background:#5b9e34}
+.app-shell :is(.report-stat strong,.goal-amount strong,.account-summary strong) {font-weight:650;letter-spacing:-.035em}
+.app-shell :is(.report-insight,.goal-intro,.dashboard-goals) {background:#eaf1e5;box-shadow:none}
+.app-shell .goal-card {padding:24px}
+.app-shell .goal-actions button {border:0;border-radius:12px;background:var(--native-background);color:var(--native-green)}
+.app-shell .data-panel {margin-bottom:16px}
+.app-shell .data-panel-head h2 {font-size:17px;font-weight:650}
+.app-shell .data-panel-head p {color:var(--native-secondary);line-height:1.6}
+.app-shell .data-actions {gap:0;flex-direction:column;margin-top:18px;border-top:1px solid var(--native-line)}
+.app-shell .data-actions button {background:transparent;border:0;border-radius:0;justify-content:flex-start;color:var(--native-green);min-height:50px;border-bottom:1px solid var(--native-line);font-weight:500}
+.app-shell .data-actions button:last-child {border-bottom:0}
+.app-shell :is(.empty-state,.filtered-empty,.goal-empty) {background:#fff;border:0;border-radius:20px;padding:40px 24px}
+.app-shell :is(.empty-state p,.filtered-empty p,.goal-empty p) {color:var(--native-secondary);line-height:1.6}
+.app-shell :is(.install-strip,.update-strip,.offline-strip) {border:0;border-radius:16px;box-shadow:none;line-height:1.5}
+.app-shell .install-strip {background:#e6eddf;margin-bottom:20px}
+.app-shell .install-strip-close {min-width:44px;min-height:44px}
+.app-shell .bottom-nav {height:78px;bottom:0;width:100%;max-width:none;border-radius:0;left:0;transform:none;border:0;border-top:1px solid #dcdce3;background:#fafafc;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom));height:calc(76px + env(safe-area-inset-bottom));box-shadow:0 -2px 16px #00000003}
+.app-shell .bottom-nav button:not(.nav-add) {width:64px;min-width:0;height:54px;border-radius:12px;gap:5px;color:var(--native-secondary)}
+.app-shell .bottom-nav button.selected {color:var(--native-green);background:transparent}
+.app-shell .bottom-nav button span {font-size:10px;font-weight:600}
+.app-shell .bottom-nav .nav-add {transform:none;width:48px;height:48px;border-radius:16px;background:var(--native-green);box-shadow:0 3px 8px #367a0a20}
+@supports(backdrop-filter:blur(20px)) {.app-shell .bottom-nav {background:#fafafce8;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}}
+.form-sheet {background:var(--native-background);border:0!important;border-radius:26px 26px 0 0!important;max-height:92dvh!important;padding:0 20px max(16px,env(safe-area-inset-bottom));box-shadow:0 -12px 50px #1c1c1e1c}
+.form-sheet [data-slot=drawer-header] {padding:20px 4px 18px;gap:8px}
+.form-sheet [data-slot=drawer-title] {font-size:20px;font-weight:650;letter-spacing:-.025em}
+.form-sheet [data-slot=drawer-description] {color:var(--native-secondary);font-size:13px;line-height:1.5}
+.form-sheet .drawer-heading button {width:44px;height:44px;background:#e5e5eb;color:var(--native-secondary)}
+.form-sheet :is(.form-body,.goal-fields) {gap:18px}
+.form-sheet :is(.form-body input,.form-body select,.select-control,.quick-entry-form textarea,.receipt-review input:not([type=checkbox]),.receipt-review select) {font-size:16px;border:1px solid transparent;border-radius:12px;background:#fff;color:var(--native-text);min-height:50px;padding:12px 14px;font-weight:400}
+.form-sheet .form-body label {font-size:13px;font-weight:600;color:var(--native-secondary);gap:8px}
+.form-sheet .form-body .amount-field {background:#fff;border-radius:18px;padding:18px;color:var(--native-secondary);text-align:center}
+.form-sheet .amount-field input {text-align:center;font-size:36px;font-weight:650;height:64px;letter-spacing:-.04em}
+.form-sheet .amount-field input[type=number] {-moz-appearance:textfield;appearance:textfield}
+.form-sheet .amount-field input[type=number]::-webkit-inner-spin-button,.form-sheet .amount-field input[type=number]::-webkit-outer-spin-button {-webkit-appearance:none;margin:0}
+.form-sheet .entry-amount-preview {text-align:center;color:var(--native-green);font-size:13px}
+.form-sheet .type-pills {background:#e4e4ea;padding:4px;border-radius:12px}
+.form-sheet .type-pills button {font-size:12px;min-height:40px;font-weight:600;color:var(--native-secondary)}
+.form-sheet .type-pills button.chosen {color:var(--native-text);box-shadow:0 2px 4px #0000000c}
+.form-sheet .save-button,.app-shell .save-button {background:var(--native-green);color:white;border:0;border-radius:14px;font-size:16px;font-weight:600;min-height:52px;padding:12px 18px}
+.form-sheet .form-body>.save-button {position:sticky;bottom:0;z-index:2;box-shadow:0 -8px 14px var(--native-background);flex-shrink:0}
+.form-sheet .reset-filters {background:#e6e6ec;border:0;color:var(--native-secondary);min-height:44px;border-radius:12px}
+.form-sheet input[type=checkbox] {accent-color:var(--native-green);width:20px;height:20px;flex:none}
+.form-sheet summary {cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600;gap:8px}
+.form-sheet summary::after {content:"+";margin-left:auto;color:var(--native-secondary);font-size:20px;font-weight:400}
+.form-sheet details[open]>summary::after {content:"−"}
+.form-sheet summary::-webkit-details-marker {display:none}
+.form-sheet .budget-insight {border:0;border-radius:14px;background:var(--native-tint)}
+.app-shell .receipt-entry-button,.form-sheet .receipt-entry-button {display:flex;width:100%;gap:12px;text-align:left;background:#e6f0df;color:var(--native-green);border:0;border-radius:16px;padding:16px;margin:8px 0;min-height:70px}
+.receipt-entry-button>span {flex:1;display:flex;flex-direction:column;gap:4px;font-size:15px;font-weight:650}
+.receipt-entry-button small {font-size:12px;font-weight:400;color:#57764a}
+.app-shell .receipt-history {padding:0 18px;margin:12px 0 20px;background:#fff}
+.app-shell .receipt-history>summary {padding:16px 0;cursor:pointer;font-size:14px;font-weight:600;color:var(--native-secondary)}
+.app-shell .receipt-history-row {font-size:13px;line-height:1.6;border-color:var(--native-line)}
+.app-shell .receipt-history-row button {border:0;background:var(--native-tint);color:var(--native-green);min-height:44px}
+.profile-page .profile-topbar {background:transparent;border-color:var(--native-line)}
+.profile-page :is(.profile-summary-card,.profile-form-card) {border:0;border-radius:22px;box-shadow:none;background:white}
+.profile-page .profile-avatar {background:var(--native-tint);color:var(--native-green)}
+.profile-page .profile-heading h1 {letter-spacing:-.04em;font-size:34px}
+.profile-page :is(input,button) {font-size:16px;min-height:44px}
+.skeleton {position:relative;overflow:hidden;background:#e6e6ec;border-radius:20px}
+.skeleton::after {content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#ffffff70,transparent);transform:translateX(-100%);animation:native-shimmer 1.6s infinite}
+.loading-balance {height:230px}.loading-actions {display:flex;gap:12px;margin:18px 0 24px}.loading-actions span {height:58px;flex:1}.loading-grid {display:grid;grid-template-columns:1fr 1fr;gap:18px}.loading-grid>div {height:230px}
+@keyframes native-shimmer {to{transform:translateX(100%)}}
+@media(min-width:900px) {
+  .app-shell .desktop-nav {background:#ebebf1;border:0;padding:32px 16px;width:245px}
+  .app-shell .desktop-link {color:var(--native-secondary);font-weight:500;padding:13px 16px;min-height:48px;margin-bottom:5px}
+  .app-shell .desktop-link.active {background:white;color:var(--native-green);box-shadow:0 1px 4px #00000006}
+  .app-shell .brand {margin-bottom:44px;font-weight:750}
+  .app-shell .content {padding:32px clamp(24px,4vw,64px) 64px}
+  .app-shell .bottom-nav {display:none}
+}
+@media(min-width:768px) {
+  .form-sheet[data-vaul-drawer-direction=bottom] {top:50%;bottom:auto;left:50%;right:auto;margin:0;width:min(560px,calc(100vw - 48px));transform:translate(-50%,-50%)!important;max-height:86dvh!important;border-radius:24px!important;padding:0 24px 24px}
+  .form-sheet>div:first-child {visibility:hidden;height:0;margin:0}
+}
+@media(max-width:600px) {
+  .app-shell .content {padding-inline:16px}
+  .app-shell .surface {padding:20px}
+  .app-shell .greeting strong {font-size:18px}
+  .app-shell .top-actions {gap:0}.app-shell .top-actions button {width:40px}
+  .app-shell .screen-title {align-items:flex-start;gap:12px}.app-shell .screen-title h1 {font-size:30px}
+  .app-shell .screen-title button {font-size:12px;padding-inline:12px}
+  .app-shell .transaction-surface {padding:0 16px}
+  .app-shell .transaction-row {grid-template-columns:38px minmax(0,1fr) 38px;gap:5px 10px;padding:16px 0!important}
+  .app-shell .transaction-icon {width:38px;height:38px;grid-row:1 / span 2}
+  .app-shell .transaction-info {grid-column:2;grid-row:1}.app-shell .transaction-row>strong {grid-column:2;grid-row:2;font-size:15px}
+  .app-shell .transaction-row :is(.row-menu-trigger,.row-delete,.immutable-note) {grid-column:3;grid-row:1 / span 2}
+  .app-shell .receipt-row-detail {grid-column:2;grid-row:3}
+  .app-shell .account-group .account-row {padding:18px;border-radius:16px;margin-bottom:8px;border:0}
+  .app-shell .account-group .account-row:nth-child(2),.app-shell .account-group .account-row:last-child,.app-shell .account-group .account-row:nth-child(2):last-child {border-radius:16px}
+  .app-shell .sort-control {justify-content:flex-start}.app-shell .sort-control select {flex:0 1 auto}
+  .app-shell .report-stat {padding:18px}.app-shell .mini-stats strong {font-size:19px}
+  .form-sheet {padding-inline:16px}
+  .loading-grid {grid-template-columns:1fr}
+}
+@media(max-width:360px) {
+  .app-shell .install-strip {display:grid;grid-template-columns:34px minmax(0,1fr) 44px;gap:8px 10px}
+  .app-shell .install-strip>span:nth-child(2) {grid-column:2;grid-row:1;line-height:1.35}
+  .app-shell .install-strip-action {grid-column:2;grid-row:2;justify-self:start;min-height:40px}
+  .app-shell .install-strip-close {grid-column:3;grid-row:1}
+  .app-shell .greeting strong {font-size:16px;line-height:1.25}
+}
+@media(prefers-reduced-motion:reduce) {.skeleton::after {animation:none}.app-shell button,.form-sheet button {transition:none}}

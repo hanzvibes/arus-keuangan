@@ -1,5 +1,5 @@
 /* Static service worker for Next.js/Vercel. Bump CACHE when shell behavior changes. */
-const CACHE = "arus-shell-v2";
+const CACHE = "arus-shell-v4";
 const PRECACHE = [
   "/manifest.webmanifest",
   "/icon-192.png",
@@ -76,7 +76,22 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  if (/\.(?:js|css|svg|png|webp|ico|woff2?|webmanifest)$/.test(url.pathname)) {
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request);
+        if (response.ok && !response.redirected) {
+          try { await (await caches.open(CACHE)).put(request, response.clone()); } catch { /* Use the network response. */ }
+        }
+        return response;
+      } catch {
+        return (await caches.match(request)) || Response.error();
+      }
+    })());
+    return;
+  }
+
+  if (url.pathname.startsWith("/ocr/") || /\.(?:js|css|svg|png|webp|ico|woff2?|webmanifest)$/.test(url.pathname)) {
     event.respondWith((async () => {
       const cached = await caches.match(request);
       if (cached) return cached;

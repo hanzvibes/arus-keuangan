@@ -2,7 +2,7 @@
 import { accountBalance } from "@/lib/finance";
 
 import type { FormEvent } from "react";
-import { Check, ChevronRight, X } from "lucide-react";
+import { Check, ChevronRight, ScanLine, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Account, Budget, Transaction, TransactionType } from "@/domain/finance/types";
@@ -46,6 +46,7 @@ type Props = {
   onDateChange: (value: string) => void;
   onTypeChange: (type: FinanceEntryType) => void;
   onSubmit: (event: FormEvent) => void;
+  onScanReceipt?: () => void;
 };
 
 export function FinanceEntryDrawer({
@@ -84,6 +85,7 @@ export function FinanceEntryDrawer({
   onDateChange,
   onTypeChange,
   onSubmit,
+  onScanReceipt,
 }: Props) {
   const title =
     mode === "quick" ? "Catat Cepat" :
@@ -173,6 +175,7 @@ export function FinanceEntryDrawer({
 
               {mode === "transaction" && (
                 <>
+                  {!editing && type === "expense" && onScanReceipt && <button className="receipt-entry-button" type="button" onClick={onScanReceipt}><ScanLine size={20} /><span>Scan Struk<small>Isi otomatis dari foto struk</small></span><ChevronRight size={18} /></button>}
                   <div className="type-pills">
                     {(["expense", "income", "transfer"] as const).map(item => (
                       <button
@@ -188,7 +191,7 @@ export function FinanceEntryDrawer({
                     ))}
                   </div>
 
-                  <label>
+                  <label className="amount-field">
                     Jumlah (Rp)
                     <input
                       required

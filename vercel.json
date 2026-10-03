@@ -4,6 +4,7 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
+  "crons": [{ "path": "/api/cron/receipt-photo-cleanup", "schedule": "0 3 * * *" }],
   "headers": [
     {
       "source": "/sw.js",

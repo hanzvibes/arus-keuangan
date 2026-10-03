@@ -132,6 +132,8 @@ async function write(userId: string, key: string, value: unknown): Promise<void>
 
 export const readSnapshot = <T>(userId: string) => read<T>(userId, "snapshot");
 export const writeSnapshot = (userId: string, value: unknown) => write(userId, "snapshot", value);
+export const readReceiptDrafts = <T>(userId: string) => read<T[]>(userId, "receipt-drafts");
+export const writeReceiptDrafts = (userId: string, drafts: unknown[]) => write(userId, "receipt-drafts", drafts);
 
 export async function readQueue<T>(userId: string): Promise<T[]> {
   const db = await openDatabase(userId);

@@ -1,5 +1,6 @@
 import type { SavingsInput } from "@/lib/savings";
 import type { Backup } from "@/lib/backup";
+import type { ReceiptMeta } from "@/features/receipt/types";
 import type {
   Account,
   Budget,
@@ -102,6 +103,8 @@ export interface FinanceRepository {
   updateTransaction(id: string, input: Omit<TransactionWrite, "id" | "createdAt">): Promise<boolean>;
   deleteTransaction(id: string): Promise<void>;
   transactionExists(id: string): Promise<boolean>;
+  getReceiptScanId(transactionId: string): Promise<string | null | undefined>;
+  deleteReceiptScan(id: string): Promise<void>;
 
   createBudget(input: BudgetWrite): Promise<"created" | "duplicate">;
   updateBudget(id: string, input: Pick<BudgetWrite, "category" | "amount">): Promise<"updated" | "missing" | "duplicate">;
@@ -128,4 +131,5 @@ export interface FinanceRepository {
 
   reconcile(input: ReconcileInput): Promise<string | null>;
   restoreBackup(backup: Backup): Promise<{ accounts: number; transactions: number; budgets: number }>;
+  listReceiptBackup(): Promise<ReceiptMeta[]>;
 }

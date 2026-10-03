@@ -24,6 +24,11 @@ import { InstallGuideDrawer } from "@/features/finance/components/drawers/instal
 import { ReconcileDrawer } from "@/features/finance/components/drawers/reconcile-drawer";
 
 import { GoalsTab } from "@/features/finance/components/tabs/goals-tab";
+import { ReceiptScanner } from "@/features/receipt/components/receipt-scanner";
+import { FinanceLoading } from "@/features/finance/components/finance-loading";
+import { ReceiptDetail } from "@/features/receipt/components/receipt-detail";
+import { receiptApi } from "@/features/receipt/client";
+import type { ReceiptScan } from "@/features/receipt/types";
 import { monthlyReport, searchTransactions, sortTransactions, type TransactionSort } from "@/lib/reports";
 
 type Tab = "home" | "accounts" | "transactions" | "budget" | "analytics" | "goals" | "settings";
@@ -38,6 +43,8 @@ export function FinanceApp() {
   } = useFinanceData();
   const [tab,setTab]=useState<Tab>("home"), [mode,setMode]=useState<Mode>(null), [type,setType]=useState<EntryType>("expense");
   const [hidden,setHidden]=useState(false), [query,setQuery]=useState(""), [saving,setSaving]=useState(false);
+  const [receiptOpen,setReceiptOpen]=useState(false), [receiptInitial,setReceiptInitial]=useState<ReceiptScan|null>(null);
+  const [receiptDetail,setReceiptDetail]=useState<Transaction|null>(null);
   const [transactionSort,setTransactionSort]=useState<TransactionSort>("newest");
   const [weekEnd]=useState(()=>day());
   const [month,setMonth]=useState(day().slice(0,7)), [filterType,setFilterType]=useState("all"), [filterAccount,setFilterAccount]=useState("all"), [filterCategory,setFilterCategory]=useState("all"), [transactionView,setTransactionView]=useState<"history"|"schedule">("history");
@@ -209,7 +216,7 @@ export function FinanceApp() {
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
     <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions"><button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button><button aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button><button aria-label="Lihat laporan" onClick={()=>changeTab("analytics")}><BarChart3 size={19}/></button></div></header>
     <div className="workspace-links"><button aria-pressed={tab==="accounts"} onClick={()=>changeTab("accounts")}><Wallet size={16}/>Akun</button><button aria-pressed={tab==="budget"} onClick={()=>changeTab("budget")}><LayoutGrid size={16}/>Budget</button></div>
-    {loading?<div className="load-state">Memuat catatan keuangan…</div>:error?<div className="error-state">Data belum bisa dimuat. <button onClick={()=>void refresh()}>Coba lagi</button></div>:<>
+    {loading?<FinanceLoading/>:error?<div className="error-state" role="alert">Data belum bisa dimuat. <button onClick={()=>void refresh()}>Coba lagi</button></div>:<>
     {pwa.updateAvailable&&<div className="update-strip" role="status"><span>Versi baru Arus siap digunakan.</span><button onClick={pwa.applyUpdate}>Perbarui</button></div>}
     {!pwa.installed&&!installTipDismissed&&<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>}
     {(offline||queued.length>0)&&<div className="offline-strip"><WifiOff size={18}/><span>{offline?"Menampilkan salinan terakhir. Transaksi baru akan menunggu koneksi.":queueError?`${queued.length} transaksi tertunda: ${queueError}`:`${queued.length} transaksi menunggu sinkronisasi.`}</span>{queued.length>0&&<button onClick={()=>changeTab("settings")}>Tinjau</button>}{offline?<button onClick={()=>void refresh()}>Coba lagi</button>:queued.length>0&&<button disabled={syncingQueue} onClick={()=>void syncQueue()}>{syncingQueue?"Mengirim...":"Kirim"}</button>}</div>}
@@ -279,8 +286,11 @@ export function FinanceApp() {
       syncingQueue={syncingQueue}
       onRefresh={refresh}
       onAdd={()=>open("transaction")}
+      onScanReceipt={()=>{setReceiptInitial(null);setReceiptOpen(true);}}
+      onOpenScan={scan=>{if(scan.transactionId){setReceiptDetail(data.transactions.find(row=>row.id===scan.transactionId)||null);}else{setReceiptInitial(scan);setReceiptOpen(true);}}}
+      onViewReceipt={setReceiptDetail}
       onDiscardQueued={id=>void dropQueued(id)}
-      onEdit={transaction=>edit("transaction",transaction)}
+      onEdit={transaction=>transaction.hasReceipt?setReceiptDetail(transaction):edit("transaction",transaction)}
       onDelete={transaction=>setTarget({entity:"transaction",id:transaction.id,label:transaction.note||transaction.category})}
     />}
     {tab==="budget"&&<BudgetTab
@@ -337,7 +347,7 @@ export function FinanceApp() {
       pwa={pwa}
       onCopyAppLink={()=>void copyAppLink()}
     />
-    <FinanceEntryDrawer
+    {!receiptOpen && <FinanceEntryDrawer
       mode={mode}
       editing={editing}
       saving={saving}
@@ -376,7 +386,10 @@ export function FinanceApp() {
         if(nextType!=="transfer"&&category==="Transfer")setCategory(nextType==="income"?"Gaji":categories[0]);
       }}
       onSubmit={save}
-    />
+      onScanReceipt={()=>{setMode(null);setReceiptInitial(null);setReceiptOpen(true);}}
+    />}
+    {receiptOpen && <ReceiptScanner open={receiptOpen} onClose={()=>{setReceiptOpen(false);setReceiptInitial(null);}} onSaved={refresh} accounts={data.accounts} transactions={data.transactions} categories={categories} initialScan={receiptInitial} initialAccountId={receiptInitial?.transactionId ? data.transactions.find(row=>row.id===receiptInitial.transactionId)?.accountId : undefined}/>}
+    <ReceiptDetail transaction={receiptDetail} onClose={()=>setReceiptDetail(null)} onEdit={id=>{void receiptApi.get(id).then(scan=>{setReceiptDetail(null);setReceiptInitial(scan);setReceiptOpen(true);}).catch(error=>toast.error(error instanceof Error?error.message:"Draft struk belum bisa dibuka."));}}/>
     <ReconcileDrawer
       account={reconcileAccount}
       expectedBalance={expectedBalance}

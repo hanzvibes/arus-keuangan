@@ -129,19 +129,21 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
 
   return {
     async readSnapshot(): Promise<FinanceSnapshot> {
-      const [accounts, transactions, budgets, categories, recurring, goals] = await Promise.all([
+      const [accounts, transactions, budgets, categories, recurring, goals, receipts] = await Promise.all([
         supabase.from("accounts").select("id,name,kind,opening_balance,created_at").order("created_at"),
         supabase.from("transactions").select("id,type,amount,account_id,to_account_id,category,note,date,created_at").order("date", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("budgets").select("id,category,amount,created_at").order("created_at"),
         supabase.from("categories").select("id,name,created_at").order("created_at"),
         supabase.from("recurring").select("id,type,amount,account_id,to_account_id,category,note,next_date,frequency,anchor_day,active,created_at").order("next_date"),
         supabase.from("savings_goals").select("id,name,target_amount,saved_amount,target_date,created_at,updated_at").order("created_at"),
+        supabase.from("transaction_receipts").select("transaction_id,merchant"),
       ]);
-      [accounts, transactions, budgets, categories, recurring, goals].forEach(result => assertQuery(result.error));
+      [accounts, transactions, budgets, categories, recurring, goals, receipts].forEach(result => assertQuery(result.error));
+      const receiptById = new Map((receipts.data ?? []).map(row => [row.transaction_id, row.merchant]));
 
       return {
         accounts: (accounts.data ?? []).map(mapAccount),
-        transactions: (transactions.data ?? []).map(mapTransaction),
+        transactions: (transactions.data ?? []).map(row => ({ ...mapTransaction(row), hasReceipt: receiptById.has(row.id), merchant: receiptById.get(row.id) })),
         budgets: (budgets.data ?? []).map(mapBudget),
         categories: (categories.data ?? []).map(mapCategory),
         recurring: (recurring.data ?? []).map(mapRecurring),
@@ -258,6 +260,20 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
       const result = await supabase.from("transactions").select("id").eq("id", id).maybeSingle();
       assertQuery(result.error);
       return Boolean(result.data);
+    },
+    async getReceiptScanId(transactionId) {
+      const result = await supabase.from("transaction_receipts").select("scan_id").eq("transaction_id", transactionId).maybeSingle();
+      assertQuery(result.error);
+      return result.data ? result.data.scan_id : undefined;
+    },
+    async listReceiptBackup() {
+      const result = await supabase.from("transaction_receipts").select("transaction_id,merchant,payment_method,invoice,receipt_time,subtotal,tax,service,discount,items,fields,image_hash");
+      assertQuery(result.error);
+      return (result.data ?? []).map(row => ({ transactionId: row.transaction_id, scanId: null, merchant: row.merchant, paymentMethod: row.payment_method, invoice: row.invoice, time: row.receipt_time, subtotal: row.subtotal === null ? null : asNumber(row.subtotal), tax: row.tax === null ? null : asNumber(row.tax), service: row.service === null ? null : asNumber(row.service), discount: row.discount === null ? null : asNumber(row.discount), items: row.items, fields: row.fields, imageHash: row.image_hash, photoPath: null }));
+    },
+    async deleteReceiptScan(id) {
+      const result = await supabase.from("receipt_scans").delete().eq("id", id);
+      assertQuery(result.error);
     },
 
     async createBudget(input) {

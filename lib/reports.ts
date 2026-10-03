@@ -34,7 +34,7 @@ export type TransactionSort = "newest" | "oldest" | "largest" | "smallest";
 export function searchTransactions(rows: Transaction[], accounts: Account[], query: string) {
   const term = query.trim().toLocaleLowerCase("id-ID");
   const names = new Map(accounts.map(account => [account.id, account.name]));
-  return rows.filter(row => [row.note, row.category, names.get(row.accountId), names.get(row.toAccountId || "")]
+  return rows.filter(row => [row.note, row.merchant, row.category, names.get(row.accountId), names.get(row.toAccountId || "")]
     .join(" ").toLocaleLowerCase("id-ID").includes(term));
 }
 export function sortTransactions(rows: Transaction[], sort: TransactionSort) {

@@ -39,14 +39,17 @@ Keep `schemas/arus.sql` synchronized with the resulting production schema and ru
 
 Do not commit production data, database passwords, service-role keys, or other secrets.
 
-## Proposed savings goals migration
+## Savings goals and receipt migrations
 
 `20260930170000_add_savings_goals.sql` adds per-user savings goals with RLS,
 a database-maintained update timestamp, and backup v3 support in the atomic
-restore function. Apply the migration before deploying the corresponding
-application changes. The schema snapshot on this feature branch includes the
-proposed schema; it is not a claim that production has already been migrated.
+restore function. It was already present on FinanceTracker before migration
+history was repaired on 2026-10-02. `20261002152109_add_receipt_scans.sql` and
+`20261002152428_add_receipt_scan_fk_index.sql` were applied to FinanceTracker on
+the same date. Other projects must apply these migrations in order before
+deploying the corresponding application code.
 
 Backups v1/v2 omit goals and preserve existing goals on restore. Backups v3
 replace goals together with the other finance records within one transaction.
-Verify migration history against the linked project and run advisors after DDL.
+The FinanceTracker remote history now records both migrations. Verify history
+against each target project and run advisors after DDL.

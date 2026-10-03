@@ -1,6 +1,8 @@
 import { ArrowLeftRight, Pencil, Scale, Trash2 } from "lucide-react";
+import { ActionMenu } from "@/components/ui/action-menu";
 import type { Account, QueuedTransaction, Transaction } from "@/domain/finance/types";
-import { categoryEmoji, dateText } from "@/features/finance/lib/presentation";
+import { dateText } from "@/features/finance/lib/presentation";
+import { CategoryIcon } from "./category-icon";
 
 type Props = {
   items: Transaction[];
@@ -12,6 +14,7 @@ type Props = {
   onDiscardQueued?: (id: string) => void;
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (transaction: Transaction) => void;
+  onViewReceipt?: (transaction: Transaction) => void;
 };
 
 export function TransactionList({
@@ -24,6 +27,7 @@ export function TransactionList({
   onDiscardQueued,
   onEdit,
   onDelete,
+  onViewReceipt,
 }: Props) {
   return (
     <div className="transaction-list">
@@ -39,7 +43,7 @@ export function TransactionList({
                 ? <Scale size={18} />
                 : transaction.type === "transfer"
                   ? <ArrowLeftRight size={18} />
-                  : categoryEmoji(transaction.category)}
+                  : <CategoryIcon category={transaction.category}/>}
             </span>
             <div className="transaction-info">
               <b>
@@ -71,24 +75,13 @@ export function TransactionList({
                   <Trash2 size={16} />
                 </button>
               ) : (
-                <>
-                  <button
-                    className="row-edit"
-                    aria-label={"Edit " + (transaction.note || transaction.category)}
-                    onClick={() => onEdit?.(transaction)}
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    className="row-delete"
-                    aria-label={"Hapus " + (transaction.note || transaction.category)}
-                    onClick={() => onDelete?.(transaction)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </>
+                <ActionMenu label={"Opsi transaksi " + (transaction.note || transaction.category)} actions={[
+                  { label: "Edit transaksi", icon: <Pencil size={17} />, onSelect: () => onEdit?.(transaction) },
+                  { label: "Hapus transaksi", icon: <Trash2 size={17} />, destructive: true, onSelect: () => onDelete?.(transaction) },
+                ]} />
               )
             )}
+            {transaction.hasReceipt && onViewReceipt && <button className="receipt-row-detail" onClick={() => onViewReceipt(transaction)}>Lihat struk</button>}
           </div>
         );
       }) : (

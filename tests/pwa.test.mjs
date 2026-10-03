@@ -8,6 +8,7 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
   const stores = new Map();
   let online = true;
   let shell = '<html><meta name="arus-app-shell" content="1">Arus</html>';
+  let nextAsset = "CSS versi awal";
   const key = input => new URL(typeof input === "string" ? input : input.url, "https://arus.test").pathname;
   const cache = name => {
     if (!stores.has(name)) stores.set(name, new Map());
@@ -37,6 +38,7 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
     if (path === "/offline.html") return new Response("Arus sedang offline", { headers: { "content-type": "text/html" } });
     if (path === "/app") return new Response(shell, { headers: { "content-type": "text/html" } });
     if (path === "/") return new Response("<html>Landing page</html>", { headers: { "content-type": "text/html" } });
+    if (path.startsWith("/_next/")) return new Response(nextAsset, { headers: { "content-type": "text/css" } });
     return new Response("asset", { headers: { "content-type": "text/javascript" } });
   };
   vm.runInNewContext(await readFile(new URL("../public/sw.js", import.meta.url), "utf8"),
@@ -63,6 +65,19 @@ test("PWA opens its cached shell offline, keeps API requests online-only, and pr
   assert.match(await (await await navigate("/app")).text(), /arus-app-shell/);
   assert.match(await (await await navigate("/")).text(), /Arus sedang offline/);
   assert.match(await (await await navigate("/login")).text(), /Arus sedang offline/);
+
+  const nextCss = { method: "GET", mode: "cors", url: "https://arus.test/_next/static/chunks/app.css" };
+  const loadNextCss = async () => {
+    intercepted = undefined;
+    listeners.get("fetch")({ request: nextCss, respondWith: response => { intercepted = response; } });
+    return intercepted;
+  };
+  online = true;
+  assert.equal(await (await loadNextCss()).text(), "CSS versi awal");
+  nextAsset = "CSS versi baru";
+  assert.equal(await (await loadNextCss()).text(), "CSS versi baru");
+  online = false;
+  assert.equal(await (await loadNextCss()).text(), "CSS versi baru");
 
   intercepted = undefined;
   listeners.get("fetch")({ request: { method: "GET", mode: "cors", url: "https://arus.test/api/data" }, respondWith: response => { intercepted = response; } });

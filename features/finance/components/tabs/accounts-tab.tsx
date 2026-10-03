@@ -3,6 +3,7 @@ import type { Account, Transaction } from "@/domain/finance/types";
 import { accountBalance } from "@/lib/finance";
 import { EmptyState } from "@/features/finance/components/empty-state";
 import { ScreenTitle } from "@/features/finance/components/screen-title";
+import { ActionMenu } from "@/components/ui/action-menu";
 
 type Props = {
   accounts: Account[];
@@ -81,20 +82,10 @@ export function AccountsTab({
                     >
                       <Scale size={15} /> Cocokkan saldo
                     </button>
-                    <button
-                      className="row-edit"
-                      aria-label={"Edit " + account.name}
-                      onClick={() => onEdit(account)}
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      className="row-delete"
-                      aria-label={"Hapus " + account.name}
-                      onClick={() => onDelete(account)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <ActionMenu label={"Opsi akun " + account.name} actions={[
+                      { label: "Edit akun", icon: <Pencil size={17}/>, onSelect: () => onEdit(account) },
+                      { label: "Hapus akun", icon: <Trash2 size={17}/>, destructive: true, onSelect: () => onDelete(account) },
+                    ]}/>
                   </div>
                 </div>
               ))}

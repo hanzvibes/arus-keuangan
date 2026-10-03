@@ -140,11 +140,11 @@ export default function ProfilePage() {
             <span className="profile-avatar">{initial}</span>
             <div>
               <h2>{loading ? "Memuat profil..." : fullName || "Pengguna"}</h2>
-              <p>{email || "Akun Supabase"}</p>
+              <p>{email || "Akun Arus"}</p>
             </div>
             <div className="profile-security-badge">
               <ShieldCheck size={17} />
-              <span>Profil dilindungi RLS</span>
+              <span>Profil pribadi</span>
             </div>
           </aside>
 

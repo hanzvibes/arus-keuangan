@@ -140,6 +140,7 @@ export async function PATCH(request: Request) {
       if (!existingType || existingType === "adjustment") {
         return bad("Penyesuaian saldo tidak dapat diedit. Cocokkan saldo lagi untuk membuat koreksi.");
       }
+      if (await repository.getReceiptScanId(id) !== undefined) return Response.json({ error: "Edit transaksi struk lewat Detail Struk." }, { status: 409 });
 
       const accountIds = type === "transfer" ? [accountId, toAccountId] : [accountId];
       if (!await repository.accountsExist(accountIds)) {
@@ -191,7 +192,9 @@ export async function DELETE(request: Request) {
       if (!type || type === "adjustment") {
         return bad("Penyesuaian saldo tidak dapat dihapus. Cocokkan saldo lagi untuk membuat koreksi.");
       }
+      const related = await repository.getReceiptScanId(key);
       await repository.deleteTransaction(key);
+      if (related) await repository.deleteReceiptScan(related);
     } else if (entity === "budget") {
       if (!await repository.deleteBudget(key)) return bad("Budget tidak ditemukan.");
     } else {

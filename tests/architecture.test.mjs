@@ -76,6 +76,7 @@ test("shared UI directory contains only primitives used by the application", asy
   const { readdir } = await import("node:fs/promises");
   const files = (await readdir("components/ui")).sort();
   assert.deepEqual(files, [
+    "action-menu.tsx",
     "alert-dialog.tsx",
     "button.tsx",
     "drawer.tsx",

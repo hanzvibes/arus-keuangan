@@ -1,7 +1,7 @@
 import type { Transaction } from "@/domain/finance/types";
 import { PeriodControl } from "@/features/finance/components/period-control";
 import { ScreenTitle } from "@/features/finance/components/screen-title";
-import { categoryEmoji } from "@/features/finance/lib/presentation";
+import { CategoryIcon } from "../category-icon";
 import { monthlyReport, monthlyTrend, percentageChange, shiftMonth } from "@/lib/reports";
 
 type Props = {
@@ -51,7 +51,7 @@ export function AnalyticsTab({ month, onMonthChange, transactions, formatMoney }
     <section className="surface analytics-categories">
       <div className="section-head"><h2>Pengeluaran per kategori</h2></div>
       {report.categories.length ? report.categories.map(item => <div className="category-line" key={item.category}>
-        <span className="category-icon">{categoryEmoji(item.category)}</span><div><b>{item.category}</b>
+        <span className="category-icon"><CategoryIcon category={item.category}/></span><div><b>{item.category}</b>
         <span className="track"><i style={{ width: (item.amount / report.expense * 100) + "%" }} /></span>
         <small>{(item.amount / report.expense * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% dari pengeluaran</small></div><strong>{formatMoney(item.amount)}</strong>
       </div>) : <p className="empty-inline">Belum ada pengeluaran bulan ini.</p>}

@@ -1,5 +1,5 @@
 import type { Budget, Transaction } from "@/domain/finance/types";
-import { categoryEmoji } from "@/features/finance/lib/presentation";
+import { CategoryIcon } from "./category-icon";
 
 type Props = {
   budget: Budget;
@@ -18,7 +18,7 @@ export function BudgetRow({ budget, expenses, formatMoney }: Props) {
     <div className="budget-row">
       <div className="budget-line">
         <div>
-          <span className="budget-icon">{categoryEmoji(budget.category)}</span>
+          <span className="budget-icon"><CategoryIcon category={budget.category} size={17}/></span>
           <b>{budget.category}</b>
         </div>
         <strong className={ratio >= 1 ? "red" : ratio >= 0.8 ? "amber" : "green"}>

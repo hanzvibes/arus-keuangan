@@ -95,7 +95,7 @@ export function SettingsTab({
           <Download size={22} />
           <div>
             <h2>Unduh data</h2>
-            <p>Cadangan JSON bisa dipulihkan; CSV untuk membuka transaksi di spreadsheet.</p>
+            <p>Cadangan JSON memuat metadata struk, tetapi tidak memuat foto atau draft scan. CSV untuk membuka transaksi di spreadsheet.</p>
           </div>
         </div>
         <div className="data-actions">
