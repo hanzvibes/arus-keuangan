@@ -42,5 +42,8 @@ jobs:
       - name: Verify proposed schema snapshot
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/schemas/arus.sql
+      - name: Verify private receipt Storage policies
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-storage.sql
       - name: Verify ownership, stale updates, backup compatibility and rollback
         run: psql -v ON_ERROR_STOP=1 -f tests/database/savings.sql

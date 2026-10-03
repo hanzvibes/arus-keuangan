@@ -35,7 +35,7 @@
 .receipt-photo-choice small {display:block;color:var(--native-secondary);font-size:12px;line-height:1.5;margin-top:4px}
 .receipt-sticky-actions {position:sticky;bottom:0;z-index:2;display:flex;gap:10px;padding:12px 0 4px;background:var(--native-background);box-shadow:0 -8px 12px var(--native-background)}
 .receipt-sticky-actions .save-button {flex:1;margin:0}
-.receipt-secondary {display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;background:#e4e4ea;color:var(--native-green);border:0;border-radius:14px;padding:12px 16px;font-size:14px;text-decoration:none;font-weight:600}
+.receipt-secondary {display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;background:var(--native-tint);color:var(--native-green);border:0;border-radius:14px;padding:12px 16px;font-size:14px;text-decoration:none;font-weight:600}
 .receipt-processing {text-align:center;padding:28px 12px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .receipt-progress-icon {display:grid;place-items:center;width:90px;height:90px;background:white;color:var(--native-green);border-radius:26px;margin-bottom:20px}
 .receipt-progress-icon svg {animation:receipt-spin 1.2s linear infinite}

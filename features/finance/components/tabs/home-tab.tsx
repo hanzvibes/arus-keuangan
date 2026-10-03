@@ -66,6 +66,7 @@ export function HomeTab({
   month,
   onMonthChange,
 }: Props) {
+  const monthLabel = new Date(month + "-01T12:00:00").toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   return (
     <>
       <div className="quick-actions" aria-label="Aksi utama">
@@ -79,7 +80,7 @@ export function HomeTab({
       <section className="balance-card">
         <div className="balance-top">
           <span>TOTAL SALDO</span>
-          <button aria-label="Sembunyikan atau tampilkan saldo" onClick={onToggleHidden}>
+          <button aria-label={hidden ? "Tampilkan saldo" : "Sembunyikan saldo"} onClick={onToggleHidden}>
             {hidden ? <EyeOff size={19} /> : <Eye size={19} />}
           </button>
         </div>
@@ -142,11 +143,10 @@ export function HomeTab({
         <div className="section-head">
           <div>
             <h2>Budget</h2>
-            <p>Pantau batas pengeluaranmu</p>
+            <p>Pantau batas pengeluaranmu · {monthLabel}</p>
           </div>
           <button className="text-link" onClick={onBudget}>Lihat <ChevronRight size={16} /></button>
         </div>
-        <PeriodControl month={month} onChange={onMonthChange} />
         {budgets.length ? budgets.slice(0, 2).map(budget => (
           <div key={budget.id}>
             <BudgetRow budget={budget} expenses={expenses} formatMoney={formatMoney} />

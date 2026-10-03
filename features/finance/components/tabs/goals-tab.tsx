@@ -54,7 +54,7 @@ export function GoalsTab({ goals, offline, formatMoney, onRefresh }: Props) {
   }
   const completed = goals.filter(goal => goal.savedAmount >= goal.targetAmount).length;
   return <section className="screen">
-    <ScreenTitle title="Target tabungan" subtitle="Beri arah untuk uang yang kamu sisihkan." action="Tambah Target" onAction={() => open(null)} />
+    <ScreenTitle title="Target tabungan" subtitle="Beri arah untuk uang yang kamu sisihkan." action={goals.length ? "Tambah Target" : undefined} onAction={() => open(null)} />
     <div className="surface goal-intro"><Target size={28} /><div><h2>{goals.length ? completed + " dari " + goals.length + " target tercapai" : "Apa yang ingin kamu wujudkan?"}</h2><p>Catat dana yang sudah kamu sisihkan. Progres ini tidak mengubah saldo atau membuat transaksi.</p></div></div>
     {offline && <p className="empty-inline" role="status">Target dari salinan perangkat. Sambungkan internet untuk membuat perubahan.</p>}
     <div className="goals-grid">{goals.map(goal => {

@@ -33,7 +33,7 @@ export function AccountsTab({
       <ScreenTitle
         title="Akun Finansial"
         subtitle="Kelola sumber keuanganmu."
-        action="Tambah Akun"
+        action={accounts.length ? "Tambah Akun" : undefined}
         onAction={onAdd}
       />
 

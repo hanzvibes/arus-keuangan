@@ -99,11 +99,11 @@ export function TransactionsTab({
   const matchingExpense = filteredTransactions.filter(row => row.type === "expense").reduce((sum,row) => sum + row.amount,0);
   const pendingScans = scans.filter(scan => !scan.transactionId);
   return (
-    <section className="screen">
+    <section className="screen transactions-screen">
       <ScreenTitle
         title="Transaksi"
         subtitle="Riwayat dan jadwal keuanganmu."
-        action="Catat Baru"
+        action={!filteredTransactions.length && !activeFilters && transactionView === "history" ? undefined : "Catat Baru"}
         onAction={onAdd}
       />
       <PeriodControl month={month} onChange={onMonthChange} />
@@ -171,7 +171,7 @@ export function TransactionsTab({
             <label className="sort-control">Urutkan<select value={sort} onChange={event=>onSortChange(event.target.value as TransactionSort)}><option value="newest">Terbaru</option><option value="oldest">Terlama</option><option value="largest">Nominal terbesar</option><option value="smallest">Nominal terkecil</option></select></label>
             {(activeFilters>0||sort!=="newest")&&<button className="reset-filters" onClick={onResetFilters}>Reset {activeFilters>0 ? activeFilters+" filter" : "urutan"}</button>}
           </div>
-          {!filteredTransactions.length ? <div className="surface filtered-empty"><Search size={28}/><h2>{activeFilters ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi bulan ini"}</h2><p>{activeFilters ? "Coba kata kunci lain atau hapus filter untuk melihat riwayat." : "Catat pemasukan, pengeluaran, atau transfer pertamamu."}</p><button className="reset-filters" onClick={activeFilters ? onResetFilters : onAdd}>{activeFilters ? "Hapus semua filter" : "Catat transaksi"}</button></div> : <div className="surface transaction-surface">
+          {!filteredTransactions.length ? <div className="surface filtered-empty"><Search size={28}/><h2>{activeFilters ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi bulan ini"}</h2><p>{activeFilters ? "Coba kata kunci lain atau hapus filter untuk melihat riwayat." : "Catat pemasukan, pengeluaran, atau transfer pertamamu."}</p><button className={"reset-filters" + (activeFilters ? "" : " empty-add-action")} onClick={activeFilters ? onResetFilters : onAdd}>{activeFilters ? "Hapus semua filter" : "Catat transaksi"}</button></div> : <div className="surface transaction-surface">
             <TransactionList
               items={filteredTransactions}
               accounts={accounts}

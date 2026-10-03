@@ -37,7 +37,7 @@ export function BudgetTab({
       <ScreenTitle
         title="Budget"
         subtitle="Kelola dan pantau batas pengeluaranmu."
-        action="Tambah Budget"
+        action={budgets.length ? "Tambah Budget" : undefined}
         onAction={onAdd}
       />
       <PeriodControl month={month} onChange={onMonthChange} />
