@@ -42,6 +42,11 @@ jobs:
       - name: Verify proposed schema snapshot
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/schemas/arus.sql
+      - name: Verify receipt bucket hardening migration
+        if: matrix.schema == 'snapshot'
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "update storage.buckets set public=true, file_size_limit=1024, allowed_mime_types=array['text/plain']::text[] where id='arus-receipts';"
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261003211200_harden_receipt_bucket.sql
       - name: Verify private receipt Storage policies
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-storage.sql
