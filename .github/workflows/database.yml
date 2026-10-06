@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
 jobs:
-  savings:
+  database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       matrix:
-        schema: [migration, snapshot]
+        schema: [fresh, snapshot]
     services:
       postgres:
         image: postgres:16
@@ -30,37 +30,34 @@ jobs:
       PGDATABASE: postgres
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Bootstrap test Auth
+      - name: Bootstrap test Supabase interfaces
         run: psql -v ON_ERROR_STOP=1 -f tests/database/bootstrap.sql
-      - name: Verify additive migration from pre-feature baseline
-        if: matrix.schema == 'migration'
+      - name: Replay migrations from an empty database
+        if: matrix.schema == 'fresh'
         run: |
-          git show 6b3e37ad27630e1eed9e809b8887e8381b5f0ca6:supabase/schemas/arus.sql | psql -v ON_ERROR_STOP=1
-          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20260930170000_add_savings_goals.sql
-      - name: Verify proposed schema snapshot
+          for migration in supabase/migrations/*.sql; do
+            echo "Applying $migration"
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+      - name: Verify declarative schema snapshot
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/schemas/arus.sql
-      - name: Verify receipt bucket hardening migration
+      - name: Exercise receipt bucket hardening against the snapshot
         if: matrix.schema == 'snapshot'
         run: |
           psql -v ON_ERROR_STOP=1 -c "update storage.buckets set public=true, file_size_limit=1024, allowed_mime_types=array['text/plain']::text[] where id='arus-receipts';"
-          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261003211200_harden_receipt_bucket.sql
-      - name: Verify private receipt Storage policies
-        if: matrix.schema == 'snapshot'
-        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-storage.sql
-      - name: Verify receipt finalization and ownership
-        if: matrix.schema == 'snapshot'
-        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipts.sql
-      - name: Verify receipt cleanup trigger hardening migration
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261003212611_harden_receipt_bucket.sql
+      - name: Apply post-snapshot receipt cleanup hardening
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261006143647_fix_receipt_photo_cleanup_trigger.sql
-      - name: Verify atomic receipt transaction deletion migration
+      - name: Apply post-snapshot atomic transaction deletion
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261006152049_add_atomic_transaction_delete.sql
+      - name: Verify private receipt Storage policies
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-storage.sql
+      - name: Verify receipt finalization and ownership
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipts.sql
       - name: Verify receipt delete and photo cleanup lifecycle
-        if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-lifecycle.sql
       - name: Verify ownership, stale updates, backup compatibility and rollback
         run: psql -v ON_ERROR_STOP=1 -f tests/database/savings.sql

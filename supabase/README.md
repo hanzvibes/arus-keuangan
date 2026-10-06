@@ -2,31 +2,30 @@
 
 Arus uses Supabase Postgres as the primary data store.
 
-## Current baseline
+## Reproducible baseline
 
-`schemas/arus.sql` is a declarative snapshot of the application-owned schema currently running in the linked production project:
+`migrations/20260927144843_add_user_profiles.sql` is the source-controlled baseline for the original application-owned schema. Its version intentionally matches the first migration version already recorded by the FinanceTracker production project, so existing production databases treat it as already applied while a fresh database can build the missing pre-migration schema.
 
-- accounts
-- transactions
-- budgets
-- categories
-- recurring
-- profiles
-- RLS policies
-- Arus RPC functions
-- profile creation trigger
+The baseline contains the original accounts, transactions, budgets, categories, recurring, profiles, RLS policies, Arus RPC functions, and profile creation trigger. Supabase-managed Auth and Storage internals are not duplicated; integration tests provide only the minimal interfaces needed to exercise application-owned SQL.
 
-Supabase-managed Auth tables are intentionally not duplicated.
+All later schema changes remain individual migrations in `migrations/` and must replay in filename order from an empty database. Database Integration CI enforces this on every PR and push to `main`.
+
+`schemas/arus.sql` remains the declarative application-schema snapshot. The snapshot CI path also reapplies post-snapshot hardening migrations before regression tests, while the `fresh` path proves the entire migration chain can recreate the current tested schema from an empty database.
 
 ## Migration history
 
-The original finance schema predates repository migration history, so `schemas/arus.sql` remains the baseline snapshot.
+The FinanceTracker production migration versions and source-controlled migration filenames must stay aligned. The repository currently starts with:
 
-New database changes are tracked from this point forward in `migrations/`. The first source-controlled post-baseline migration is:
+- `20260927144843_add_user_profiles.sql` — reproducible baseline anchored to the existing production migration version.
+- `20260928060444_add_recurring_fk_indexes.sql` — recurring foreign-key covering indexes.
+- `20260930170000_add_savings_goals.sql` — savings goals and backup support.
+- `20261002152109_add_receipt_scans.sql` — receipt scan schema and RPCs.
+- `20261002152428_add_receipt_scan_fk_index.sql` — receipt scan FK index.
+- `20261003212611_harden_receipt_bucket.sql` — private receipt bucket hardening; timestamp matches production history.
+- `20261006143647_fix_receipt_photo_cleanup_trigger.sql` — receipt photo cleanup trigger hardening.
+- `20261006152049_add_atomic_transaction_delete.sql` — atomic receipt-backed transaction deletion.
 
-- `20260928060444_add_recurring_fk_indexes.sql` — adds covering indexes for the composite recurring-account foreign keys.
-
-For future schema changes, use the current Supabase CLI to create the migration first, then verify the linked project and local migration history before committing:
+For future schema changes, create the migration with the current Supabase CLI instead of inventing a filename:
 
 ```sh
 supabase --version
@@ -35,21 +34,6 @@ supabase link --project-ref mtoswyittiipcuewrheo
 supabase migration list --local
 ```
 
-Keep `schemas/arus.sql` synchronized with the resulting production schema and run Supabase advisors after DDL changes.
+Then replay migrations from a clean local database (`supabase db reset` when using the local Supabase stack), verify the linked migration list, keep `schemas/arus.sql` synchronized with production when appropriate, and run Supabase advisors after DDL changes.
 
 Do not commit production data, database passwords, service-role keys, or other secrets.
-
-## Savings goals and receipt migrations
-
-`20260930170000_add_savings_goals.sql` adds per-user savings goals with RLS,
-a database-maintained update timestamp, and backup v3 support in the atomic
-restore function. It was already present on FinanceTracker before migration
-history was repaired on 2026-10-02. `20261002152109_add_receipt_scans.sql` and
-`20261002152428_add_receipt_scan_fk_index.sql` were applied to FinanceTracker on
-the same date. Other projects must apply these migrations in order before
-deploying the corresponding application code.
-
-Backups v1/v2 omit goals and preserve existing goals on restore. Backups v3
-replace goals together with the other finance records within one transaction.
-The FinanceTracker remote history now records both migrations. Verify history
-against each target project and run advisors after DDL.
