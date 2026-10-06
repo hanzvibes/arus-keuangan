@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { accountBalance, budgetSummary, reconciliationDelta, ADJUSTMENT_CATEGORY } from "../lib/finance.ts";
-import { parseQuickEntry } from "../lib/quick-entry.ts";
-import { validateBackup } from "../lib/backup.ts";
-import { nextOccurrence } from "../lib/recurring.ts";
+import { accountBalance, budgetSummary, reconciliationDelta, ADJUSTMENT_CATEGORY } from "../src/lib/finance.ts";
+import { parseQuickEntry } from "../src/lib/quick-entry.ts";
+import { validateBackup } from "../src/lib/backup.ts";
+import { nextOccurrence } from "../src/lib/recurring.ts";
 
 test("transfer moves money without changing the combined balance", () => {
   const accounts = [{ id: "a", openingBalance: 1000 }, { id: "b", openingBalance: 500 }];
