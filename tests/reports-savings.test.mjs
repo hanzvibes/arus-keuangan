@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { monthlyReport, monthlyTrend, percentageChange, shiftMonth, searchTransactions, sortTransactions } from "../lib/reports.ts";
-import { savingsProgress, validateSavingsInput } from "../lib/savings.ts";
-import { validateBackup } from "../lib/backup.ts";
+import { monthlyReport, monthlyTrend, percentageChange, shiftMonth, searchTransactions, sortTransactions } from "../src/lib/reports.ts";
+import { savingsProgress, validateSavingsInput } from "../src/lib/savings.ts";
+import { validateBackup } from "../src/lib/backup.ts";
 
 const row = (id, type, amount, date, category = "Makanan") => ({ id, type, amount, date, category, accountId: "a", toAccountId: type === "transfer" ? "b" : null, note: "" });
 test("reports isolate calendar months and exclude transfers and adjustments from cashflow", () => {
