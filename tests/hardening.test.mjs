@@ -11,13 +11,22 @@ const receiptRoutes = [
   "src/app/api/receipts/[id]/route.ts",
 ];
 
+test("database CI replays the complete migration history from an empty database", async () => {
+  const workflow = await readFile(".github/workflows/database.yml", "utf8");
+  const baseline = await readFile("supabase/migrations/20260927144843_add_user_profiles.sql", "utf8");
+
+  assert.match(workflow, /schema: \[fresh, snapshot\]/);
+  assert.match(workflow, /for migration in supabase\/migrations\/\*\.sql/);
+  assert.doesNotMatch(workflow, /git show 6b3e37/);
+  assert.match(baseline, /create table public\.accounts/);
+  assert.match(baseline, /create table public\.profiles/);
+});
+
 test("database CI runs every critical finance SQL suite", async () => {
   const workflow = await readFile(".github/workflows/database.yml", "utf8");
   for (const path of [
     "tests/database/receipt-storage.sql",
     "tests/database/receipts.sql",
-    "supabase/migrations/20261006143647_fix_receipt_photo_cleanup_trigger.sql",
-    "supabase/migrations/20261006152049_add_atomic_transaction_delete.sql",
     "tests/database/receipt-lifecycle.sql",
     "tests/database/savings.sql",
   ]) {
