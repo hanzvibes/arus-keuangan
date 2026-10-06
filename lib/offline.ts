@@ -34,58 +34,16 @@ function deleteDatabase(name: string): Promise<void> {
   });
 }
 
-async function migrateLegacyCache(userId: string) {
-  let created = false;
-  const legacy = await new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(LEGACY_DATABASE, 2);
-    request.onupgradeneeded = event => {
-      created = event.oldVersion === 0;
-      if (!request.result.objectStoreNames.contains(STORE)) {
-        request.result.createObjectStore(STORE);
-      }
-      if (!request.result.objectStoreNames.contains(PENDING)) {
-        request.result.createObjectStore(PENDING, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-
-  if (created) {
-    legacy.close();
-    await deleteDatabase(LEGACY_DATABASE);
-    return;
-  }
-
-  const snapshot = await new Promise<unknown | null>((resolve, reject) => {
-    const request = legacy.transaction(STORE, "readonly").objectStore(STORE).get("snapshot");
-    request.onsuccess = () => resolve(request.result ?? null);
-    request.onerror = () => reject(request.error);
-  });
-  const pending = await new Promise<Array<{ id: string }>>((resolve, reject) => {
-    const request = legacy.transaction(PENDING, "readonly").objectStore(PENDING).getAll();
-    request.onsuccess = () => resolve(request.result as Array<{ id: string }>);
-    request.onerror = () => reject(request.error);
-  });
-  legacy.close();
-
-  const scoped = await openNamedDatabase(databaseName(userId));
-  await new Promise<void>((resolve, reject) => {
-    const transaction = scoped.transaction([STORE, PENDING], "readwrite");
-    if (snapshot !== null) transaction.objectStore(STORE).put(snapshot, "snapshot");
-    for (const item of pending) transaction.objectStore(PENDING).put(item);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  scoped.close();
-
+async function migrateLegacyCache() {
+  // The legacy database predates per-user ownership. Reassigning it to whichever
+  // user logs in first can expose another user's financial snapshot or queue.
   await deleteDatabase(LEGACY_DATABASE);
 }
 
 async function ensureUserDatabase(userId: string) {
   let migration = migrations.get(userId);
   if (!migration) {
-    migration = migrateLegacyCache(userId).catch(error => {
+    migration = migrateLegacyCache().catch(error => {
       migrations.delete(userId);
       throw error;
     });
