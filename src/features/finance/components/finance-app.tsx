@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeftRight, BarChart3, Eye, EyeOff, Home, LayoutGrid, Plus, Settings2, Target, Wallet, WifiOff, X } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { validateBackup, type Backup } from "@/lib/backup";
 import { parseQuickEntry } from "@/lib/quick-entry";
 import { accountBalance as balance, budgetSummary, reconciliationDelta } from "@/lib/finance";
 import { allCategories, defaultCategories } from "@/lib/categories";
@@ -11,6 +10,7 @@ import { usePwa } from "@/lib/use-pwa";
 import { FinanceApiError, financeApi } from "@/data/client/finance-api";
 import type { Account, Transaction, Budget, QueuedTransaction } from "@/domain/finance/types";
 import { useFinanceData } from "@/features/finance/hooks/use-finance-data";
+import { useFinanceBackup } from "@/features/finance/hooks/use-finance-backup";
 import { day, money } from "@/features/finance/lib/presentation";
 import { AccountsTab } from "@/features/finance/components/tabs/accounts-tab";
 import { AnalyticsTab } from "@/features/finance/components/tabs/analytics-tab";
@@ -53,14 +53,28 @@ export function FinanceApp() {
   const [installTipDismissed,setInstallTipDismissed]=useState(()=>typeof window!=="undefined"&&sessionStorage.getItem("arus_install_tip_dismissed")==="1");
   const [installGuideOpen,setInstallGuideOpen]=useState(false);
   const [editing,setEditing]=useState<string|null>(null), [quickText,setQuickText]=useState("");
-  const [pendingBackup,setPendingBackup]=useState<Backup|null>(null), [restoring,setRestoring]=useState(false);
-  const fileRef=useRef<HTMLInputElement>(null);
   const [target,setTarget]=useState<{entity:string;id:string;label:string}|null>(null);
   const [name,setName]=useState(""), [kind,setKind]=useState("bank"), [opening,setOpening]=useState("");
   const [amount,setAmount]=useState(""), [account,setAccount]=useState(""), [destination,setDestination]=useState("");
   const [category,setCategory]=useState(defaultCategories[0]), [note,setNote]=useState(""), [date,setDate]=useState(day());
   const [reconcileAccount,setReconcileAccount]=useState<Account|null>(null), [expectedBalance,setExpectedBalance]=useState(0);
   const [actualBalance,setActualBalance]=useState(""), [reconcileNote,setReconcileNote]=useState(""), [reconcileSaving,setReconcileSaving]=useState(false);
+  const {
+    fileRef,
+    pendingBackup,
+    restoring,
+    setPendingBackup,
+    exportBackup,
+    exportCsv,
+    selectBackup,
+    restoreBackup,
+  }=useFinanceBackup({
+    data,
+    hasPending,
+    runExclusive,
+    refresh,
+    onRestored:()=>{setTab("home");setQuery("");window.scrollTo({top:0,behavior:"smooth"});},
+  });
   const categories=allCategories(data.categories), fmt=(n:number)=>hidden?"Rp •••••••":money(n);
   const total=shown.accounts.reduce((s,a)=>s+balance(a,shown.transactions),0);
   useEffect(()=>{
@@ -177,39 +191,6 @@ export function FinanceApp() {
       if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
       else toast.error(e instanceof Error?e.message:"Gagal menghapus.");
     }finally{setTarget(null);}
-  }
-  function download(filename:string,contents:string,mime:string){const url=URL.createObjectURL(new Blob([contents],{type:mime}));const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  async function exportBackup(){try{if(await hasPending())throw Error("Selesaikan transaksi tertunda agar cadangan lengkap.");const backup=await financeApi.backup();download("arus-cadangan-"+day()+".json",JSON.stringify(backup,null,2),"application/json");toast.success("Cadangan berhasil diunduh.");}catch(e){toast.error(e instanceof Error?e.message:"Cadangan belum bisa diunduh.");}}
-  async function exportCsv(){
-    try{if(await hasPending())throw Error("Selesaikan transaksi tertunda agar CSV lengkap.");}
-    catch(e){toast.error(e instanceof Error?e.message:"CSV belum bisa diunduh.");return;}
-    const cell=(value:string|number)=>{const text=String(value);return '"'+(/^[\s\u0000-\u001f]*[=+@-]/.test(text)?"'":"")+text.replace(/"/g,'""')+'"';};
-    const rows=[["Tanggal","Jenis","Jumlah","Akun","Akun tujuan","Kategori","Catatan"],...data.transactions.map(t=>[t.date,t.type,t.amount,data.accounts.find(a=>a.id===t.accountId)?.name||"",data.accounts.find(a=>a.id===t.toAccountId)?.name||"",t.category,t.note])];
-    download("arus-transaksi-"+day()+".csv","\uFEFF"+rows.map(row=>row.map(cell).join(",")).join("\r\n"),"text/csv;charset=utf-8");toast.success("CSV berhasil diunduh.");
-  }
-  async function selectBackup(file?:File){
-    if(!file)return;
-    if(file.size>3_000_000){toast.error("File cadangan terlalu besar.");return;}
-    try{const value=JSON.parse(await file.text()) as unknown;const validated=validateBackup(value);if(!validated.data)throw Error(validated.error);setPendingBackup(validated.data);}
-    catch(e){toast.error(e instanceof Error?e.message:"File cadangan tidak valid.");}
-    if(fileRef.current)fileRef.current.value="";
-  }
-  async function restoreBackup(){
-    if(!pendingBackup)return;
-    setRestoring(true);
-    try{
-      await runExclusive(async()=>{
-        if(await hasPending())throw Error("Sinkronkan atau batalkan transaksi tertunda sebelum memulihkan cadangan.");
-        await financeApi.restore(pendingBackup);
-        setPendingBackup(null);
-        await refresh();
-      });
-      toast.success("Cadangan berhasil dipulihkan.");
-      changeTab("home");
-    }catch(e){
-      if(e instanceof Error&&e.message==="SYNC_BUSY") toast.info("Tunggu pengiriman transaksi selesai.");
-      else toast.error(e instanceof Error?e.message:"Pemulihan gagal.");
-    }finally{setRestoring(false);}
   }
   async function removeDeviceCache(){
     try{

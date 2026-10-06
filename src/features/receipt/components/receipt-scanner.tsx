@@ -10,7 +10,7 @@ import { decodeReceipt, hashReceiptImage, prepareReceiptImage, type Crop } from 
 import { parseReceipt } from "../parser";
 import { receiptNeedsReview, validDate, validateReceiptDraft } from "../validation";
 import { receiptApi } from "../client";
-import { receiptDuplicateReasons } from "../duplicate";
+import { saveReceiptTransaction } from "../save-transaction";
 import { ReceiptReview, receiptFieldNames as fieldNames, type DuplicateReview } from "./receipt-review";
 import type { Account, Transaction } from "@/domain/finance/types";
 import type { ReceiptDraft, ReceiptProgress, ReceiptScan } from "../types";
@@ -122,47 +122,17 @@ export function ReceiptScanner({ open, onClose, onSaved, accounts, transactions,
     if (receiptNeedsReview(draft) && !acknowledged) { setMessage("Centang pemeriksaan hasil scan sebelum menyimpan."); return; }
     setBusy(true); setMessage("");
     try {
-      let current = scan;
-      let remote: ReceiptScan | null = null;
-      try { remote = await receiptApi.get(current.id); }
-      catch (error) { if (!(error instanceof Error && error.message === "Scan tidak ditemukan.")) throw error; }
-      if (!remote) {
-        const created = await receiptApi.create(current);
-        current = { ...current, version: created.version };
-      } else if (remote.version !== current.version) {
-        throw Error("Draft berubah di perangkat lain. Muat ulang sebelum menyimpan.");
-      }
-      if (!current.transactionId) {
-        const updated = await receiptApi.update({ ...current, draft, savePhoto, status: receiptNeedsReview(draft) ? "review" : "success" });
-        current = { ...current, draft, savePhoto, version: updated.version };
-        setScan(current);
-      }
-      let photoPath: string | null = null;
-      if (current.transactionId && savePhoto && !photo) photoPath = (await receiptApi.detail(current.transactionId)).receipt.photoPath;
-      if (current.transactionId && savePhoto && !photoPath && !photo) throw Error("Pilih foto asli lagi atau matikan pilihan simpan foto.");
-      if (savePhoto && photo) {
-        const supabase = createClient(); const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) throw Error("Sesi login tidak valid.");
-        const extension = photo.type === "image/png" || !["image/png","image/webp","image/jpeg"].includes(photo.type) ? "png" : photo.type === "image/webp" ? "webp" : "jpg";
-        const source = ["image/png","image/webp","image/jpeg"].includes(photo.type) ? photo : (await prepareReceiptImage(photo, blankCrop, 0)).blob;
-        photoPath = (await receiptApi.reservePhoto(current.id, extension)).photoPath;
-        const uploaded = await supabase.storage.from("arus-receipts").upload(photoPath, source, { contentType: source.type, upsert: true });
-        if (uploaded.error) { setMessage("Upload foto gagal. Coba simpan lagi atau matikan pilihan simpan foto."); throw uploaded.error; }
-      }
-      const result = current.transactionId
-        ? await receiptApi.updateTransaction(current.id, { expectedVersion: current.version, accountId, draft, photoPath })
-        : await receiptApi.finalize(current.id, { expectedVersion: current.version, transactionId: crypto.randomUUID(), accountId, draft, duplicateToken: duplicate?.token ?? null, photoPath });
-      if ("duplicate" in result && result.duplicate && result.token) {
-        const ids = result.transactionIds ?? [];
-        const reasons: Record<string, string[]> = {};
-        try {
-          const history = (await receiptApi.list()).scans;
-          for (const id of ids) {
-            const match = history.find(item => item.transactionId === id);
-            reasons[id] = match ? receiptDuplicateReasons(match, current) : [];
-          }
-        } catch { /* The transaction candidates still appear by ID. */ }
-        setDuplicate({ ids, token: result.token, reasons });
+      const result = await saveReceiptTransaction({
+        scan,
+        draft,
+        accountId,
+        savePhoto,
+        photo,
+        duplicateToken: duplicate?.token ?? null,
+      });
+      setScan(result.scan);
+      if (result.kind === "duplicate") {
+        setDuplicate(result.duplicate);
         setAcknowledged(false);
         setMessage("Struk ini mungkin sudah dicatat. Periksa transaksi yang cocok sebelum lanjut.");
         return;
