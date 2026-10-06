@@ -10,8 +10,8 @@ export async function POST(request: Request) {
     if (scan.error) throw scan.error;
     if (!scan.data) return receiptReply({ error: "Draft scan tidak ditemukan." }, 404);
     const photoPath = `${userId}/${payload.scanId}.${payload.extension}`;
-    const reservation = await supabase.from("receipt_photo_cleanup").upsert({ user_id: userId, photo_path: photoPath, created_at: new Date().toISOString() }, { onConflict: "user_id,photo_path", ignoreDuplicates: true });
-    if (reservation.error) throw reservation.error;
+    const reservation = await supabase.from("receipt_photo_cleanup").insert({ user_id: userId, photo_path: photoPath, created_at: new Date().toISOString() });
+    if (reservation.error && reservation.error.code !== "23505") throw reservation.error;
     return receiptReply({ photoPath });
-  } catch (error) { return receiptError(error); }
+  } catch (error) { return receiptError(error, request); }
 }

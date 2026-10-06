@@ -13,5 +13,5 @@ export async function POST(request: Request, context: Context) {
     if (result.error) throw result.error;
     const data = result.data as { error?: string; duplicate?: boolean };
     return receiptReply(data, data.error === "stale" || data.duplicate ? 409 : data.error ? 400 : 200);
-  } catch (error) { return receiptError(error); }
+  } catch (error) { return receiptError(error, request); }
 }

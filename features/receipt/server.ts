@@ -23,10 +23,67 @@ export function receiptDraftShape(value: unknown): value is ReceiptDraft {
   }
   return d.date?.value === null || validDate(String(d.date?.value));
 }
-export function receiptError(error: unknown) {
-  if (error instanceof Error && error.message === "UNAUTHENTICATED") return Response.json({ error: "Sesi login tidak valid." }, { status: 401 });
-  if (error instanceof FinanceRequestError) return Response.json({ error: error.message }, { status: error.status, headers: { "Cache-Control": "no-store" } });
-  console.error("receipt_error", error instanceof Error ? error.message : error);
-  return Response.json({ error: "Struk belum bisa diproses. Coba lagi." }, { status: 500 });
+
+function receiptContext(request?: Request) {
+  let path = "";
+  if (request) {
+    try {
+      path = new URL(request.url).pathname;
+    } catch {
+      path = "";
+    }
+  }
+  return {
+    requestId: crypto.randomUUID(),
+    method: request?.method ?? "UNKNOWN",
+    path,
+    vercelId: request?.headers.get("x-vercel-id") || undefined,
+  };
+}
+
+function receiptErrorHeaders(requestId: string) {
+  return {
+    "Cache-Control": "no-store",
+    "X-Request-Id": requestId,
+  };
+}
+
+export function receiptError(error: unknown, request?: Request) {
+  const context = receiptContext(request);
+  const headers = receiptErrorHeaders(context.requestId);
+
+  if (error instanceof Error && error.message === "UNAUTHENTICATED") {
+    return Response.json(
+      { error: "Sesi login tidak valid.", requestId: context.requestId },
+      { status: 401, headers },
+    );
+  }
+  if (error instanceof FinanceRequestError) {
+    return Response.json(
+      { error: error.message, requestId: context.requestId },
+      { status: error.status, headers },
+    );
+  }
+
+  const record = error && typeof error === "object" ? error as Record<string, unknown> : null;
+  const detail = error instanceof Error
+    ? { name: error.name, message: error.message }
+    : {
+        name: "ReceiptError",
+        message: typeof record?.message === "string" ? record.message : "Non-error value thrown",
+        code: typeof record?.code === "string" ? record.code : undefined,
+      };
+
+  console.error(JSON.stringify({
+    level: "error",
+    event: "receipt_route_error",
+    ...context,
+    error: detail,
+  }));
+
+  return Response.json(
+    { error: "Struk belum bisa diproses. Coba lagi.", requestId: context.requestId },
+    { status: 500, headers },
+  );
 }
 export const receiptReply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });

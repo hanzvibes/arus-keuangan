@@ -50,5 +50,14 @@ jobs:
       - name: Verify private receipt Storage policies
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-storage.sql
+      - name: Verify receipt finalization and ownership
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipts.sql
+      - name: Verify receipt cleanup trigger hardening migration
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261006143647_fix_receipt_photo_cleanup_trigger.sql
+      - name: Verify receipt delete and photo cleanup lifecycle
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-lifecycle.sql
       - name: Verify ownership, stale updates, backup compatibility and rollback
         run: psql -v ON_ERROR_STOP=1 -f tests/database/savings.sql
