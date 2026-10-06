@@ -101,7 +101,7 @@ export interface FinanceRepository {
   createTransaction(input: TransactionWrite): Promise<"created" | "duplicate">;
   getTransactionType(id: string): Promise<TransactionType | null>;
   updateTransaction(id: string, input: Omit<TransactionWrite, "id" | "createdAt">): Promise<boolean>;
-  deleteTransaction(id: string): Promise<void>;
+  deleteTransaction(id: string): Promise<"deleted" | "missing" | "adjustment">;
   transactionExists(id: string): Promise<boolean>;
   getReceiptScanId(transactionId: string): Promise<string | null | undefined>;
   deleteReceiptScan(id: string): Promise<void>;

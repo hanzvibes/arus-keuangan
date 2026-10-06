@@ -56,6 +56,9 @@ jobs:
       - name: Verify receipt cleanup trigger hardening migration
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261006143647_fix_receipt_photo_cleanup_trigger.sql
+      - name: Verify atomic receipt transaction deletion migration
+        if: matrix.schema == 'snapshot'
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261006152049_add_atomic_transaction_delete.sql
       - name: Verify receipt delete and photo cleanup lifecycle
         if: matrix.schema == 'snapshot'
         run: psql -v ON_ERROR_STOP=1 -f tests/database/receipt-lifecycle.sql

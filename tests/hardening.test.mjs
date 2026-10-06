@@ -17,6 +17,7 @@ test("database CI runs every critical finance SQL suite", async () => {
     "tests/database/receipt-storage.sql",
     "tests/database/receipts.sql",
     "supabase/migrations/20261006143647_fix_receipt_photo_cleanup_trigger.sql",
+    "supabase/migrations/20261006152049_add_atomic_transaction_delete.sql",
     "tests/database/receipt-lifecycle.sql",
     "tests/database/savings.sql",
   ]) {
@@ -55,4 +56,36 @@ test("legacy unscoped offline cache is discarded instead of assigned to the acti
   assert.doesNotMatch(migration, /openNamedDatabase\(databaseName\(/);
   assert.doesNotMatch(migration, /objectStore\(STORE\)\.put/);
   assert.doesNotMatch(migration, /objectStore\(PENDING\)\.put/);
+});
+
+test("offline device state stays user-scoped even when post-signout cleanup fails", async () => {
+  const offline = await readFile("lib/offline.ts", "utf8");
+  const auth = await readFile("features/auth/components/auth-user.tsx", "utf8");
+
+  assert.match(offline, /const DATABASE_PREFIX = "arus-device-cache:"/);
+  assert.match(offline, /return DATABASE_PREFIX \+ userId/);
+  assert.match(offline, /deleteDatabase\(databaseName\(userId\)\)/);
+
+  const signOut = auth.indexOf("await supabase.auth.signOut()");
+  const cleanup = auth.indexOf("await clearDeviceCache(userId)");
+  const cleanupFailure = auth.indexOf("catch (cleanupError)");
+  const redirect = auth.indexOf('window.location.assign("/login")');
+  assert.ok(signOut >= 0, "logout must invalidate the auth session");
+  assert.ok(cleanup > signOut, "device cleanup must happen after auth invalidation");
+  assert.ok(cleanupFailure > cleanup, "cleanup failure must be handled separately");
+  assert.ok(redirect > cleanupFailure, "cleanup failure must not prevent redirect after logout");
+  assert.match(auth.slice(cleanupFailure, redirect), /clearAppShellCache\(\)\.catch\(\(\) => \{\}\)/);
+});
+
+test("receipt-backed transaction deletion is delegated to one atomic database RPC", async () => {
+  const route = await readFile("app/api/data/route.ts", "utf8");
+  const repository = await readFile("data/server/supabase-finance-repository.ts", "utf8");
+  const contract = await readFile("data/server/finance-repository.ts", "utf8");
+  const deleteRoute = route.slice(route.indexOf("export async function DELETE"));
+
+  assert.match(deleteRoute, /const deletion = await repository\.deleteTransaction\(key\)/);
+  assert.doesNotMatch(deleteRoute, /getReceiptScanId\(key\)/);
+  assert.doesNotMatch(deleteRoute, /deleteReceiptScan\(/);
+  assert.match(repository, /supabase\.rpc\("arus_delete_transaction"/);
+  assert.match(contract, /deleteTransaction\(id: string\): Promise<"deleted" \| "missing" \| "adjustment">/);
 });

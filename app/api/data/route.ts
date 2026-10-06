@@ -188,13 +188,11 @@ export async function DELETE(request: Request) {
       }
       if (!await repository.deleteAccount(key)) return bad("Akun tidak ditemukan.");
     } else if (entity === "transaction") {
-      const type = await repository.getTransactionType(key);
-      if (!type || type === "adjustment") {
+      const deletion = await repository.deleteTransaction(key);
+      if (deletion === "missing") return bad("Transaksi tidak ditemukan.");
+      if (deletion === "adjustment") {
         return bad("Penyesuaian saldo tidak dapat dihapus. Cocokkan saldo lagi untuk membuat koreksi.");
       }
-      const related = await repository.getReceiptScanId(key);
-      await repository.deleteTransaction(key);
-      if (related) await repository.deleteReceiptScan(related);
     } else if (entity === "budget") {
       if (!await repository.deleteBudget(key)) return bad("Budget tidak ditemukan.");
     } else {
