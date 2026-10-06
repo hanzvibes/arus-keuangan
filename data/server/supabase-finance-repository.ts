@@ -252,8 +252,12 @@ export async function createFinanceRepository(): Promise<FinanceRepository> {
     },
 
     async deleteTransaction(id) {
-      const result = await supabase.from("transactions").delete().eq("id", id);
+      const result = await supabase.rpc("arus_delete_transaction", { p_id: id });
       assertQuery(result.error);
+      if (result.data === "deleted" || result.data === "missing" || result.data === "adjustment") {
+        return result.data;
+      }
+      throw new FinanceRepositoryError("DATA_ACCESS", "Hasil penghapusan transaksi tidak valid.");
     },
 
     async transactionExists(id) {
