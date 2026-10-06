@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const receiptRoutes = [
-  "app/api/receipt-scans/route.ts",
-  "app/api/receipt-scans/[id]/route.ts",
-  "app/api/receipt-scans/[id]/finalize/route.ts",
-  "app/api/receipt-scans/[id]/update-transaction/route.ts",
-  "app/api/receipt-photos/route.ts",
-  "app/api/receipts/[id]/route.ts",
+  "src/app/api/receipt-scans/route.ts",
+  "src/app/api/receipt-scans/[id]/route.ts",
+  "src/app/api/receipt-scans/[id]/finalize/route.ts",
+  "src/app/api/receipt-scans/[id]/update-transaction/route.ts",
+  "src/app/api/receipt-photos/route.ts",
+  "src/app/api/receipts/[id]/route.ts",
 ];
 
 test("database CI runs every critical finance SQL suite", async () => {
@@ -26,7 +26,7 @@ test("database CI runs every critical finance SQL suite", async () => {
 });
 
 test("receipt API errors expose correlation IDs and receive request context", async () => {
-  const server = await readFile("features/receipt/server.ts", "utf8");
+  const server = await readFile("src/features/receipt/server.ts", "utf8");
   assert.match(server, /crypto\.randomUUID\(\)/);
   assert.match(server, /X-Request-Id/);
   assert.match(server, /receipt_route_error/);
@@ -39,14 +39,14 @@ test("receipt API errors expose correlation IDs and receive request context", as
 });
 
 test("receipt photo reservation stays compatible with the insert-only cleanup queue", async () => {
-  const source = await readFile("app/api/receipt-photos/route.ts", "utf8");
+  const source = await readFile("src/app/api/receipt-photos/route.ts", "utf8");
   assert.match(source, /receipt_photo_cleanup"\)\.insert\(/);
   assert.match(source, /reservation\.error\.code\s*!==\s*"23505"/);
   assert.doesNotMatch(source, /receipt_photo_cleanup"\)\.upsert\(/);
 });
 
 test("legacy unscoped offline cache is discarded instead of assigned to the active user", async () => {
-  const source = await readFile("lib/offline.ts", "utf8");
+  const source = await readFile("src/lib/offline.ts", "utf8");
   const start = source.indexOf("async function migrateLegacyCache");
   const end = source.indexOf("async function ensureUserDatabase");
   assert.ok(start >= 0 && end > start, "legacy migration function must exist");
@@ -59,8 +59,8 @@ test("legacy unscoped offline cache is discarded instead of assigned to the acti
 });
 
 test("offline device state stays user-scoped even when post-signout cleanup fails", async () => {
-  const offline = await readFile("lib/offline.ts", "utf8");
-  const auth = await readFile("features/auth/components/auth-user.tsx", "utf8");
+  const offline = await readFile("src/lib/offline.ts", "utf8");
+  const auth = await readFile("src/features/auth/components/auth-user.tsx", "utf8");
 
   assert.match(offline, /const DATABASE_PREFIX = "arus-device-cache:"/);
   assert.match(offline, /return DATABASE_PREFIX \+ userId/);
@@ -78,9 +78,9 @@ test("offline device state stays user-scoped even when post-signout cleanup fail
 });
 
 test("receipt-backed transaction deletion is delegated to one atomic database RPC", async () => {
-  const route = await readFile("app/api/data/route.ts", "utf8");
-  const repository = await readFile("data/server/supabase-finance-repository.ts", "utf8");
-  const contract = await readFile("data/server/finance-repository.ts", "utf8");
+  const route = await readFile("src/app/api/data/route.ts", "utf8");
+  const repository = await readFile("src/data/server/supabase-finance-repository.ts", "utf8");
+  const contract = await readFile("src/data/server/finance-repository.ts", "utf8");
   const deleteRoute = route.slice(route.indexOf("export async function DELETE"));
 
   assert.match(deleteRoute, /const deletion = await repository\.deleteTransaction\(key\)/);
