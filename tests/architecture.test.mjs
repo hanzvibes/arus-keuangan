@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const financeRoutes = [
-  "app/api/data/route.ts",
-  "app/api/backup/route.ts",
-  "app/api/categories/route.ts",
-  "app/api/recurring/route.ts",
-  "app/api/reconcile/route.ts",
-  "app/api/goals/route.ts",
+  "src/app/api/data/route.ts",
+  "src/app/api/backup/route.ts",
+  "src/app/api/categories/route.ts",
+  "src/app/api/recurring/route.ts",
+  "src/app/api/reconcile/route.ts",
+  "src/app/api/goals/route.ts",
 ];
 
 test("finance API routes depend on the repository boundary, not Supabase queries", async () => {
@@ -23,21 +23,21 @@ test("finance API routes depend on the repository boundary, not Supabase queries
 });
 
 test("finance domain types stay framework and persistence agnostic", async () => {
-  const source = await readFile("domain/finance/types.ts", "utf8");
+  const source = await readFile("src/domain/finance/types.ts", "utf8");
   assert.doesNotMatch(source, /next\//);
   assert.doesNotMatch(source, /supabase/i);
   assert.doesNotMatch(source, /\.\.\/\.\.\/lib\//);
 });
 
 test("dashboard page stays a thin finance composition", async () => {
-  const source = await readFile("app/app/page.tsx", "utf8");
+  const source = await readFile("src/app/app/page.tsx", "utf8");
   assert.match(source, /<FinanceApp\s*\/>/);
   assert.doesNotMatch(source, /useState|useEffect|financeApi|supabase/i);
-  assert.ok(source.length < 1000, "app/app/page.tsx should remain composition-only");
+  assert.ok(source.length < 1000, "src/app/app/page.tsx should remain composition-only");
 });
 
 test("finance UI stays split into feature tabs", async () => {
-  const source = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  const source = await readFile("src/features/finance/components/finance-app.tsx", "utf8");
   for (const tab of [
     "HomeTab",
     "AccountsTab",
@@ -54,7 +54,7 @@ test("finance UI stays split into feature tabs", async () => {
 });
 
 test("offline storage is scoped by authenticated user", async () => {
-  const source = await readFile("lib/offline.ts", "utf8");
+  const source = await readFile("src/lib/offline.ts", "utf8");
   assert.match(source, /DATABASE_PREFIX\s*=\s*"arus-device-cache:"/);
   assert.match(source, /readSnapshot\s*=\s*<T>\(userId: string\)/);
   assert.match(source, /writeSnapshot\s*=\s*\(userId: string,/);
@@ -65,7 +65,7 @@ test("offline storage is scoped by authenticated user", async () => {
 });
 
 test("finance offline hook resolves the Supabase user before touching device storage", async () => {
-  const source = await readFile("features/finance/hooks/use-finance-data.ts", "utf8");
+  const source = await readFile("src/features/finance/hooks/use-finance-data.ts", "utf8");
   assert.match(source, /supabase\.auth\.getUser\(\)/);
   assert.match(source, /readQueue<QueuedTransaction>\(userId\)/);
   assert.match(source, /writeSnapshot\(userId,/);
@@ -74,7 +74,7 @@ test("finance offline hook resolves the Supabase user before touching device sto
 
 test("shared UI directory contains only primitives used by the application", async () => {
   const { readdir } = await import("node:fs/promises");
-  const files = (await readdir("components/ui")).sort();
+  const files = (await readdir("src/components/ui")).sort();
   assert.deepEqual(files, [
     "action-menu.tsx",
     "alert-dialog.tsx",
@@ -107,7 +107,7 @@ test("removed starter UI packages do not return as direct dependencies", async (
 });
 
 test("global CSS stays a small ordered stylesheet entrypoint", async () => {
-  const source = await readFile("app/globals.css", "utf8");
+  const source = await readFile("src/app/globals.css", "utf8");
   assert.ok(source.length < 1000, "globals.css should only compose style modules");
   assert.match(source, /styles\/tokens\.css/);
   assert.match(source, /styles\/finance\.css/);
@@ -116,20 +116,20 @@ test("global CSS stays a small ordered stylesheet entrypoint", async () => {
 
 test("obsolete ChatGPT starter auth surface stays removed", async () => {
   const { access } = await import("node:fs/promises");
-  await assert.rejects(() => access("app/chatgpt-auth.ts"));
-  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
+  await assert.rejects(() => access("src/app/chatgpt-auth.ts"));
+  const proxy = await readFile("src/lib/supabase/proxy.ts", "utf8");
   assert.doesNotMatch(proxy, /signin-with-chatgpt|signout-with-chatgpt|\\"\/callback\\"/);
 });
 
 test("auth-specific account UI lives in the auth feature", async () => {
-  const finance = await readFile("features/finance/components/finance-app.tsx", "utf8");
-  const settings = await readFile("features/finance/components/tabs/settings-tab.tsx", "utf8");
+  const finance = await readFile("src/features/finance/components/finance-app.tsx", "utf8");
+  const settings = await readFile("src/features/finance/components/tabs/settings-tab.tsx", "utf8");
   assert.match(finance, /features\/auth\/components\/auth-user/);
   assert.match(settings, /features\/auth\/components\/auth-user/);
 });
 
 test("finance app composes overlays instead of rendering primitive drawers inline", async () => {
-  const source = await readFile("features/finance/components/finance-app.tsx", "utf8");
+  const source = await readFile("src/features/finance/components/finance-app.tsx", "utf8");
   for (const component of [
     "FinanceEntryDrawer",
     "InstallGuideDrawer",
@@ -142,10 +142,10 @@ test("finance app composes overlays instead of rendering primitive drawers inlin
 });
 
 test("password recovery routes use the existing Supabase PKCE callback", async () => {
-  const forgot = await readFile("app/forgot-password/page.tsx", "utf8");
-  const update = await readFile("app/update-password/page.tsx", "utf8");
-  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
-  const callback = await readFile("app/auth/callback/route.ts", "utf8");
+  const forgot = await readFile("src/app/forgot-password/page.tsx", "utf8");
+  const update = await readFile("src/app/update-password/page.tsx", "utf8");
+  const proxy = await readFile("src/lib/supabase/proxy.ts", "utf8");
+  const callback = await readFile("src/app/auth/callback/route.ts", "utf8");
 
   assert.match(forgot, /resetPasswordForEmail/);
   assert.match(forgot, /auth\/callback\?next=\/update-password/);
@@ -154,7 +154,6 @@ test("password recovery routes use the existing Supabase PKCE callback", async (
   assert.doesNotMatch(proxy, /PUBLIC_PATHS[\s\S]*"\/update-password"/);
   assert.match(callback, /"recovery"/);
 });
-
 
 test("Supabase schema tracks covering indexes for recurring account foreign keys", async () => {
   const schema = await readFile("supabase/schemas/arus.sql", "utf8");
@@ -172,7 +171,6 @@ test("Supabase schema tracks covering indexes for recurring account foreign keys
   }
 });
 
-
 test("Next.js applies production security headers and disables API caching", async () => {
   const source = await readFile("next.config.ts", "utf8");
 
@@ -188,9 +186,8 @@ test("Next.js applies production security headers and disables API caching", asy
   assert.match(source, /no-store, max-age=0/);
 });
 
-
 test("finance mutations use the shared bounded JSON parser", async () => {
-  const shared = await readFile("app/api/_shared/finance-route.ts", "utf8");
+  const shared = await readFile("src/app/api/_shared/finance-route.ts", "utf8");
   assert.match(shared, /Content-Type application\/json/);
   assert.match(shared, /DEFAULT_BODY_LIMIT\s*=\s*64_000/);
   assert.match(shared, /TextEncoder\(\)\.encode\(text\)\.byteLength/);
@@ -198,24 +195,24 @@ test("finance mutations use the shared bounded JSON parser", async () => {
   assert.match(shared, /assertSameOrigin\(request\)/);
 
   for (const path of [
-    "app/api/data/route.ts",
-    "app/api/backup/route.ts",
-    "app/api/categories/route.ts",
-    "app/api/recurring/route.ts",
-    "app/api/reconcile/route.ts",
+    "src/app/api/data/route.ts",
+    "src/app/api/backup/route.ts",
+    "src/app/api/categories/route.ts",
+    "src/app/api/recurring/route.ts",
+    "src/app/api/reconcile/route.ts",
   ]) {
     const source = await readFile(path, "utf8");
     assert.match(source, /readFinanceJson/);
     assert.doesNotMatch(source, /request\.json\(\)/);
   }
 
-  const backup = await readFile("app/api/backup/route.ts", "utf8");
+  const backup = await readFile("src/app/api/backup/route.ts", "utf8");
   assert.match(backup, /3_000_000/);
   assert.doesNotMatch(backup, /JSON\.parse\(text\)/);
 });
 
 test("API proxy rejects cross-site state-changing requests before data access", async () => {
-  const source = await readFile("lib/supabase/proxy.ts", "utf8");
+  const source = await readFile("src/lib/supabase/proxy.ts", "utf8");
   assert.match(source, /SAFE_METHODS/);
   assert.match(source, /sec-fetch-site/);
   assert.match(source, /trustedMutationOrigin/);
@@ -223,15 +220,14 @@ test("API proxy rejects cross-site state-changing requests before data access", 
   assert.match(source, /pathname\.startsWith\("\/api\/"\)/);
 });
 
-
 test("CI runs lint as a production quality gate", async () => {
   const source = await readFile(".github/workflows/ci.yml", "utf8");
   assert.match(source, /- name: Lint\s+run: pnpm lint/);
 });
 
 test("health endpoint is public, cache-free, and does not touch auth or finance data", async () => {
-  const health = await readFile("app/api/health/route.ts", "utf8");
-  const proxy = await readFile("lib/supabase/proxy.ts", "utf8");
+  const health = await readFile("src/app/api/health/route.ts", "utf8");
+  const proxy = await readFile("src/lib/supabase/proxy.ts", "utf8");
 
   assert.match(health, /status: "ok"/);
   assert.match(health, /service: "arus"/);
@@ -246,7 +242,7 @@ test("health endpoint is public, cache-free, and does not touch auth or finance 
 });
 
 test("finance server errors emit correlation IDs without exposing raw errors to clients", async () => {
-  const shared = await readFile("app/api/_shared/finance-route.ts", "utf8");
+  const shared = await readFile("src/app/api/_shared/finance-route.ts", "utf8");
 
   assert.match(shared, /crypto\.randomUUID\(\)/);
   assert.match(shared, /X-Request-Id/);
@@ -256,9 +252,8 @@ test("finance server errors emit correlation IDs without exposing raw errors to 
   assert.match(shared, /Data belum bisa diproses\. Coba lagi\./);
 });
 
-
 test("finance client has bounded requests and retries only safe reads", async () => {
-  const source = await readFile("data/client/finance-api.ts", "utf8");
+  const source = await readFile("src/data/client/finance-api.ts", "utf8");
 
   assert.match(source, /DEFAULT_TIMEOUT_MS\s*=\s*10_000/);
   assert.match(source, /BACKUP_TIMEOUT_MS\s*=\s*30_000/);
@@ -269,26 +264,23 @@ test("finance client has bounded requests and retries only safe reads", async ()
   assert.match(source, /kind: FinanceApiErrorKind/);
 });
 
-
 test("offline transaction fallback recognizes the hardened API network errors", async () => {
-  const app = await readFile("features/finance/components/finance-app.tsx", "utf8");
-  const route = await readFile("app/api/data/route.ts", "utf8");
+  const app = await readFile("src/features/finance/components/finance-app.tsx", "utf8");
+  const route = await readFile("src/app/api/data/route.ts", "utf8");
 
   assert.match(app, /e instanceof FinanceApiError/);
   assert.match(app, /e\.kind === "network"/);
   assert.match(app, /e\.kind === "timeout"/);
   assert.match(app, /queueTransaction\(transaction\)/);
 
-  // Client-generated transaction IDs make timeout recovery idempotent.
   assert.match(route, /payload\.entity === "transaction"/);
   assert.match(route, /payload\.id/);
   assert.match(route, /result === "duplicate"/);
   assert.match(route, /status: 200/);
 });
 
-
 test("logout preserves offline data until Supabase confirms the session is signed out", async () => {
-  const source = await readFile("features/auth/components/auth-user.tsx", "utf8");
+  const source = await readFile("src/features/auth/components/auth-user.tsx", "utf8");
   const signOutIndex = source.indexOf("supabase.auth.signOut()");
   const clearCacheIndex = source.indexOf("clearDeviceCache(userId)", signOutIndex);
 

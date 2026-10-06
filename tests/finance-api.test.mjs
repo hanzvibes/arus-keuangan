@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { financeApi, FinanceApiError } from "../data/client/finance-api.ts";
+import { financeApi, FinanceApiError } from "../src/data/client/finance-api.ts";
 
 function response(body = {}, init = {}) {
   return new Response(JSON.stringify(body), {
@@ -61,7 +61,6 @@ test("finance API surfaces server errors with status and message", async t => {
       error.kind === "http",
   );
 });
-
 
 test("finance API retries safe GET once after a transient upstream failure", async t => {
   const originalFetch = globalThis.fetch;
