@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createWorker } from "tesseract.js";
-import { parseReceipt, parseReceiptMoney } from "../features/receipt/parser.ts";
-import { receiptArithmetic, validateReceiptDraft } from "../features/receipt/validation.ts";
-import { receiptDuplicateReasons } from "../features/receipt/duplicate.ts";
-import { validateBackup } from "../lib/backup.ts";
+import { parseReceipt, parseReceiptMoney } from "../src/features/receipt/parser.ts";
+import { receiptArithmetic, validateReceiptDraft } from "../src/features/receipt/validation.ts";
+import { receiptDuplicateReasons } from "../src/features/receipt/duplicate.ts";
+import { validateBackup } from "../src/lib/backup.ts";
 
 const parse = text => parseReceipt({ text, words: [], engine: "fixture" });
 
