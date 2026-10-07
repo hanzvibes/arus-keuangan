@@ -98,3 +98,14 @@ test("receipt-backed transaction deletion is delegated to one atomic database RP
   assert.match(repository, /supabase\.rpc\("arus_delete_transaction"/);
   assert.match(contract, /deleteTransaction\(id: string\): Promise<"deleted" \| "missing" \| "adjustment">/);
 });
+
+
+test("receipt cleanup cron has a dedicated proxy authentication exception", async () => {
+  const proxy = await readFile("src/lib/supabase/proxy.ts", "utf8");
+  const cron = await readFile("src/app/api/cron/receipt-photo-cleanup/route.ts", "utf8");
+
+  assert.match(proxy, /\/api\/cron\/receipt-photo-cleanup/);
+  assert.match(proxy, /authorizedReceiptCleanupCron/);
+  assert.match(cron, /Unauthorized/);
+  assert.match(cron, /status: 401/);
+});

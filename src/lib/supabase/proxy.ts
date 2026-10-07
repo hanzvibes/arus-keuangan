@@ -12,9 +12,22 @@ const PUBLIC_PATHS = new Set([
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const PUBLIC_API_PATHS = new Set(["/api/health"]);
+const RECEIPT_CLEANUP_CRON_PATH = "/api/cron/receipt-photo-cleanup";
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.has(pathname);
+}
+
+function authorizedReceiptCleanupCron(request: NextRequest) {
+  if (request.method !== "GET" || request.nextUrl.pathname !== RECEIPT_CLEANUP_CRON_PATH) {
+    return false;
+  }
+
+  const secret = process.env.CRON_SECRET;
+  return Boolean(
+    secret &&
+    request.headers.get("authorization") === `Bearer ${secret}`,
+  );
 }
 
 function redirectToLogin(request: NextRequest, reason?: string) {
@@ -43,6 +56,10 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   if (PUBLIC_API_PATHS.has(pathname) && SAFE_METHODS.has(request.method)) {
+    return response;
+  }
+
+  if (authorizedReceiptCleanupCron(request)) {
     return response;
   }
 
