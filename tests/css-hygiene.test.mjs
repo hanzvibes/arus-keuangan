@@ -29,3 +29,23 @@ test("legacy CSS selectors stay removed after their UI paths are gone", async ()
     );
   }
 });
+
+
+test("CSS cleanup preserves surviving grouped selectors", async () => {
+  const finance = await readFile("src/styles/finance.css", "utf8");
+
+  assert.doesNotMatch(
+    finance,
+    /\.account-summary span,\.eyebrow,\.account-summary strong/,
+    "eyebrow must not inherit the account balance heading size",
+  );
+  assert.match(
+    finance,
+    /\.account-summary span,\.eyebrow\{[^}]*font-size:12px/,
+    "eyebrow must keep the compact label typography",
+  );
+  assert.doesNotMatch(finance, /\.transaction-surface \.transaction-surface \.row-delete/);
+  assert.doesNotMatch(finance, /\.account-row \.account-row \.row-delete/);
+  assert.match(finance, /\.transaction-surface \.row-delete\{grid-column:4;grid-row:2\}/);
+  assert.match(finance, /\.account-row \.row-delete\{grid-column:auto;grid-row:auto\}/);
+});
