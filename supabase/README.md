@@ -4,17 +4,17 @@ Arus uses Supabase Postgres as the primary data store.
 
 ## Reproducible baseline
 
-`migrations/20260927144843_add_user_profiles.sql` is the source-controlled baseline for the original application-owned schema. Its version intentionally matches the first migration version already recorded by the FinanceTracker production project, so existing production databases treat it as already applied while a fresh database can build the missing pre-migration schema.
+`migrations/20260927144843_add_user_profiles.sql` is the source-controlled baseline for the original application-owned schema. Its version intentionally matches the first migration version already recorded by the Arus production project, so existing production databases treat it as already applied while a fresh database can build the missing pre-migration schema.
 
 The baseline contains the original accounts, transactions, budgets, categories, recurring, profiles, RLS policies, Arus RPC functions, and profile creation trigger. Supabase-managed Auth and Storage internals are not duplicated; integration tests provide only the minimal interfaces needed to exercise application-owned SQL.
 
 All later schema changes remain individual migrations in `migrations/` and must replay in filename order from an empty database. Database Integration CI enforces this on every PR and push to `main`.
 
-`schemas/arus.sql` remains the declarative application-schema snapshot. The snapshot CI path also reapplies post-snapshot hardening migrations before regression tests, while the `fresh` path proves the entire migration chain can recreate the current tested schema from an empty database.
+`schemas/arus.sql` is the current declarative application-schema snapshot, synchronized through `20261006152049_add_atomic_transaction_delete.sql`. The `snapshot` CI path loads it directly before regression tests; it no longer needs schema migrations layered on top. The receipt-bucket hardening migration is still exercised separately as a regression check by deliberately degrading the test bucket and repairing it. The `fresh` path independently proves the complete migration chain can recreate the same tested application schema from an empty database.
 
 ## Migration history
 
-The FinanceTracker production migration versions and source-controlled migration filenames must stay aligned. The repository currently starts with:
+The Arus production migration versions and source-controlled migration filenames must stay aligned. The repository currently starts with:
 
 - `20260927144843_add_user_profiles.sql` — reproducible baseline anchored to the existing production migration version.
 - `20260928060444_add_recurring_fk_indexes.sql` — recurring foreign-key covering indexes.

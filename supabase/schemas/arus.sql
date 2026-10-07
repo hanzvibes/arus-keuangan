@@ -1,7 +1,7 @@
--- Arus declarative schema snapshot.
--- Baseline captured from the live Supabase project on 2026-09-27; synchronized through migration 20260928060444.
--- Proposed additions: savings_goals and backup v3; apply migration 20260930170000 before deploying this branch.
--- This file covers application-owned objects only. Supabase-managed auth schema is not duplicated here.
+-- Arus declarative application-schema snapshot.
+-- Baseline originated from the live Supabase project on 2026-09-27.
+-- Synchronized through migration 20261006152049_add_atomic_transaction_delete.
+-- Supabase-managed Auth and Storage internals are not duplicated beyond Arus-owned bucket configuration and policies.
 
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
@@ -413,101 +413,6 @@ begin
 end;
 $$;
 
-create or replace function public.arus_restore_backup(
-  p_backup jsonb
-) returns jsonb
-language plpgsql
-security invoker
-set search_path = ''
-as $$
-declare
-  uid uuid := (select auth.uid());
-  row_data jsonb;
-  account_count integer := 0;
-  transaction_count integer := 0;
-  budget_count integer := 0;
-begin
-  if uid is null then raise exception 'authentication required'; end if;
-
-  -- Legacy backups preserve goals because they did not contain this feature.
-  if p_backup ? 'goals' then
-    delete from public.savings_goals where user_id = uid;
-    for row_data in select value from jsonb_array_elements(p_backup->'goals')
-    loop
-      insert into public.savings_goals(user_id, id, name, target_amount, saved_amount, target_date, created_at, updated_at)
-      values (uid, row_data->>'id', row_data->>'name',
-        (row_data->>'targetAmount')::bigint, (row_data->>'savedAmount')::bigint,
-        (row_data->>'targetDate')::date, (row_data->>'createdAt')::timestamptz,
-        (row_data->>'updatedAt')::timestamptz);
-    end loop;
-  end if;
-
-  delete from public.transactions where user_id = uid;
-  delete from public.recurring where user_id = uid;
-  delete from public.budgets where user_id = uid;
-  delete from public.categories where user_id = uid;
-  delete from public.accounts where user_id = uid;
-
-  for row_data in select value from jsonb_array_elements(coalesce(p_backup->'accounts', '[]'::jsonb))
-  loop
-    insert into public.accounts(user_id, id, name, kind, opening_balance, created_at)
-    values (uid, row_data->>'id', row_data->>'name', row_data->>'kind',
-      (row_data->>'openingBalance')::bigint, (row_data->>'createdAt')::timestamptz);
-    account_count := account_count + 1;
-  end loop;
-
-  for row_data in select value from jsonb_array_elements(coalesce(p_backup->'categories', '[]'::jsonb))
-  loop
-    insert into public.categories(user_id, id, name, created_at)
-    values (uid, row_data->>'id', row_data->>'name', (row_data->>'createdAt')::timestamptz);
-  end loop;
-
-  for row_data in select value from jsonb_array_elements(coalesce(p_backup->'budgets', '[]'::jsonb))
-  loop
-    insert into public.budgets(user_id, id, category, amount, created_at)
-    values (uid, row_data->>'id', row_data->>'category',
-      (row_data->>'amount')::bigint, (row_data->>'createdAt')::timestamptz);
-    budget_count := budget_count + 1;
-  end loop;
-
-  for row_data in select value from jsonb_array_elements(coalesce(p_backup->'recurring', '[]'::jsonb))
-  loop
-    insert into public.recurring(
-      user_id, id, type, amount, account_id, to_account_id, category, note,
-      next_date, frequency, anchor_day, active, created_at
-    ) values (
-      uid, row_data->>'id', row_data->>'type', (row_data->>'amount')::bigint,
-      row_data->>'accountId', nullif(row_data->>'toAccountId', ''),
-      row_data->>'category', coalesce(row_data->>'note', ''),
-      (row_data->>'nextDate')::date, row_data->>'frequency',
-      (row_data->>'anchorDay')::integer, (row_data->>'active')::integer = 1,
-      (row_data->>'createdAt')::timestamptz
-    );
-  end loop;
-
-  for row_data in select value from jsonb_array_elements(coalesce(p_backup->'transactions', '[]'::jsonb))
-  loop
-    insert into public.transactions(
-      user_id, id, type, amount, account_id, to_account_id, category, note,
-      date, created_at
-    ) values (
-      uid, row_data->>'id', row_data->>'type', (row_data->>'amount')::bigint,
-      row_data->>'accountId', nullif(row_data->>'toAccountId', ''),
-      row_data->>'category', coalesce(row_data->>'note', ''),
-      (row_data->>'date')::date, (row_data->>'createdAt')::timestamptz
-    );
-    transaction_count := transaction_count + 1;
-  end loop;
-
-  return jsonb_build_object(
-    'accounts', account_count,
-    'transactions', transaction_count,
-    'budgets', budget_count
-  );
-end;
-$$;
-
-
 create or replace function private.arus_handle_new_user()
 returns trigger
 language plpgsql
@@ -538,7 +443,6 @@ revoke all on function public.arus_rename_category(text,text) from public, anon;
 revoke all on function public.arus_skip_recurring(text,date) from public, anon;
 revoke all on function public.arus_record_recurring(text,date,date) from public, anon;
 revoke all on function public.arus_reconcile_balance(text,bigint,bigint,text,date,text) from public, anon;
-revoke all on function public.arus_restore_backup(jsonb) from public, anon;
 revoke all on function private.arus_handle_new_user() from public, anon, authenticated;
 
 grant execute on function public.arus_next_occurrence(date,text,integer) to authenticated;
@@ -546,7 +450,6 @@ grant execute on function public.arus_rename_category(text,text) to authenticate
 grant execute on function public.arus_skip_recurring(text,date) to authenticated;
 grant execute on function public.arus_record_recurring(text,date,date) to authenticated;
 grant execute on function public.arus_reconcile_balance(text,bigint,bigint,text,date,text) to authenticated;
-grant execute on function public.arus_restore_backup(jsonb) to authenticated;
 
 create trigger arus_create_profile_on_signup
   after insert on auth.users
@@ -608,9 +511,20 @@ revoke all on public.transaction_receipts from public, anon;
 grant select, insert, update, delete on public.transaction_receipts to authenticated;
 
 -- Storage object policies are deliberately path-scoped; client uploads only to its own folder.
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values ('arus-receipts','arus-receipts',false,15000000,array['image/jpeg','image/png','image/webp'])
-on conflict(id) do nothing;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'arus-receipts',
+  'arus-receipts',
+  false,
+  15000000,
+  array['image/jpeg','image/png','image/webp']
+)
+on conflict (id) do update
+set
+  name = excluded.name,
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 create policy arus_receipt_photo_read on storage.objects for select to authenticated
   using (bucket_id = 'arus-receipts' and (storage.foldername(name))[1] = (select auth.uid())::text);
 create policy arus_receipt_photo_insert on storage.objects for insert to authenticated
@@ -636,17 +550,29 @@ create or replace function public.arus_queue_old_receipt_photo() returns trigger
 language plpgsql security invoker set search_path = '' as $$
 begin
   if tg_op = 'DELETE' and old.photo_path is not null then
-    insert into public.receipt_photo_cleanup(user_id,photo_path) values(old.user_id,old.photo_path)
-      on conflict(user_id,photo_path) do nothing;
+    begin
+      insert into public.receipt_photo_cleanup(user_id, photo_path)
+      values(old.user_id, old.photo_path);
+    exception when unique_violation then
+      null;
+    end;
     return old;
   end if;
+
   if tg_op = 'UPDATE' and old.photo_path is not null and old.photo_path is distinct from new.photo_path then
-    insert into public.receipt_photo_cleanup(user_id,photo_path) values(old.user_id,old.photo_path)
-      on conflict(user_id,photo_path) do nothing;
+    begin
+      insert into public.receipt_photo_cleanup(user_id, photo_path)
+      values(old.user_id, old.photo_path);
+    exception when unique_violation then
+      null;
+    end;
   end if;
+
   return new;
-end; $$;
-revoke all on function public.arus_queue_old_receipt_photo() from public,anon;
+end;
+$$;
+
+revoke all on function public.arus_queue_old_receipt_photo() from public, anon;
 grant execute on function public.arus_queue_old_receipt_photo() to authenticated;
 create trigger arus_queue_receipt_photo after update or delete on public.transaction_receipts
 for each row execute function public.arus_queue_old_receipt_photo();
@@ -855,6 +781,63 @@ begin
 end;
 $$;
 
+revoke all on function public.arus_restore_backup(jsonb) from public, anon;
+grant execute on function public.arus_restore_backup(jsonb) to authenticated;
+
 -- Receipt scan foreign key index migration snapshot.
 create index transaction_receipts_scan_idx
   on public.transaction_receipts(user_id, scan_id);
+
+-- Atomic receipt-backed transaction deletion.
+create or replace function public.arus_delete_transaction(p_id text)
+returns text
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  uid uuid := (select auth.uid());
+  tx_type text;
+  receipt_scan_id text;
+begin
+  if uid is null then
+    raise exception 'authentication required';
+  end if;
+
+  select r.scan_id into receipt_scan_id
+  from public.transaction_receipts r
+  where r.user_id = uid and r.transaction_id = p_id;
+
+  if receipt_scan_id is not null then
+    perform 1
+    from public.receipt_scans s
+    where s.user_id = uid and s.id = receipt_scan_id
+    for update;
+  end if;
+
+  select t.type into tx_type
+  from public.transactions t
+  where t.user_id = uid and t.id = p_id
+  for update;
+
+  if not found then
+    return 'missing';
+  end if;
+  if tx_type = 'adjustment' then
+    return 'adjustment';
+  end if;
+
+  delete from public.transactions
+  where user_id = uid and id = p_id;
+
+  if receipt_scan_id is not null then
+    delete from public.receipt_scans
+    where user_id = uid and id = receipt_scan_id;
+  end if;
+
+  return 'deleted';
+end;
+$$;
+
+revoke all on function public.arus_delete_transaction(text) from public, anon;
+grant execute on function public.arus_delete_transaction(text) to authenticated;

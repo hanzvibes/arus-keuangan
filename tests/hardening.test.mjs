@@ -109,3 +109,25 @@ test("receipt cleanup cron has a dedicated proxy authentication exception", asyn
   assert.match(cron, /Unauthorized/);
   assert.match(cron, /status: 401/);
 });
+
+
+test("declarative Supabase snapshot already includes the latest application migrations", async () => {
+  const workflow = await readFile(".github/workflows/database.yml", "utf8");
+  const schema = await readFile("supabase/schemas/arus.sql", "utf8");
+
+  assert.match(schema, /synchronized through migration 20261006152049/i);
+  assert.match(schema, /create or replace function public\.arus_delete_transaction\(p_id text\)/);
+  assert.match(schema, /exception when unique_violation/);
+  assert.match(schema, /on conflict \(id\) do update/);
+  assert.equal(
+    (schema.match(/create or replace function public\.arus_restore_backup\(/g) ?? []).length,
+    1,
+    "snapshot must contain only the final restore implementation",
+  );
+  assert.doesNotMatch(
+    schema,
+    /insert into public\.receipt_photo_cleanup[\s\S]*?on conflict\(user_id,photo_path\) do nothing/,
+  );
+  assert.doesNotMatch(workflow, /Apply post-snapshot receipt cleanup hardening/);
+  assert.doesNotMatch(workflow, /Apply post-snapshot atomic transaction deletion/);
+});
