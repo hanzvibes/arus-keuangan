@@ -29,3 +29,11 @@ test("legacy CSS selectors stay removed after their UI paths are gone", async ()
     );
   }
 });
+
+
+test("impossible nested finance selectors stay removed", async () => {
+  const styles = await readFile("src/styles/finance.css", "utf8");
+
+  assert.doesNotMatch(styles, /\.transaction-surface\s+\.transaction-surface\s+\.row-delete/);
+  assert.doesNotMatch(styles, /\.account-row\s+\.account-row\s+\.row-delete/);
+});
