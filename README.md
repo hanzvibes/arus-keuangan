@@ -32,6 +32,9 @@ Operasi yang harus atomik dijalankan sebagai fungsi Postgres:
 - `arus_record_recurring`
 - `arus_reconcile_balance`
 - `arus_restore_backup`
+- `arus_delete_transaction`
+- `arus_finalize_receipt`
+- `arus_update_receipt`
 
 Fungsi tersebut menggunakan `SECURITY INVOKER`, sehingga tetap tunduk pada RLS user yang sedang login.
 
@@ -117,11 +120,11 @@ pemulihan cadangan lama mempertahankan target tabungan yang sudah ada.
 ### Menyiapkan fitur target tabungan
 
 Migration `supabase/migrations/20260930170000_add_savings_goals.sql` sudah
-diterapkan pada project FinanceTracker dan dicatat dalam riwayat remote.
+diterapkan pada project Supabase production Arus dan dicatat dalam riwayat remote.
 Migration menambahkan tabel `savings_goals`, RLS per-user, trigger timestamp,
 dan memperbarui restore backup secara atomik. Kode API snapshot membutuhkan
 tabel tersebut; jangan deploy kode sebelum migration berhasil.
-Snapshot schema pada branch ini mencakup perubahan yang diusulkan.
+Snapshot schema dan migration chain diverifikasi oleh Database Integration CI.
 
 ## Scan Struk
 
@@ -136,7 +139,7 @@ kecuali pengguna memilih **Simpan foto bersama transaksi**. Foto yang disimpan b
 di bucket privat dan dapat dibuka dari Detail Struk.
 
 Migration `supabase/migrations/20261002152109_add_receipt_scans.sql` sudah
-diterapkan pada project FinanceTracker. Migration membuat tabel, kebijakan RLS,
+diterapkan pada project Supabase production Arus. Migration membuat tabel, kebijakan RLS,
 bucket privat, dan RPC transaksi struk. Untuk lingkungan Supabase lain, terapkan
 migration ini dan `supabase/migrations/20261002152428_add_receipt_scan_fk_index.sql`
 sebelum kode aplikasi. Isi
@@ -203,6 +206,8 @@ Konfigurasi project di Vercel:
 4. Tambahkan environment variable berikut untuk **Production** dan **Preview**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SECRET_KEY`
+   - `CRON_SECRET`
 5. Deploy branch `main`.
 
 Tidak diperlukan database Vercel, D1 binding, Wrangler, atau Cloudflare Worker.
@@ -241,6 +246,6 @@ Baseline keamanan database:
 
 Schema aplikasi Supabase dicatat di `supabase/schemas/arus.sql`. File tersebut adalah snapshot deklaratif dari object aplikasi yang aktif: tabel finance, profil, RLS, RPC, dan trigger profil.
 
-Karena finance schema awal dibuat sebelum workflow Supabase CLI dibakukan, repository belum memiliki baseline migration hasil `supabase db pull`. Ikuti `supabase/README.md` sebelum perubahan schema berikutnya agar migration history dan repository kembali sinkron.
+Repository sekarang memiliki baseline migration yang reproducible di `supabase/migrations/20260927144843_add_user_profiles.sql`. Database Integration CI mereplay seluruh migration dari database kosong dan juga menguji jalur snapshot. Ikuti `supabase/README.md` sebelum perubahan schema berikutnya agar migration history repository dan production tetap sinkron.
 
 Data D1 lama tidak otomatis dipindahkan. Bila ada backup D1 yang masih perlu dipertahankan, restore melalui menu cadangan setelah user login.
