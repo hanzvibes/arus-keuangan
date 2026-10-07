@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LogOut, Pencil, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { clearAppShellCache, clearDeviceCache, readQueue } from "@/lib/offline";
 
@@ -20,6 +21,7 @@ const fallback: Viewer = {
 };
 
 export function AuthUser({ variant }: AuthUserProps) {
+  const router = useRouter();
   const [viewer, setViewer] = useState<Viewer>(fallback);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -108,7 +110,7 @@ export function AuthUser({ variant }: AuthUserProps) {
         );
       }
 
-      window.location.assign("/login");
+      router.replace("/login");
     } catch (error) {
       console.error("Sign out failed", error);
       window.alert("Belum bisa keluar. Pastikan tab Arus lain ditutup lalu coba lagi.");

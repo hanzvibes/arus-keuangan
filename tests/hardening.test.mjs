@@ -78,7 +78,7 @@ test("offline device state stays user-scoped even when post-signout cleanup fail
   const signOut = auth.indexOf("await supabase.auth.signOut()");
   const cleanup = auth.indexOf("await clearDeviceCache(userId)");
   const cleanupFailure = auth.indexOf("catch (cleanupError)");
-  const redirect = auth.indexOf('window.location.assign("/login")');
+  const redirect = auth.indexOf('router.replace("/login")');
   assert.ok(signOut >= 0, "logout must invalidate the auth session");
   assert.ok(cleanup > signOut, "device cleanup must happen after auth invalidation");
   assert.ok(cleanupFailure > cleanup, "cleanup failure must be handled separately");
