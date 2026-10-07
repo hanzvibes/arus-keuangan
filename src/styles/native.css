@@ -45,7 +45,7 @@
 .app-shell .balance-art {opacity:.5}
 .app-shell .quick-actions {gap:10px;margin:16px 0 24px}
 .app-shell .quick-actions button {border:0;border-radius:16px;box-shadow:none;font-weight:600;min-height:58px}
-.app-shell .quick-actions .all-actions {background:var(--native-green);border-radius:16px;width:58px}
+
 .app-shell .action-icon {background:transparent}
 .app-shell .screen-title {margin-bottom:24px;align-items:center}
 .app-shell .screen-title h1 {font-size:32px;line-height:1.13;letter-spacing:-.045em;font-weight:750}
