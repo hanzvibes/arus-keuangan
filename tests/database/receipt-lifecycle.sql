@@ -67,6 +67,23 @@ reset role;
 
 do $$
 begin
+  if not has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'INSERT') then
+    raise exception 'authenticated must retain INSERT on receipt_photo_cleanup';
+  end if;
+
+  if has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'SELECT')
+    or has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'UPDATE')
+    or has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'DELETE')
+    or has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'TRUNCATE')
+    or has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'REFERENCES')
+    or has_table_privilege('authenticated', 'public.receipt_photo_cleanup', 'TRIGGER')
+  then
+    raise exception 'authenticated has excess receipt_photo_cleanup privileges';
+  end if;
+end; $$;
+
+do $$
+begin
   if not exists(
     select 1 from public.receipt_photo_cleanup
     where user_id = '33333333-3333-4333-8333-333333333333'

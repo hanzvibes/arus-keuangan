@@ -1,6 +1,6 @@
 -- Arus declarative application-schema snapshot.
 -- Baseline originated from the live Supabase project on 2026-09-27.
--- Synchronized through migration 20261006152049_add_atomic_transaction_delete.
+-- Synchronized through migration 20261007111928_tighten_receipt_photo_cleanup_privileges.
 -- Supabase-managed Auth and Storage internals are not duplicated beyond Arus-owned bucket configuration and policies.
 
 create schema if not exists private;
@@ -544,7 +544,7 @@ create table public.receipt_photo_cleanup (
 alter table public.receipt_photo_cleanup enable row level security;
 create policy receipt_photo_cleanup_owner on public.receipt_photo_cleanup for insert to authenticated
   with check ((select auth.uid()) = user_id);
-revoke all on public.receipt_photo_cleanup from public,anon;
+revoke all on public.receipt_photo_cleanup from public, anon, authenticated;
 grant insert on public.receipt_photo_cleanup to authenticated;
 create or replace function public.arus_queue_old_receipt_photo() returns trigger
 language plpgsql security invoker set search_path = '' as $$

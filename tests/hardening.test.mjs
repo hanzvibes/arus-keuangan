@@ -115,7 +115,7 @@ test("declarative Supabase snapshot already includes the latest application migr
   const workflow = await readFile(".github/workflows/database.yml", "utf8");
   const schema = await readFile("supabase/schemas/arus.sql", "utf8");
 
-  assert.match(schema, /synchronized through migration 20261006152049/i);
+  assert.match(schema, /synchronized through migration 20261007111928/i);
   assert.match(schema, /create or replace function public\.arus_delete_transaction\(p_id text\)/);
   assert.match(schema, /exception when unique_violation/);
   assert.match(schema, /on conflict \(id\) do update/);
@@ -130,4 +130,26 @@ test("declarative Supabase snapshot already includes the latest application migr
   );
   assert.doesNotMatch(workflow, /Apply post-snapshot receipt cleanup hardening/);
   assert.doesNotMatch(workflow, /Apply post-snapshot atomic transaction deletion/);
+});
+
+
+test("receipt cleanup privilege migration enforces least privilege", async () => {
+  const migration = await readFile(
+    "supabase/migrations/20261007111928_tighten_receipt_photo_cleanup_privileges.sql",
+    "utf8",
+  );
+  const schema = await readFile("supabase/schemas/arus.sql", "utf8");
+
+  assert.match(
+    migration,
+    /revoke all privileges on table public\.receipt_photo_cleanup from authenticated;/i,
+  );
+  assert.match(
+    migration,
+    /grant insert on table public\.receipt_photo_cleanup to authenticated;/i,
+  );
+  assert.match(
+    schema,
+    /revoke all on public\.receipt_photo_cleanup from public, anon, authenticated;/i,
+  );
 });
