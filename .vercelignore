@@ -1,6 +1,3 @@
-.vinext/
-dist/
-.wrangler/
 .sites-runtime/
 supabase/.temp/
 supabase/.branches/
