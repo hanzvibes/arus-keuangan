@@ -29,7 +29,7 @@ jobs:
       PGPASSWORD: postgres
       PGDATABASE: postgres
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Bootstrap test Supabase interfaces
         run: psql -v ON_ERROR_STOP=1 -f tests/database/bootstrap.sql
       - name: Replay migrations from an empty database

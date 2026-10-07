@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function friendlyAuthError(message: string) {
@@ -13,6 +14,7 @@ function friendlyAuthError(message: string) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +58,7 @@ export default function LoginPage() {
         }
       }
 
-      window.location.assign(destination);
+      router.replace(destination);
     } catch {
       setError("Login belum bisa diproses. Coba lagi.");
     } finally {

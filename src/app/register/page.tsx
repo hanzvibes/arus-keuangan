@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, UserRound, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function friendlySignupError(message: string) {
@@ -13,6 +14,7 @@ function friendlySignupError(message: string) {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +61,7 @@ export default function RegisterPage() {
       }
 
       if (data.session) {
-        window.location.assign("/app");
+        router.replace("/app");
         return;
       }
 

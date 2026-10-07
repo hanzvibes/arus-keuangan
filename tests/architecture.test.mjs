@@ -287,5 +287,5 @@ test("logout preserves offline data until Supabase confirms the session is signe
   assert.ok(signOutIndex >= 0, "logout must call Supabase signOut");
   assert.ok(clearCacheIndex > signOutIndex, "device cache must only clear after signOut succeeds");
   assert.match(source, /Post-signout cache cleanup failed/);
-  assert.match(source, /window\.location\.assign\("\/login"\)/);
+  assert.match(source, /router\.replace\("\/login"\)/);
 });
