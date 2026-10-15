@@ -12,7 +12,7 @@ import { RecurringSection } from "@/features/finance/components/recurring-sectio
 import { ScreenTitle } from "@/features/finance/components/screen-title";
 import { TransactionList } from "@/features/finance/components/transaction-list";
 import { day } from "@/features/finance/lib/presentation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { listAndSyncReceiptDrafts } from "@/features/receipt/client";
 import type { ReceiptScan } from "@/features/receipt/types";
 
@@ -91,12 +91,17 @@ export function TransactionsTab({
 }: Props) {
   const [scans,setScans]=useState<ReceiptScan[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   useEffect(()=>{ let active=true; const refreshScans=()=>{void listAndSyncReceiptDrafts().then(rows=>{if(active)setScans(rows);}).catch(()=>{});}; refreshScans();window.addEventListener("online",refreshScans);return()=>{active=false;window.removeEventListener("online",refreshScans);}; },[filteredTransactions]);
   const dueCount = recurring.filter(rule => rule.active && rule.nextDate <= day()).length;
 
   const activeFilters = [filterType !== "all", filterAccount !== "all", filterCategory !== "all", !!query.trim()].filter(Boolean).length;
   const matchingIncome = filteredTransactions.filter(row => row.type === "income").reduce((sum,row) => sum + row.amount,0);
   const matchingExpense = filteredTransactions.filter(row => row.type === "expense").reduce((sum,row) => sum + row.amount,0);
+  const pageCount = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleTransactions = useMemo(() => filteredTransactions.slice((currentPage - 1) * pageSize, currentPage * pageSize), [currentPage, filteredTransactions]);
   const pendingScans = scans.filter(scan => !scan.transactionId);
   return (
     <section className="screen transactions-screen">
@@ -173,7 +178,7 @@ export function TransactionsTab({
           </div>
           {!filteredTransactions.length ? <div className="surface filtered-empty"><Search size={28}/><h2>{activeFilters ? "Tidak ada transaksi yang cocok" : "Belum ada transaksi bulan ini"}</h2><p>{activeFilters ? "Coba kata kunci lain atau hapus filter untuk melihat riwayat." : "Catat pemasukan, pengeluaran, atau transfer pertamamu."}</p><button className={"reset-filters" + (activeFilters ? "" : " empty-add-action")} onClick={activeFilters ? onResetFilters : onAdd}>{activeFilters ? "Hapus semua filter" : "Catat transaksi"}</button></div> : <div className="surface transaction-surface">
             <TransactionList
-              items={filteredTransactions}
+              items={visibleTransactions}
               accounts={accounts}
               queued={queued}
               formatMoney={formatMoney}
@@ -184,6 +189,11 @@ export function TransactionsTab({
               onDelete={onDelete}
               onViewReceipt={onViewReceipt}
             />
+            {pageCount > 1 && <nav className="transaction-pagination" aria-label="Halaman transaksi">
+              <button type="button" onClick={() => setPage(value => Math.max(1, value - 1))} disabled={currentPage === 1}>Sebelumnya</button>
+              <span>Halaman {currentPage} dari {pageCount}</span>
+              <button type="button" onClick={() => setPage(value => Math.min(pageCount, value + 1))} disabled={currentPage === pageCount}>Berikutnya</button>
+            </nav>}
           </div>}
         </>
       ) : (
