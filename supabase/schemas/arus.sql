@@ -1,6 +1,7 @@
 -- Arus declarative application-schema snapshot.
 -- Baseline originated from the live Supabase project on 2026-09-27.
--- Synchronized through migration 20261015120000_add_notifications.
+-- Synchronized through migration 20261007111928_tighten_receipt_photo_cleanup_privileges.
+-- Extended with migration 20261015120000_add_notifications.
 -- Supabase-managed Auth and Storage internals are not duplicated beyond Arus-owned bucket configuration and policies.
 
 create schema if not exists private;

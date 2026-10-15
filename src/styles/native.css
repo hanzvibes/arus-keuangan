@@ -19,6 +19,49 @@
   font-variant-numeric:tabular-nums;
 }
 .app-shell,.profile-page {background:var(--native-background);min-height:100dvh}
+.app-shell {background:linear-gradient(180deg,#f5f5f8 0%,#f0f0f5 46%,#ededf2 100%)}
+.app-shell .content {animation:native-page-in .32s ease both}
+.app-shell .surface,.app-shell .balance-card,.app-shell .mini-stats>div,.app-shell .goal-card,.app-shell .empty-state,.app-shell .filtered-empty,.app-shell .goal-empty {box-shadow:0 1px 2px #1c1c1e08,0 12px 34px #1c1c1e06}
+.app-shell .surface:hover,.app-shell .goal-card:hover,.app-shell .mini-stats>div:hover {box-shadow:0 2px 4px #1c1c1e0a,0 16px 42px #1c1c1e08}
+.app-shell .screen-title h1 {font-size:clamp(28px,4vw,36px)}
+.app-shell .screen-title p {font-size:14px}
+.app-shell .workspace-links {background:#e5e5eb;border-radius:14px;padding:3px;width:max-content}
+.app-shell .workspace-links button {border-radius:11px;min-height:40px}
+.app-shell .workspace-links button[aria-pressed=true] {box-shadow:0 2px 8px #1c1c1e12}
+.app-shell .bottom-nav {backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);background:#fafafccc!important}
+.app-shell .bottom-nav button {border-radius:14px;transition:background .2s ease,color .2s ease,transform .15s ease}
+.app-shell .bottom-nav button.selected {background:#eaf3e4;color:var(--native-green)}
+.app-shell .bottom-nav .nav-add {background:var(--native-green);box-shadow:0 6px 16px #367a0a35;color:#fff;transform:translateY(-8px)}
+.app-shell .bottom-nav .nav-add:active {transform:translateY(-8px) scale(.95)}
+.app-shell .top-actions button {background:#ffffff8c;box-shadow:0 1px 2px #1c1c1e08}
+.app-shell .top-actions button:hover {background:#fff;box-shadow:0 4px 12px #1c1c1e0d}
+.app-shell .balance-card {background:linear-gradient(145deg,#fff 0%,#fbfcfa 100%)}
+.app-shell .balance-value {font-size:clamp(32px,7vw,48px)}
+.app-shell .quick-actions button {background:#fff;box-shadow:0 1px 3px #1c1c1e08;transition:transform .18s ease,box-shadow .18s ease}
+.app-shell .quick-actions button:hover {transform:translateY(-2px);box-shadow:0 8px 20px #1c1c1e0d}
+.app-shell .progress span,.app-shell .track i {transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.app-shell .drawer-backdrop,.app-shell [data-radix-dialog-overlay] {background:#1c1c1e52;backdrop-filter:blur(4px)}
+.app-shell .drawer-content,.app-shell [data-radix-dialog-content] {border-radius:28px 28px 0 0;box-shadow:0 -18px 60px #1c1c1e22}
+
+.notification-center {position:relative;z-index:80}
+.notification-center-trigger {position:relative;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:#ffffff8c;color:#636366;box-shadow:0 1px 2px #1c1c1e08}
+.notification-center-trigger:hover {background:#fff;color:var(--native-green);box-shadow:0 4px 12px #1c1c1e0d}
+.notification-badge {position:absolute;top:0;right:0;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border:2px solid #f2f2f7;border-radius:999px;background:#c73d49;color:#fff;font-size:10px;font-weight:750;line-height:1}
+.notification-panel {position:absolute;top:52px;right:0;width:min(360px,calc(100vw - 32px));overflow:hidden;border:1px solid #e5e5ea;border-radius:20px;background:#fff;box-shadow:0 18px 55px #1c1c1e24;animation:native-pop-in .18s ease both}
+.notification-panel-header {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #e5e5ea;font-size:15px}
+.notification-panel-header button {display:flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--native-green);font-size:12px;font-weight:650}
+.notification-panel>p {padding:26px 18px;color:#636366;font-size:14px;text-align:center}
+.notification-panel ul {max-height:360px;margin:0;padding:0;overflow:auto;list-style:none}
+.notification-panel li {border-bottom:1px solid #f0f0f2}
+.notification-panel li:last-child {border-bottom:0}
+.notification-panel li button {display:flex;width:100%;flex-direction:column;gap:5px;padding:15px 18px;border:0;background:#fff;text-align:left}
+.notification-panel li.unread button {background:#f6faf3}
+.notification-panel li button:hover {background:#f1f5ee}
+.notification-panel li strong {font-size:13px;color:#1c1c1e}
+.notification-panel li span {color:#636366;font-size:12px;line-height:1.45}
+@keyframes native-page-in {from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes native-pop-in {from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce) {*,*::before,*::after {animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .app-shell button,.form-sheet button,.profile-page button {touch-action:manipulation;transition:background .18s ease,box-shadow .18s ease,transform .15s ease}
 .app-shell button:active:not(:disabled),.form-sheet button:active:not(:disabled),.profile-page button:active:not(:disabled) {transform:scale(.98)}
 .app-shell :is(button,a,input,select,textarea):focus-visible,.form-sheet :is(button,a,input,select,textarea):focus-visible,.profile-page :is(button,a,input,select,textarea):focus-visible {outline:3px solid #6ba846;outline-offset:3px}
