@@ -154,4 +154,18 @@ export const financeApi = {
   category: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok?: boolean }>("/api/categories", "Kategori belum bisa diproses.", json(method, body)),
   goal: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok: boolean }>("/api/goals", "Target belum bisa disimpan.", json(method, body)),
   recurring: (method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>) => request<{ ok?: boolean }>("/api/recurring", "Jadwal belum bisa diproses.", json(method, body)),
+  notifications: () => request<{ notifications: Notification[]; unreadCount: number }>("/api/notifications", "Notifikasi belum bisa dimuat.", { cache: "no-store" }),
+  readNotification: (body: { id?: string; all?: boolean }) => request<{ unreadCount: number }>("/api/notifications", "Notifikasi belum bisa diperbarui.", json("PATCH", body)),
+};
+
+export type Notification = {
+  id: string;
+  kind: "budget_alert";
+  title: string;
+  body: string;
+  budget_id: string | null;
+  period: string;
+  severity: "warning" | "exceeded";
+  read_at: string | null;
+  created_at: string;
 };
