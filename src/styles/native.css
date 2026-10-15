@@ -59,6 +59,7 @@
 .notification-panel li button:hover {background:#f1f5ee}
 .notification-panel li strong {font-size:13px;color:#1c1c1e}
 .notification-panel li span {color:#636366;font-size:12px;line-height:1.45}
+.productivity-summary {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:1160px;margin:14px auto 0;padding:0 24px}.productivity-summary>div{padding:16px 18px;border:1px solid #e5e5ea;border-radius:18px;background:#ffffffb8;box-shadow:0 8px 24px #1c1c1e06}.productivity-summary span{display:flex;align-items:center;gap:6px;color:#636366;font-size:12px;font-weight:650}.productivity-summary strong{display:block;margin-top:8px;color:#1c1c1e;font-size:23px;letter-spacing:-.03em}.productivity-summary strong small{margin-left:3px;color:#8a8a8f;font-size:12px}.productivity-summary p{margin:5px 0 0;color:#636366;font-size:12px;line-height:1.4}@media(max-width:600px){.productivity-summary{grid-template-columns:1fr;margin-top:10px;padding:0 17px}.productivity-summary>div{padding:13px 15px}}
 @keyframes native-page-in {from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes native-pop-in {from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce) {*,*::before,*::after {animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
