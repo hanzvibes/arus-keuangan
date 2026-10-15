@@ -30,6 +30,8 @@ import { ReceiptDetail } from "@/features/receipt/components/receipt-detail";
 import { NotificationCenter } from "@/features/notifications/components/notification-center";
 import { ProductivitySummary } from "@/features/productivity/productivity-summary";
 import { CommandPalette } from "@/features/productivity/command-palette";
+import { OnboardingChecklist } from "@/features/productivity/onboarding-checklist";
+import { useDevicePreferences } from "@/features/productivity/use-device-preferences";
 import { receiptApi } from "@/features/receipt/client";
 import type { ReceiptScan } from "@/features/receipt/types";
 import { monthlyReport, searchTransactions, sortTransactions, type TransactionSort } from "@/lib/reports";
@@ -53,6 +55,7 @@ export function FinanceApp() {
   const [weekEnd]=useState(()=>day());
   const [month,setMonth]=useState(day().slice(0,7)), [filterType,setFilterType]=useState("all"), [filterAccount,setFilterAccount]=useState("all"), [filterCategory,setFilterCategory]=useState("all"), [transactionView,setTransactionView]=useState<"history"|"schedule">("history");
   const pwa=usePwa();
+  const {compact}=useDevicePreferences();
   const [installTipDismissed,setInstallTipDismissed]=useState(()=>typeof window!=="undefined"&&sessionStorage.getItem("arus_install_tip_dismissed")==="1");
   const [installGuideOpen,setInstallGuideOpen]=useState(false);
   const [editing,setEditing]=useState<string|null>(null), [quickText,setQuickText]=useState("");
@@ -205,7 +208,7 @@ export function FinanceApp() {
     }
   }
   const installBanner=!pwa.installed&&!installTipDismissed?<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>:null;
-  return <><Toaster position="top-center" richColors/><CommandPalette/><NotificationCenter/><div className="app-shell"><ProductivitySummary data={shown} month={month}/>
+  return <><Toaster position="top-center" richColors/><CommandPalette/><NotificationCenter/><div className={compact?"app-shell compact":"app-shell"}><ProductivitySummary data={shown} month={month}/><OnboardingChecklist data={shown} onOpen={kind=>open(kind)}/>
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
     <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions">{tab!=="home"&&<button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button>}{tab!=="settings"&&<button className="top-settings-action" aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button>}</div></header>
     <div className="workspace-links"><button aria-pressed={tab==="accounts"} onClick={()=>changeTab("accounts")}><Wallet size={16}/>Akun</button><button aria-pressed={tab==="budget"} onClick={()=>changeTab("budget")}><LayoutGrid size={16}/>Budget</button></div>
