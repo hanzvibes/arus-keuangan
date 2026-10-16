@@ -31,7 +31,6 @@ import { NotificationCenter } from "@/features/notifications/components/notifica
 import { ProductivitySummary } from "@/features/productivity/productivity-summary";
 import { CommandPalette } from "@/features/productivity/command-palette";
 import { OnboardingChecklist } from "@/features/productivity/onboarding-checklist";
-import { CsvImportCenter } from "@/features/productivity/csv-import-center";
 import { useDevicePreferences } from "@/features/productivity/use-device-preferences";
 import { receiptApi } from "@/features/receipt/client";
 import type { ReceiptScan } from "@/features/receipt/types";
@@ -209,7 +208,7 @@ export function FinanceApp() {
     }
   }
   const installBanner=!pwa.installed&&!installTipDismissed?<div className="install-strip"><span className="install-strip-icon"><Wallet size={19}/></span><span>Pasang Arus di layar utama</span><button className="install-strip-action" onClick={()=>pwa.canInstall?void pwa.install():setInstallGuideOpen(true)}>{pwa.canInstall?"Pasang":"Cara pasang"}</button><button className="install-strip-close" aria-label="Tutup saran instalasi" onClick={()=>{sessionStorage.setItem("arus_install_tip_dismissed","1");setInstallTipDismissed(true);}}><X size={17}/></button></div>:null;
-  return <><Toaster position="top-center" richColors/><CommandPalette/><NotificationCenter/><div className={compact?"app-shell compact":"app-shell"}><div className="productivity-tools"><CsvImportCenter accountId={data.accounts[0]?.id} onImport={async rows=>{for(const row of rows) await queueTransaction(row);toast.success(`${rows.length} transaksi masuk antrean.`)}}/></div><ProductivitySummary data={shown} month={month}/><OnboardingChecklist data={shown} onOpen={kind=>open(kind)}/>
+  return <><Toaster position="top-center" richColors/><CommandPalette/><NotificationCenter/><div className={compact?"app-shell compact":"app-shell"}>
     <aside className="desktop-nav"><div className="brand"><span className="brand-mark"><Wallet size={23} strokeWidth={2.5}/></span>arus<span className="brand-dot">.</span></div><div className="desktop-nav-label">MENU UTAMA</div>{navigation.map(n=><button key={n.id} className={"desktop-link "+(tab===n.id?"active":"")} onClick={()=>changeTab(n.id)}><n.icon size={20}/>{n.label}</button>)}<AuthUser variant="sidebar"/></aside>
     <main className="main"><div className="content"><header className="topbar"><AuthUser variant="greeting"/><div className="top-actions">{tab!=="home"&&<button aria-label={hidden?"Tampilkan saldo":"Sembunyikan saldo"} onClick={()=>setHidden(!hidden)}>{hidden?<EyeOff size={19}/>:<Eye size={19}/>}</button>}{tab!=="settings"&&<button className="top-settings-action" aria-label="Data dan cadangan" onClick={()=>changeTab("settings")}><Settings2 size={19}/></button>}</div></header>
     <div className="workspace-links"><button aria-pressed={tab==="accounts"} onClick={()=>changeTab("accounts")}><Wallet size={16}/>Akun</button><button aria-pressed={tab==="budget"} onClick={()=>changeTab("budget")}><LayoutGrid size={16}/>Budget</button></div>
@@ -244,6 +243,7 @@ export function FinanceApp() {
       month={month}
       onMonthChange={changeMonth}
     />}
+    {tab==="home"&&<><ProductivitySummary data={shown} month={month}/><OnboardingChecklist data={shown} onOpen={kind=>open(kind)}/></>}
     {tab==="accounts"&&<AccountsTab
       accounts={shown.accounts}
       transactions={shown.transactions}
@@ -286,6 +286,7 @@ export function FinanceApp() {
       onScanReceipt={()=>startScan()}
       onOpenScan={scan=>{if(scan.transactionId){setReceiptDetail(data.transactions.find(row=>row.id===scan.transactionId)||null);}else{setScanReturnTo(null);setReceiptInitial(scan);setReceiptOpen(true);}}}
       onViewReceipt={setReceiptDetail}
+      onImportCsv={async rows=>{for(const row of rows) await queueTransaction(row);toast.success(`${rows.length} transaksi masuk antrean.`)}}
       onDiscardQueued={id=>void dropQueued(id)}
       onEdit={transaction=>transaction.hasReceipt?setReceiptDetail(transaction):edit("transaction",transaction)}
       onDelete={transaction=>setTarget({entity:"transaction",id:transaction.id,label:transaction.note||transaction.category})}
@@ -307,6 +308,7 @@ export function FinanceApp() {
       month={month}
       onMonthChange={changeMonth}
       transactions={shown.transactions}
+      budgets={shown.budgets}
       formatMoney={fmt}
     />}
     {tab==="goals"&&<GoalsTab goals={shown.goals||[]} offline={offline} formatMoney={fmt} onRefresh={refresh}/>}

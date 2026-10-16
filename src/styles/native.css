@@ -218,6 +218,9 @@
 .loading-balance {height:230px}.loading-actions {display:flex;gap:12px;margin:18px 0 24px}.loading-actions span {height:58px;flex:1}.loading-grid {display:grid;grid-template-columns:1fr 1fr;gap:18px}.loading-grid>div {height:230px}
 @keyframes native-shimmer {to{transform:translateX(100%)}}
 .transaction-pagination{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px;border-top:1px solid #e5e5ea;color:#636366;font-size:12px}.transaction-pagination button{min-height:36px;padding:0 12px;border:1px solid #d8d8de;border-radius:10px;background:#fff;color:#1c1c1e;font-weight:650}.transaction-pagination button:disabled{opacity:.4;cursor:not-allowed}
+.app-shell .content .productivity-summary{max-width:none;margin:18px 0 0;padding:0}.app-shell .content .onboarding-card{max-width:none;margin:16px 0}
+.transaction-import{display:flex;justify-content:flex-end;margin:-8px 0 16px}.transaction-import .csv-import-trigger{min-height:42px}
+.monthly-tools{margin:18px 0}.monthly-tools>summary{cursor:pointer;display:flex;align-items:center;list-style:none}.monthly-tools>summary::-webkit-details-marker{display:none}.monthly-tools>summary::after{content:"⌄";margin-left:auto;color:var(--native-secondary);font-size:22px}.monthly-tools[open]>summary::after{content:"⌃"}.monthly-tools>summary span{display:flex;flex-direction:column;gap:4px}.monthly-tools>summary strong{font-size:16px}.monthly-tools>summary small,.monthly-tools-grid small,.monthly-calendar-title small{color:var(--native-secondary);font-size:12px}.monthly-tools-body{padding-top:20px}.monthly-tools-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.monthly-tools-grid>div{min-width:0;display:flex;flex-direction:column;gap:5px;padding:14px;border:1px solid var(--native-line);border-radius:14px;background:var(--native-background)}.monthly-tools-grid span{color:var(--native-secondary);font-size:12px}.monthly-tools-grid strong{font-size:17px;overflow-wrap:anywhere}.monthly-tools-grid small{overflow-wrap:anywhere}.monthly-calendar{margin-top:20px}.monthly-calendar-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.monthly-calendar-title strong{font-size:14px}.monthly-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:12px}.monthly-calendar-grid>div{display:grid;place-items:center;min-height:35px;border-radius:8px;background:var(--native-tint);font-size:11px;font-weight:700}.monthly-calendar-grid>div.future{opacity:.35}.monthly-tools-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.monthly-tools-actions button{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:9px 13px;border:0;border-radius:11px;background:var(--native-tint);color:var(--native-green);font-weight:650;font-size:12px}.monthly-tools-note{margin:9px 0 0;color:var(--native-secondary);font-size:11px}
 @media(min-width:900px) {
   .app-shell .desktop-nav {background:#ebebf1;border:0;padding:32px 16px;width:245px}
   .app-shell .desktop-link {color:var(--native-secondary);font-weight:500;padding:13px 16px;min-height:48px;margin-bottom:5px}
@@ -249,6 +252,8 @@
   .onboarding-list button:disabled {display:none}
   .transaction-pagination {gap:8px;padding:13px 8px}
   .transaction-pagination button {font-size:12px;padding-inline:9px}
+  .monthly-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .monthly-calendar-title{align-items:flex-start;flex-direction:column;gap:3px}
   .app-shell .surface {padding:20px}
   .app-shell .greeting strong {font-size:18px}
   .app-shell .top-actions {gap:0}.app-shell .top-actions button {width:40px}

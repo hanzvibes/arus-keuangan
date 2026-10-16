@@ -1,4 +1,5 @@
-import type { Transaction } from "@/domain/finance/types";
+import type { Budget, Transaction } from "@/domain/finance/types";
+import { MonthlyToolsPanel } from "@/features/finance/components/monthly-tools-panel";
 import { PeriodControl } from "@/features/finance/components/period-control";
 import { ScreenTitle } from "@/features/finance/components/screen-title";
 import { CategoryIcon } from "../category-icon";
@@ -6,11 +7,11 @@ import { monthlyReport, monthlyTrend, percentageChange, shiftMonth } from "@/lib
 
 type Props = {
   month: string; onMonthChange: (delta: number) => void;
-  transactions: Transaction[]; formatMoney: (value: number) => string;
+  transactions: Transaction[]; budgets: Budget[]; formatMoney: (value: number) => string;
 };
 const monthLabel = (month: string) => new Date(month + "-01T12:00:00").toLocaleDateString("id-ID", { month: "short", year: "2-digit" });
 
-export function AnalyticsTab({ month, onMonthChange, transactions, formatMoney }: Props) {
+export function AnalyticsTab({ month, onMonthChange, transactions, budgets, formatMoney }: Props) {
   const report = monthlyReport(transactions, month);
   const previous = monthlyReport(transactions, shiftMonth(month, -1));
   const trend = monthlyTrend(transactions, month);
@@ -28,6 +29,7 @@ export function AnalyticsTab({ month, onMonthChange, transactions, formatMoney }
       <div className="surface report-stat"><span>Pengeluaran</span><strong>{formatMoney(report.expense)}</strong><small>{changeText(report.expense, previous.expense)}</small></div>
       <div className="surface report-stat"><span>Arus kas bersih</span><strong className={report.net >= 0 ? "green" : "red"}>{formatMoney(report.net)}</strong><small>Selisih pemasukan dan pengeluaran</small></div>
     </div>
+    <MonthlyToolsPanel month={month} transactions={transactions} budgets={budgets} formatMoney={formatMoney}/>
     <div className="surface report-insight">
       <div><h2>{report.net < 0 ? "Pengeluaran melebihi pemasukan" : report.income > 0 ? "Pantau ruang untuk menabung" : "Mulai dari catatan pertamamu"}</h2>
       <p>{report.savingsRate === null ? "Catat pemasukan untuk melihat persentase arus kas yang tersisa." : "Arus kas tersisa " + report.savingsRate.toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% dari pemasukan. Transfer dan penyesuaian saldo tidak dihitung sebagai pemasukan atau pengeluaran."}</p></div>

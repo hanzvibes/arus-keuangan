@@ -14,6 +14,7 @@ import { TransactionList } from "@/features/finance/components/transaction-list"
 import { day } from "@/features/finance/lib/presentation";
 import { useEffect, useMemo, useState } from "react";
 import { listAndSyncReceiptDrafts } from "@/features/receipt/client";
+import { CsvImportCenter } from "@/features/productivity/csv-import-center";
 import type { ReceiptScan } from "@/features/receipt/types";
 
 type View = "history" | "schedule";
@@ -52,6 +53,7 @@ type Props = {
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   onViewReceipt: (transaction: Transaction) => void;
+  onImportCsv: (rows: QueuedTransaction[]) => Promise<void>;
 };
 
 export function TransactionsTab({
@@ -88,6 +90,7 @@ export function TransactionsTab({
   onEdit,
   onDelete,
   onViewReceipt,
+  onImportCsv,
 }: Props) {
   const [scans,setScans]=useState<ReceiptScan[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -112,6 +115,7 @@ export function TransactionsTab({
         onAction={onAdd}
       />
       <PeriodControl month={month} onChange={onMonthChange} />
+      <div className="transaction-import"><CsvImportCenter accountId={accounts[0]?.id} onImport={onImportCsv}/></div>
       {pendingScans.length>0 && <button className="scan-pending-banner" onClick={()=>onOpenScan(pendingScans[0])}><ScanLine size={18}/><span><strong>{pendingScans.length} draft scan perlu dilanjutkan</strong><small>Lanjutkan review struk</small></span><ChevronRight size={17}/></button>}
 
       <div className="view-switch" role="group" aria-label="Tampilan transaksi">
