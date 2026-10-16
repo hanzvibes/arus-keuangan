@@ -1,0 +1,155 @@
+/* A restrained visual layer for the signed-in finance workspace. */
+.app-shell {
+  --native-background: #f4f6f3;
+  --native-surface: #fff;
+  --native-text: #142a22;
+  --native-secondary: #66766e;
+  --native-line: #e2e9e3;
+  --native-green: #176348;
+  --native-tint: #e9f3ed;
+  --native-red: #b44850;
+  --native-radius: 22px;
+  background: radial-gradient(circle at 70% -12%, #e5eee6 0, transparent 38%), #f4f6f3;
+}
+
+.app-shell .content {max-width: 1180px; padding-top: 30px}
+.app-shell .topbar {min-height: 64px; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid var(--native-line)}
+.app-shell .greeting {min-width: 0}
+.app-shell .greeting>div {min-width: 0}
+.app-shell .greeting strong {overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--native-text); font-size: 21px; font-weight: 720}
+.app-shell .greeting div span {color: var(--native-secondary); font-size: 12px; font-weight: 600; letter-spacing: .025em}
+.app-shell .avatar {width: 45px; height: 45px; border: 1px solid #cee2d4; background: #e4f0e7; color: var(--native-green); box-shadow: inset 0 1px #ffffffb0}
+.app-shell .top-actions {flex: none; gap: 6px}
+.app-shell .topbar .top-actions>button,.app-shell .topbar .notification-center-trigger {display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid var(--native-line); border-radius: 14px; background: #fff; color: var(--native-green); box-shadow: 0 2px 7px #14332708}
+.app-shell .notification-center {position: relative; top: auto; right: auto; z-index: 80}
+.app-shell .notification-panel {top: 50px; border-color: var(--native-line)}
+.app-shell .notification-panel ul {max-height: min(60dvh, 420px)}
+.app-shell .top-actions .notification-panel-header button {display: inline-flex; width: auto; height: 36px; padding: 0 8px; border: 0; border-radius: 9px; background: transparent; box-shadow: none; color: var(--native-green)}
+.app-shell .top-actions .notification-panel li button {display: flex; width: 100%; height: auto; padding: 15px 18px; place-items: initial; border: 0; border-radius: 0; background: #fff; box-shadow: none; color: var(--native-text)}
+.app-shell .top-actions .notification-panel li.unread button {background: #f0f7f1}
+.app-shell .workspace-links {margin-bottom: 20px; padding: 4px; gap: 3px; border: 1px solid var(--native-line); border-radius: 14px; background: #e9eeea}
+.app-shell .workspace-links button {min-height: 37px; padding: 8px 13px; border-radius: 10px; background: transparent; color: #61736a; font-size: 12px; font-weight: 700}
+.app-shell .workspace-links button[aria-pressed=true] {background: #fff; color: var(--native-green); box-shadow: 0 2px 8px #1d3f2d12}
+
+.app-shell :is(.surface,.mini-stats>div,.goal-card,.empty-state,.filtered-empty,.goal-empty) {border: 1px solid var(--native-line); border-radius: 22px; background: var(--native-surface); box-shadow: 0 2px 4px #15362904, 0 16px 38px #15362908}
+.app-shell .surface:hover,.app-shell .goal-card:hover,.app-shell .mini-stats>div:hover {box-shadow: 0 2px 4px #15362904, 0 16px 38px #15362908}
+.app-shell .screen-title h1 {color: var(--native-text); font-weight: 750; letter-spacing: -.05em}
+.app-shell .screen-title p,.app-shell .section-head p {color: var(--native-secondary)}
+.app-shell .section-head h2 {color: var(--native-text); font-size: 17px; font-weight: 720}
+.app-shell .text-link {color: var(--native-green); font-weight: 700}
+
+.app-shell .balance-card {position: relative; isolation: isolate; overflow: hidden; min-height: 254px; padding: 28px 31px 0; border: 1px solid #1a614b; border-radius: 26px; background: linear-gradient(125deg, #102f29 0%, #184f3e 56%, #216a4f 100%); color: #fff; box-shadow: 0 18px 34px #12392a25, inset 0 1px #ffffff2a}
+.app-shell .balance-card::before {content: ""; position: absolute; z-index: -1; width: 300px; height: 300px; top: -170px; right: -45px; border: 1px solid #ffffff24; border-radius: 50%; box-shadow: 0 0 0 46px #ffffff08, 0 0 0 94px #ffffff06}
+.app-shell .balance-top {color: #c9ddcf; font-size: 11px; font-weight: 700; letter-spacing: .16em}
+.app-shell .balance-top button {display: grid; place-items: center; width: 38px; height: 38px; min-width: 38px; min-height: 38px; padding: 0; border: 1px solid #ffffff38; border-radius: 12px; background: #ffffff13; color: #fff}
+.app-shell .balance-value {position: relative; margin: 23px 0 31px; color: #fff; font-size: clamp(33px, 5vw, 50px); font-weight: 720; letter-spacing: -.055em; line-height: 1.06}
+.app-shell .balance-bottom {border-color: #ffffff30; padding: 19px 0 22px}
+.app-shell .balance-bottom span {color: #bed2c5}
+.app-shell .balance-bottom strong {color: #fff; font-size: 15px; font-weight: 650}
+.app-shell .balance-art {top: -30px; right: -8px; color: #d7ead7; opacity: .14}
+
+.app-shell .quick-actions {gap: 12px; margin: 18px 0 20px}
+.app-shell .quick-actions button {min-width: 0; min-height: 64px; padding: 10px 14px; border: 1px solid var(--native-line); border-radius: 18px; background: #fff; color: var(--native-text); box-shadow: 0 5px 16px #15362908; font-size: 13px; font-weight: 680}
+.app-shell .quick-actions button:hover {border-color: #c1d8c9; box-shadow: 0 8px 20px #15362912}
+.app-shell .action-icon {width: 35px; height: 35px; flex: none; border-radius: 12px; background: #eff4f0}
+.app-shell .action-icon.expense {background: #fbefef; color: #b44850}
+.app-shell .action-icon.income {background: #e7f4ed; color: #167c58}
+.app-shell .action-icon.scan {background: #f3f0e9; color: #856b3e}
+.app-shell .install-strip {border: 1px solid #dce9dc; border-radius: 16px; background: #eef5ed; color: #275d42}
+.app-shell .install-strip-icon {background: #1d714f}
+.app-shell .install-strip-action {background: var(--native-green)}
+
+.app-shell .dashboard-month {margin-top: 4px}
+.app-shell .dashboard-stats>div+div {border-left: 1px solid var(--native-line); padding-left: 18px}
+.app-shell .dashboard-stats span,.app-shell .report-stat>span {color: var(--native-secondary); font-size: 12px; font-weight: 600}
+.app-shell .dashboard-stats strong {color: var(--native-text); font-weight: 700}
+.app-shell .dashboard-goals,.app-shell .report-insight {border: 1px solid #dce9dc; background: #ebf3eb; box-shadow: none}
+.app-shell .dashboard-goals strong {color: #1b503a}
+.app-shell .dashboard-goals span {color: #52705b}
+.app-shell .week-card .bar {background: #cfe2d5}
+.app-shell .week-card .bar.current {background: #176348}
+.app-shell .transaction-row {border-color: var(--native-line)}
+.app-shell .transaction-icon,.app-shell .account-icon,.app-shell .budget-icon,.app-shell .category-icon {border-radius: 13px; background: #edf4ee; color: var(--native-green)}
+.app-shell :is(.progress,.track) {background: #e8eee9}
+.app-shell :is(.progress span,.track i) {background: #23805c}
+.app-shell .report-stat {min-height: 146px}
+.app-shell .report-stat strong {color: var(--native-text); font-weight: 730}
+.app-shell .period-control,.app-shell .view-switch {border: 1px solid var(--native-line); background: #e9eeea}
+.app-shell .search-box {border: 1px solid var(--native-line); background: #fff}
+.app-shell .filter-trigger,.app-shell .csv-import-trigger {border: 1px solid var(--native-line); background: #fff; color: var(--native-green)}
+.app-shell .monthly-tools-grid>div {background: #f7f9f7}
+.app-shell .productivity-summary>div {border: 1px solid var(--native-line); border-radius: 18px; background: #fff; box-shadow: 0 7px 24px #15362908}
+.app-shell .onboarding-card {border-color: #dce9dc; background: #f0f6ee}
+
+.app-shell :is(.screen-title button,.empty-state button,.reset-filters,.restore-select,.monthly-tools-actions button) {background: var(--native-tint); color: var(--native-green)}
+.app-shell .save-button,.form-sheet .save-button {background: #176348}
+.app-shell :is(button,a,input,select,textarea):focus-visible,.form-sheet :is(button,a,input,select,textarea):focus-visible {outline-color: #267f5d}
+.form-sheet {background: #f4f6f3}
+.form-sheet :is(.form-body input,.form-body select,.select-control,.quick-entry-form textarea) {border: 1px solid #dfe8e0; background: #fff}
+
+@media (min-width: 900px) {
+  .app-shell .desktop-nav {width: 245px; border-right: 1px solid #24493b; background: linear-gradient(180deg, #12372d, #0c2923); color: #eaf4ec}
+  .app-shell .brand {color: #f7fbf8}
+  .app-shell .brand-mark {border-color: #d0b47e; color: #d0b47e}
+  .app-shell .brand-dot {color: #d0b47e}
+  .app-shell .desktop-nav-label {color: #9bb7a5}
+  .app-shell .desktop-link {color: #bfcec3; background: transparent}
+  .app-shell .desktop-link:hover {background: #ffffff14; color: #fff}
+  .app-shell .desktop-link.active {background: #ffffff1b; color: #fff; box-shadow: inset 3px 0 #d0b47e}
+  .app-shell .nav-footer {border-color: #ffffff24; color: #fff}
+  .app-shell .nav-footer small {color: #aac0b2}
+  .app-shell .topbar .top-actions>.top-settings-action {display: none}
+  .app-shell .content {padding: 32px clamp(26px, 4vw, 60px) 72px}
+  .app-shell .bottom-nav {display: none}
+}
+
+@media (max-width: 899px) {
+  .app-shell .bottom-nav {left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; width: min(520px, calc(100% - 24px)); height: 70px; max-width: none; padding: 6px 10px; transform: translateX(-50%); border: 1px solid #dce7de; border-radius: 22px; background: #fffffff2!important; box-shadow: 0 10px 34px #173f2b24; backdrop-filter: blur(20px)}
+  .app-shell .bottom-nav button:not(.nav-add) {height: 54px; color: #738279}
+  .app-shell .bottom-nav button.selected {color: var(--native-green); background: #e9f3ed}
+  .app-shell .bottom-nav .nav-add {width: 52px; height: 52px; border-radius: 16px; background: #176348; box-shadow: 0 5px 12px #17634840; transform: translateY(-4px)}
+  .app-shell .bottom-nav .nav-add:active {transform: translateY(-4px) scale(.95)}
+  .app-shell .content {padding-bottom: calc(135px + env(safe-area-inset-bottom))}
+  .command-palette-hint {display: none}
+}
+
+@media (max-width: 600px) {
+  .app-shell .content {padding-top: 18px; padding-inline: 18px}
+  .app-shell .topbar {margin-bottom: 17px; padding-bottom: 14px}
+  .app-shell .greeting strong {max-width: min(53vw, calc(100vw - 185px)); font-size: 17px}
+  .app-shell .greeting div span {font-size: 11px}
+  .app-shell .avatar {width: 39px; height: 39px; font-size: 15px}
+  .app-shell .topbar .top-actions>button,.app-shell .topbar .notification-center-trigger {width: 39px; height: 39px; border-radius: 12px}
+  .app-shell .workspace-links {margin-bottom: 17px}
+  .app-shell .balance-card {min-height: 218px; padding: 23px 23px 0; border-radius: 23px}
+  .app-shell .balance-value {margin: 20px 0 24px; font-size: clamp(31px, 8.5vw, 42px)}
+  .app-shell .balance-bottom {padding: 15px 0 18px}
+  .app-shell .quick-actions {gap: 8px; margin: 13px 0 17px}
+  .app-shell .quick-actions button {flex-direction: column; gap: 7px; min-height: 84px; padding: 9px 4px; border-radius: 16px; font-size: 11px}
+  .app-shell .action-icon {width: 32px; height: 32px; border-radius: 10px}
+  .app-shell .action-icon svg {width: 19px; height: 19px}
+  .app-shell .surface {padding: 19px}
+  .app-shell .dashboard-stats>div+div {border-left: 0; padding-left: 0; border-top: 1px solid var(--native-line); padding-top: 12px}
+  .app-shell .dashboard-stats {gap: 12px}
+  .app-shell .productivity-summary {grid-template-columns: 1fr 1fr; gap: 9px}
+  .app-shell .productivity-summary>div {padding: 12px; border-radius: 15px}
+  .app-shell .productivity-summary strong {font-size: 18px}
+  .app-shell .productivity-summary p {font-size: 11px}
+  .app-shell .summary-export {font-size: 10px}
+  .app-shell .report-summary {gap: 9px}
+  .app-shell .report-stat {min-height: 118px}
+}
+
+.arus-dark .app-shell {--native-background: #141f1a; --native-surface: #203129; --native-text: #f1f7f0; --native-secondary: #b5c6b9; --native-line: #385044; --native-green: #8bd0a8; --native-tint: #294536; background: #141f1a}
+.arus-dark .app-shell :is(.surface,.mini-stats>div,.goal-card,.empty-state,.filtered-empty,.goal-empty,.productivity-summary>div) {background: #203129; border-color: #385044; color: #f1f7f0}
+.arus-dark .app-shell .balance-card {background: linear-gradient(125deg, #0c2b23, #155039); color: #fff}
+.arus-dark .app-shell .balance-value,.arus-dark .app-shell .balance-bottom strong {color: #fff}
+.arus-dark .app-shell :is(.quick-actions button,.top-actions>button,.notification-center-trigger,.search-box,.filter-trigger,.csv-import-trigger,.workspace-links button[aria-pressed=true]) {background: #203129; border-color: #385044; color: #f1f7f0}
+.arus-dark .app-shell :is(.workspace-links,.period-control,.view-switch,.monthly-tools-grid>div) {background: #1a2b22; border-color: #385044}
+.arus-dark .app-shell :is(.dashboard-goals,.report-insight,.onboarding-card,.install-strip) {background: #294536; border-color: #385044; color: #f1f7f0}
+.arus-dark .app-shell :is(.dashboard-goals strong,.dashboard-goals span) {color: #e4f2e6}
+.arus-dark .app-shell .bottom-nav {background: #203129f2!important; border-color: #385044}
+.arus-dark .app-shell .top-actions .notification-panel li button {background: #203129; color: #f1f7f0}
+.arus-dark .app-shell .top-actions .notification-panel li.unread button {background: #294536}
+.arus-dark .app-shell .notification-panel li strong {color: #f1f7f0}
+.arus-dark .app-shell .notification-panel li span {color: #b5c6b9}

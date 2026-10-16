@@ -69,14 +69,6 @@ export function HomeTab({
   const monthLabel = new Date(month + "-01T12:00:00").toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   return (
     <>
-      <div className="quick-actions" aria-label="Aksi utama">
-        <button onClick={onExpense}><span className="action-icon expense"><Minus size={22} /></span>Pengeluaran</button>
-        <button onClick={onIncome}><span className="action-icon income"><Plus size={22} /></span>Pemasukan</button>
-        <button onClick={onScan}><span className="action-icon scan"><ScanLine size={22} /></span>Scan Struk</button>
-      </div>
-
-      {installBanner}
-
       <section className="balance-card">
         <div className="balance-top">
           <span>TOTAL SALDO</span>
@@ -90,6 +82,14 @@ export function HomeTab({
           <Wallet className="balance-art" size={128} strokeWidth={1.2} />
         </div>
       </section>
+
+      <div className="quick-actions" aria-label="Aksi utama">
+        <button onClick={onExpense}><span className="action-icon expense"><Minus size={22} /></span>Pengeluaran</button>
+        <button onClick={onIncome}><span className="action-icon income"><Plus size={22} /></span>Pemasukan</button>
+        <button onClick={onScan}><span className="action-icon scan"><ScanLine size={22} /></span>Scan Struk</button>
+      </div>
+
+      {installBanner}
 
       <section className="surface dashboard-month">
         <div className="section-head"><div><h2>Ringkasan bulanan</h2><p>Pantau pemasukan, pengeluaran, dan selisihnya</p></div><button className="text-link" onClick={onAnalytics}>Laporan <ChevronRight size={16}/></button></div>
