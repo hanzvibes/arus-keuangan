@@ -50,6 +50,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  allowedDevOrigins: ["pv-013bf734f625-bab75bf8-cda0-495a-8144-56e0c8644c38.style.dev"],
   async headers() {
     return [
       {
