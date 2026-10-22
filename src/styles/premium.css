@@ -153,3 +153,207 @@
 .arus-dark .app-shell .top-actions .notification-panel li.unread button {background: #294536}
 .arus-dark .app-shell .notification-panel li strong {color: #f1f7f0}
 .arus-dark .app-shell .notification-panel li span {color: #b5c6b9}
+
+/* Dashboard refinement: tighter hierarchy, numeric clarity, and richer insight surfaces. */
+.app-shell .balance-top {align-items: flex-start}
+.app-shell .balance-top-actions {display: flex; align-items: center; gap: 10px}
+.app-shell .balance-chip {padding: 6px 10px; border: 1px solid #ffffff2e; border-radius: 999px; background: #ffffff14; color: #d8f2c4; font-size: 10.5px; font-weight: 700; letter-spacing: .01em; white-space: nowrap}
+.app-shell .balance-chip.negative {color: #ffd5d8; border-color: #ffffff2e; background: #c2484f24}
+.app-shell .balance-value {margin: 18px 0 16px}
+.app-shell .balance-trend {display: flex; align-items: center; gap: 16px; margin-bottom: 20px}
+.app-shell .balance-spark {width: 120px; height: 44px; flex: none; opacity: .95}
+.app-shell .balance-trend-copy {display: flex; min-width: 0; flex-direction: column; gap: 3px}
+.app-shell .balance-trend-copy b {color: #f2f9ee; font-size: 11.5px; font-weight: 650; letter-spacing: .01em}
+.app-shell .balance-trend-copy span {color: #a9c2b1; font-size: 10.5px; font-weight: 600; overflow-wrap: anywhere}
+.app-shell .balance-bottom {display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: nowrap}
+.app-shell .balance-bottom > div {display: flex; min-width: 0; flex-direction: column; gap: 5px}
+.app-shell .balance-bottom > div:nth-child(2) {margin-left: auto; text-align: right}
+.app-shell .balance-bottom > div:nth-child(3) {text-align: right}
+.app-shell .balance-bottom span {color: #a9c2b1; font-size: 10.5px; font-weight: 650; letter-spacing: .02em}
+.app-shell .balance-bottom strong {color: #fff; font-size: 13px; font-weight: 650; white-space: nowrap}
+
+.app-shell .action-icon.transfer {background: #eef0fb; color: #5566c8}
+.app-shell .dashboard-month {margin-top: 0}
+.app-shell .dashboard-stats {align-items: flex-start}
+.app-shell .dashboard-stats strong {letter-spacing: -.03em}
+.app-shell .stat-delta {display: block; margin-top: 7px; color: var(--native-secondary); font-size: 11px; font-weight: 650; letter-spacing: -.005em}
+.app-shell .stat-delta span {color: var(--native-secondary); font-weight: 600; opacity: .85}
+.app-shell .stat-delta.up {color: #167c58}
+.app-shell .stat-delta.down {color: #b44850}
+.app-shell .stat-delta.neutral {color: var(--native-secondary); font-weight: 600}
+
+.app-shell .dashboard-goals {display: block; width: 100%; margin-top: 14px; padding: 20px 22px; text-align: left; cursor: pointer}
+.app-shell .dashboard-goals:hover {box-shadow: 0 2px 4px #15362904, 0 18px 40px #15362910}
+.app-shell .goal-summary-head {display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #1b503a}
+.app-shell .goal-summary-label {display: inline-flex; align-items: center; gap: 7px; color: #1b503a; font-size: 13px; font-weight: 720}
+.app-shell .goal-summary-head svg {color: #3d6b54}
+.app-shell .goal-summary-top {display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 14px}
+.app-shell .goal-summary-top b {color: var(--native-text); font-size: 14px; font-weight: 700; letter-spacing: -.02em}
+.app-shell .goal-summary-top strong {color: #1b503a; font-size: 15px; font-weight: 780; letter-spacing: -.02em}
+.app-shell .goal-summary-track {display: block; height: 8px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: #dbe8dc}
+.app-shell .goal-summary-track i {display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2f8c62, #176348); transition: width .5s cubic-bezier(.2,.8,.2,1)}
+.app-shell .goal-summary-meta {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 9px; color: #52705b; font-size: 11.5px; font-weight: 600}
+.app-shell .goal-summary-empty {margin: 10px 0 0; color: #52705b; font-size: 12.5px; line-height: 1.55}
+
+.app-shell .home-grid {margin-top: 16px}
+.app-shell .week-chart {position: relative}
+.app-shell .week-average {position: absolute; left: 0; right: 0; border-top: 1px dashed #17634842; pointer-events: none}
+.app-shell .week-average::after {content: "rata-rata"; position: absolute; top: -9px; right: 0; padding-left: 6px; background: var(--native-surface); color: #7a8f80; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase}
+.app-shell .week-footnote {margin: 8px 0 0; color: var(--native-secondary); font-size: 11px; font-weight: 600}
+.app-shell .home-budget-foot {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--native-line); color: var(--native-secondary); font-size: 12px; font-weight: 650}
+.app-shell .home-budget-foot strong {font-size: 15px; font-weight: 750; letter-spacing: -.025em}
+.app-shell .home-budget {margin-top: 16px}
+
+@media (max-width: 600px) {
+  .app-shell .balance-chip {padding: 5px 8px; font-size: 9.5px}
+  .app-shell .balance-top-actions {gap: 6px}
+  .app-shell .balance-spark {width: 94px; height: 38px}
+  .app-shell .balance-trend {gap: 12px; margin-bottom: 16px}
+  .app-shell .balance-trend-copy b {font-size: 11px}
+  .app-shell .balance-trend-copy span {font-size: 10px}
+  .app-shell .balance-bottom {gap: 10px; padding: 14px 0 17px}
+  .app-shell .balance-bottom span {font-size: 9.5px}
+  .app-shell .balance-bottom strong {font-size: 11.5px}
+  .app-shell .stat-delta {font-size: 10px; margin-top: 6px}
+  .app-shell .goal-summary-meta {flex-direction: column; align-items: flex-start; gap: 3px}
+  .app-shell .dashboard-goals {padding: 18px}
+}
+
+@media (max-width: 380px) {
+  .app-shell .balance-chip {display: none}
+  .app-shell .balance-bottom > div:nth-child(2) {margin-left: 0}
+}
+
+.arus-dark .app-shell .stat-delta.up {color: #8bd0a8}
+.arus-dark .app-shell .stat-delta.down {color: #e59aa1}
+.arus-dark .app-shell .goal-summary-label,.arus-dark .app-shell .goal-summary-top strong {color: #e4f2e6}
+.arus-dark .app-shell .goal-summary-meta,.arus-dark .app-shell .goal-summary-empty {color: #b5c6b9}
+.arus-dark .app-shell .goal-summary-track {background: #385044}
+.arus-dark .app-shell .week-average {border-color: #8bd0a866}
+.arus-dark .app-shell .week-average::after {background: #203129; color: #b5c6b9}
+.arus-dark .app-shell .action-icon.transfer {background: #2b3550; color: #b9c6f2}
+
+/* Accounts, transactions, budget and reports share the dashboard's premium rhythm. */
+.app-shell .account-summary {display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: center; gap: 26px; margin-bottom: 26px; padding: 24px 26px}
+.app-shell .account-summary-main {display: flex; flex-direction: column; gap: 7px}
+.app-shell .account-summary-main > span {color: var(--native-secondary); font-size: 10.5px; font-weight: 750; letter-spacing: .14em}
+.app-shell .account-summary-main strong {color: var(--native-text); font-size: clamp(26px, 3.2vw, 34px); font-weight: 730; letter-spacing: -.045em; line-height: 1.1; overflow-wrap: anywhere}
+.app-shell .account-summary-main small {color: var(--native-secondary); font-size: 11.5px; font-weight: 600}
+.app-shell .account-mix {display: flex; min-width: 0; flex-direction: column; gap: 11px; padding: 16px 18px; border: 1px solid var(--native-line); border-radius: 16px; background: #f7f9f7}
+.app-shell .account-mix-bar {display: flex; height: 9px; overflow: hidden; border-radius: 999px; background: #e3ebe4}
+.app-shell .account-mix-bar i {display: block; height: 100%; background: #176348}
+.app-shell .account-mix-bar i[data-kind=ewallet] {background: #3f8f6a}
+.app-shell .account-mix-bar i[data-kind=cash] {background: #c9a86a}
+.app-shell .account-mix-legend {display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none}
+.app-shell .account-mix-legend li {display: inline-flex; align-items: center; gap: 6px; color: var(--native-secondary); font-size: 11px; font-weight: 600}
+.app-shell .account-mix-legend li i {width: 7px; height: 7px; border-radius: 50%; background: #176348}
+.app-shell .account-mix-legend li i[data-kind=ewallet] {background: #3f8f6a}
+.app-shell .account-mix-legend li i[data-kind=cash] {background: #c9a86a}
+.app-shell .account-mix-legend b {color: var(--native-text); font-weight: 750}
+.app-shell .account-row {transition: background .18s ease, box-shadow .18s ease}
+.app-shell .account-row:hover {background: #fbfcfa}
+.app-shell .account-row[data-kind=ewallet] .account-icon {background: #eef0fb; color: #5566c8}
+.app-shell .account-row[data-kind=cash] .account-icon {background: #faf3e5; color: #96752f}
+.app-shell .account-reconcile {display: inline-flex; align-items: center; gap: 5px; min-height: 38px; padding: 0 11px; border: 1px solid var(--native-line); border-radius: 10px; background: #fff; color: var(--native-green); font-size: 11.5px; font-weight: 650}
+.app-shell .account-reconcile:hover {border-color: #c1d8c9; background: #f6faf5}
+.app-shell .account-reconcile:disabled {opacity: .45}
+.app-shell .group-title span {font-size: 11.5px; font-weight: 600}
+
+.app-shell .transactions-summary {grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 16px 0 18px}
+.app-shell .transactions-summary > div {padding: 15px 17px; gap: 7px}
+.app-shell .transactions-summary span {font-size: 11px; font-weight: 650; letter-spacing: .02em}
+.app-shell .transactions-summary strong {font-size: clamp(15px, 1.7vw, 18px); font-weight: 700; letter-spacing: -.03em}
+.app-shell .transactions-actions {display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 14px; flex-wrap: wrap}
+.app-shell .transactions-scan {display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 14px; border: 1px solid #dce9dc; border-radius: 12px; background: var(--native-tint); color: var(--native-green); font-size: 12.5px; font-weight: 700}
+.app-shell .transactions-scan:hover {border-color: #bcd8c5}
+.app-shell .transactions-actions .csv-import-trigger {min-height: 42px; border-radius: 12px; font-size: 12.5px}
+.app-shell .transaction-search {margin: 4px 0 8px}
+.app-shell .transaction-surface {padding-top: 2px}
+
+.app-shell .budget-overview {align-items: center; gap: 26px; margin-bottom: 22px; padding: 24px 26px}
+.app-shell .budget-overview .donut {background: conic-gradient(#2f8c62 var(--percent), #e4ece5 var(--percent)); box-shadow: inset 0 0 0 1px #ffffff0a}
+.app-shell .budget-overview .donut::before {background: var(--native-surface)}
+.app-shell .budget-overview-copy {display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 6px}
+.app-shell .budget-overview-copy .eyebrow {color: var(--native-secondary); font-size: 10px; letter-spacing: .13em}
+.app-shell .budget-overview-copy > strong {color: var(--native-text); font-size: clamp(24px, 3vw, 30px); font-weight: 730; letter-spacing: -.04em; line-height: 1.1}
+.app-shell .budget-overview-copy > small {color: var(--native-secondary); font-size: 11.5px; font-weight: 550}
+.app-shell .budget-overview-bar {height: 7px; margin-top: 6px; overflow: hidden; border-radius: 999px; background: #e8eee9}
+.app-shell .budget-overview-bar i {display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2f8c62, #176348); transition: width .5s cubic-bezier(.2,.8,.2,1)}
+.app-shell .budget-overview-bar i.near {background: linear-gradient(90deg, #d9a13c, #c2871f)}
+.app-shell .budget-overview-bar i.over {background: linear-gradient(90deg, #d4696a, #b44850)}
+.app-shell .budget-chips {display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px}
+.app-shell .budget-chip {padding: 5px 9px; border: 1px solid var(--native-line); border-radius: 999px; background: #f7f9f7; color: #4d6a57; font-size: 10.5px; font-weight: 700; white-space: nowrap}
+.app-shell .budget-chip.safe {background: #eaf4ee; border-color: #d5e8db; color: #1c6048}
+.app-shell .budget-chip.warning {background: #fbf3e2; border-color: #f0e0bd; color: #8a6320}
+.app-shell .budget-chip.danger {background: #fbeeee; border-color: #f0d4d4; color: #a53c44}
+.app-shell .budget-list-head {display: flex; align-items: baseline; justify-content: space-between; gap: 12px}
+.app-shell .budget-list-head .section-label {margin: 0 2px 14px}
+.app-shell .budget-list-head > span {color: var(--native-secondary); font-size: 10.5px; font-weight: 600}
+.app-shell .budget-item {transition: box-shadow .22s ease, transform .22s ease}
+.app-shell .budget-item:hover {transform: translateY(-2px); box-shadow: 0 2px 4px #15362904, 0 18px 40px #15362910}
+
+.app-shell .report-stat-label {display: inline-flex; align-items: center; gap: 8px; color: var(--native-secondary); font-size: 11.5px; font-weight: 700; letter-spacing: .01em}
+.app-shell .report-stat-icon {display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: #eef4ef; color: var(--native-green); font-style: normal}
+.app-shell .report-stat-icon.income {background: #e7f4ed; color: #167c58}
+.app-shell .report-stat-icon.expense {background: #fbefef; color: #b44850}
+.app-shell .report-stat small {color: var(--native-secondary); font-size: 11.5px; line-height: 1.5}
+.app-shell .surface.report-stat-net {position: relative; border-color: #1a5a45; background: linear-gradient(135deg, #12372d 0%, #0c2923 100%); color: #f2f9ee; box-shadow: 0 14px 30px #12392a26}
+.app-shell .report-stat-net .report-stat-label {color: #c3d8cb}
+.app-shell .report-stat-net .report-stat-icon {background: #ffffff1a; color: #c9f59a}
+.app-shell .report-stat-net strong {color: #fff; font-weight: 730}
+.app-shell .report-stat-net small {color: #a9c2b1}
+.app-shell .report-stat-badge {display: inline-flex; align-self: flex-start; margin-top: 2px; padding: 4px 9px; border-radius: 999px; background: #ffffff17; color: #d6f2bd; font-size: 9.5px; font-weight: 750; letter-spacing: .02em}
+.app-shell .report-trend-total {padding: 5px 10px; border: 1px solid var(--native-line); border-radius: 999px; background: #f7f9f7; color: var(--native-secondary); font-size: 10.5px; font-weight: 700; white-space: nowrap}
+.app-shell .trend-bars span {transition: filter .18s ease}
+.app-shell .trend-bars span:hover {filter: brightness(.94)}
+.app-shell .report-table-details {margin-top: 12px; border-top: 1px solid var(--native-line)}
+.app-shell .report-table-details summary {display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px 0; color: var(--native-secondary); font-size: 11.5px; font-weight: 700; cursor: pointer; list-style: none}
+.app-shell .report-table-details summary::-webkit-details-marker {display: none}
+.app-shell .report-table-details summary::after {content: "+"; color: var(--native-green); font-size: 15px; font-weight: 650}
+.app-shell .report-table-details[open] summary::after {content: "−"}
+.app-shell .report-table-details .report-table-wrap {margin-top: 10px}
+.app-shell .category-amount {display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none}
+.app-shell .category-amount strong {color: var(--native-text); font-size: 12.5px; font-weight: 750; letter-spacing: -.02em}
+.app-shell .category-amount span {color: var(--native-secondary); font-size: 10px; font-weight: 700}
+.app-shell .analytics-categories .section-head p {margin-top: 5px; font-size: 11.5px}
+
+@media (max-width: 900px) {
+  .app-shell .account-summary {grid-template-columns: 1fr; gap: 18px}
+  .app-shell .account-mix {padding: 14px 16px}
+}
+
+@media (max-width: 600px) {
+  .app-shell .account-summary {padding: 20px; margin-bottom: 20px}
+  .app-shell .account-summary-main strong {font-size: 27px}
+  .app-shell .account-mix-legend {gap: 5px 12px}
+  .app-shell .account-mix-legend li {font-size: 10.5px}
+  .app-shell .transactions-summary {gap: 8px; margin: 14px 0 16px}
+  .app-shell .transactions-summary > div {padding: 12px 12px; gap: 6px; border-radius: 14px}
+  .app-shell .transactions-summary span {font-size: 9.5px}
+  .app-shell .transactions-summary strong {font-size: 13.5px}
+  .app-shell .transactions-actions {margin-bottom: 12px}
+  .app-shell .transactions-scan {min-height: 40px; padding: 0 12px; font-size: 12px}
+  .app-shell .transactions-actions .csv-import-trigger {min-height: 40px; font-size: 12px; padding: 0 11px}
+  .app-shell .budget-overview {gap: 16px; padding: 19px}
+  .app-shell .budget-overview-copy > strong {font-size: 22px}
+  .app-shell .budget-chip {font-size: 9.5px; padding: 4px 8px}
+  .app-shell .budget-list-head > span {display: none}
+  .app-shell .report-stat-label {font-size: 10.5px}
+  .app-shell .report-stat-icon {width: 21px; height: 21px; border-radius: 7px}
+  .app-shell .category-amount strong {font-size: 12px}
+}
+
+.arus-dark .app-shell .account-mix {background: #1a2b22; border-color: #385044}
+.arus-dark .app-shell .account-mix-bar {background: #385044}
+.arus-dark .app-shell .account-row:hover {background: #253a2f}
+.arus-dark .app-shell .account-reconcile {background: #203129; border-color: #385044; color: #b9e2c6}
+.arus-dark .app-shell .budget-overview .donut {background: conic-gradient(#8bd0a8 var(--percent), #385044 var(--percent))}
+.arus-dark .app-shell .budget-overview-bar {background: #385044}
+.arus-dark .app-shell .budget-chip {background: #1a2b22; border-color: #385044; color: #b5c6b9}
+.arus-dark .app-shell .budget-chip.safe {background: #24402f; border-color: #35604a; color: #c6eed3}
+.arus-dark .app-shell .budget-chip.warning {background: #40361f; border-color: #5d4c28; color: #f0d79b}
+.arus-dark .app-shell .budget-chip.danger {background: #402829; border-color: #5d3a3d; color: #f3b7bc}
+.arus-dark .app-shell .surface.report-stat-net {background: linear-gradient(135deg, #0c2b23, #155039); border-color: #2c6b52}
+.arus-dark .app-shell .report-trend-total {background: #1a2b22; border-color: #385044; color: #b5c6b9}
+.arus-dark .app-shell .report-table-details {border-color: #385044}
+.arus-dark .app-shell .transactions-scan {background: var(--native-tint); color: #b9e2c6; border-color: #385044}

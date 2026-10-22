@@ -223,6 +223,7 @@ export function FinanceApp() {
       formatMoney={fmt}
       onIncome={()=>open("transaction","income")}
       onExpense={()=>open("transaction","expense")}
+      onTransfer={()=>open("transaction","transfer")}
       onBudget={()=>changeTab("budget")}
       onScan={()=>startScan()}
       installBanner={installBanner}
